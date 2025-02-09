@@ -1,0 +1,200 @@
+openapi: 3.1.1
+info:
+  title: LEIA API
+  version: '1.0.0'
+  description: LEIA API documentation
+servers:
+  - url: /api
+tags:
+  - name: Personas
+    description: Operations related to Personas
+paths:
+  /personas:
+    post:
+      summary: Create a new Persona
+      operationId: createPersona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPersona'
+      responses:
+        '201':
+          description: Persona created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+    get:
+      summary: Retrieve Personas by query or return all Personas
+      operationId: getPersonaByQuery
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Persona name filter
+        - in: query
+          name: version
+          schema:
+            type: string
+          description: Persona version filter (use "latest" for the latest version)
+      responses:
+        '200':
+          description: Successful response with one or more Personas
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Persona'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Persona'
+  /personas/version:
+    post:
+      summary: Create a new version for an existing Persona
+      operationId: createNewPersonaVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersona'
+      responses:
+        '201':
+          description: Persona version created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+  /personas/exists/{name}:
+    get:
+      summary: Check if a Persona exists by name
+      operationId: existsPersonaByName
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the Persona to check
+      responses:
+        '200':
+          description: Existence check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+  /personas/{id}:
+    get:
+      summary: Retrieve a Persona by its ID
+      operationId: getPersonaById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the Persona
+      responses:
+        '200':
+          description: Persona retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Persona not found
+
+components:
+  schemas:
+    Persona:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the Persona
+        name:
+          type: string
+        version:
+          type: string
+          description: Version number in the format x.x.x
+        fullName:
+          type: string
+        firstName:
+          type: string
+        description:
+          type: string
+        personality:
+          type: string
+        subjectPronoum:
+          type: string
+        objectPronoum:
+          type: string
+        possesivePronoum:
+          type: string
+        possesiveAdjective:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewPersona:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        fullName:
+          type: string
+        firstName:
+          type: string
+        description:
+          type: string
+        personality:
+          type: string
+        subjectPronoum:
+          type: string
+        objectPronoum:
+          type: string
+        possesivePronoum:
+          type: string
+        possesiveAdjective:
+          type: string
+    UpdatePersona:
+      type: object
+      required:
+        - name
+        - versionType
+      properties:
+        name:
+          type: string
+        fullName:
+          type: string
+        firstName:
+          type: string
+        description:
+          type: string
+        personality:
+          type: string
+        subjectPronoum:
+          type: string
+        objectPronoum:
+          type: string
+        possesivePronoum:
+          type: string
+        possesiveAdjective:
+          type: string
+        versionType:
+          type: string
+          enum:
+            - major
+            - minor
+            - patch

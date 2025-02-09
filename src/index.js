@@ -1,9 +1,12 @@
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 import logger from './utils/logger.js';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
 import requestLogger from './middlewares/requestLogger.js';
+import personaRoutes from './routes/personaRoutes.js';
+import YAML from 'yamljs';
 
 const app = express();
 
@@ -16,10 +19,14 @@ app.use(
 );
 app.use(express.json());
 app.use(requestLogger);
+
+const swaggerDocument = YAML.load('./openapi.yaml');
+
 // Routes
-app.get('/', (_req, res) => {
-  res.send('Hello World');
-});
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api/personas', personaRoutes);
+
+// Error handling middleware
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
@@ -39,9 +46,7 @@ const startServer = async () => {
       });
 
       setTimeout(() => {
-        logger.error(
-          'Could not close connections in time, forcefully shutting down'
-        );
+        logger.error('Could not close connections in time, forcefully shutting down');
         process.exit(1);
       }, 10000);
     };
