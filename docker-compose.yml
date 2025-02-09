@@ -1,0 +1,32 @@
+services:
+  mongodb-leia:
+    restart: unless-stopped
+    image: mongo:latest
+    container_name: mongodb-leia
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-leia:/data/db
+  leia-backend:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leia-backend
+    environment:
+      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-leia:27017/leia?authSource=admin
+      - FRONTEND_URL=${FRONTEND_URL}
+      - CUSTOMER_API_URL=${CUSTOMER_API_URL}
+      - CUSTOMER_API_KEY=${CUSTOMER_API_KEY}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=3000
+    depends_on:
+      - mongodb-leia
+    ports:
+      - '${PORT}:3000'
+
+volumes:
+  mongo-leia:
