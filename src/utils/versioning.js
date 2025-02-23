@@ -1,39 +1,30 @@
 /**
- * Increments a version number according to the specified type.
+ * Returns an object of parsed semver number as stored in the metadata.version field. (e.g. '1.2.3' -> { major: 1, minor: 2, patch: 3 })
  *
- * @param {string} version - Version number in the format "x.y.z".
- * @param {string} versionType - Type of version increment. Must be 'major', 'minor' or 'patch'.
- * @returns {string} The incremented version number.
- * @throws {Error} If the version number is not in the format "x.y.z" being x, y and z integers.
+ * @param {String} version The version number in the format "x.y.z" being x, y and z integers.
+ * @returns {Object} The object with the major, minor and patch numbers.
  */
-export function incrementVersion(version, versionType) {
+export function getVersionObjectFromString(version) {
   const splits = version.split('.');
-  if (splits.length !== 3) {
-    throw new Error('Incorrect version format. Must be x.y.z');
-  }
 
-  let [major, minor, patch] = splits.map(Number);
+  const [major, minor, patch] = splits.map(Number);
 
-  if (isNaN(major) || isNaN(minor) || isNaN(patch)) {
-    throw new Error('Incorrect version format. Must be x.y.z with x, y and z being integers');
-  }
+  return { major, minor, patch };
+}
 
-  switch (versionType) {
-    case 'major':
-      major++;
-      minor = 0;
-      patch = 0;
-      break;
-    case 'minor':
-      minor++;
-      patch = 0;
-      break;
-    case 'patch':
-      patch++;
-      break;
-    default:
-      throw new Error("Invalid version type. Must be 'major', 'minor' or 'patch'");
-  }
+/**
+ * Returns a boolean indicating if the version number is greater than another version number.
+ *
+ * @param {Object} v1 The version object to compare.
+ * @param {Object} v2 The version object to compare against.
+ * @returns {Boolean} True if v1 is greater than v2, false otherwise.
+ */
+export function isObjectVersionGreater(v1, v2) {
+  if (v1.major > v2.major) return true;
+  if (v1.major < v2.major) return false;
 
-  return `${major}.${minor}.${patch}`;
+  if (v1.minor > v2.minor) return true;
+  if (v1.minor < v2.minor) return false;
+
+  return v1.patch > v2.patch;
 }

@@ -6,11 +6,13 @@ info:
 servers:
   - url: /api
 tags:
-  - name: Personas
-    description: Operations related to Personas
+  - name: Personas v1
+    description: Main Persona API and v1 endpoints
 paths:
-  /personas:
+  /v1/personas:
     post:
+      tags:
+        - Personas v1
       summary: Create a new Persona
       operationId: createPersona
       requestBody:
@@ -18,28 +20,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewPersona'
+              $ref: '#/components/schemas/NewPersonaV1'
       responses:
         '201':
           description: Persona created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaV1'
     get:
-      summary: Retrieve Personas by query or return all Personas
+      tags:
+        - Personas v1
+      summary: Retrieve Personas using query parameters
       operationId: getPersonaByQuery
       parameters:
         - in: query
-          name: name
+          name: text
           schema:
             type: string
-          description: Persona name filter
+          description: Persona text filter
         - in: query
           name: version
           schema:
             type: string
-          description: Persona version filter (use "latest" for the latest version)
+          description: Persona version filter (use "latest" for only the latest versions of each Persona)
       responses:
         '200':
           description: Successful response with one or more Personas
@@ -47,12 +51,14 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/Persona'
+                  - $ref: '#/components/schemas/PersonaV1'
                   - type: array
                     items:
-                      $ref: '#/components/schemas/Persona'
-  /personas/version:
+                      $ref: '#/components/schemas/PersonaV1'
+  /v1/personas/version:
     post:
+      tags:
+        - Personas v1
       summary: Create a new version for an existing Persona
       operationId: createNewPersonaVersion
       requestBody:
@@ -60,16 +66,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdatePersona'
+              $ref: '#/components/schemas/UpdatePersonaV1'
       responses:
         '201':
           description: Persona version created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
-  /personas/exists/{name}:
+                $ref: '#/components/schemas/PersonaV1'
+  /v1/personas/exists/{name}:
     get:
+      tags:
+        - Personas v1
       summary: Check if a Persona exists by name
       operationId: existsPersonaByName
       parameters:
@@ -89,8 +97,60 @@ paths:
                 properties:
                   exists:
                     type: boolean
-  /personas/{id}:
+  /v1/personas/name/{name}:
     get:
+      tags:
+        - Personas v1
+      summary: Retrieve a list of Personas by its name
+      operationId: getPersonasByName
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the Persona
+      responses:
+        '200':
+          description: Persona retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaV1'
+        '404':
+          description: Persona not found
+  /v1/personas/name/{name}/version/{version}:
+    get:
+      tags:
+        - Personas v1
+      summary: Retrieve a Persona by its name and version
+      operationId: getPersonaByNameAndVersion
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the Persona
+        - in: path
+          name: version
+          required: true
+          schema:
+            type: string
+          description: Persona version in format x.y.z (use "latest" to retrieve the latest version)
+      responses:
+        '200':
+          description: Persona retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaV1'
+        '404':
+          description: Persona not found
+  /v1/personas/{id}:
+    get:
+      tags:
+        - Personas v1
       summary: Retrieve a Persona by its ID
       operationId: getPersonaById
       parameters:
@@ -106,95 +166,126 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaV1'
         '404':
           description: Persona not found
 
 components:
   schemas:
-    Persona:
+    PersonaV1:
       type: object
       properties:
         id:
           type: string
           description: Unique identifier for the Persona
-        name:
+        apiVersion:
           type: string
-        version:
-          type: string
-          description: Version number in the format x.x.x
-        fullName:
-          type: string
-        firstName:
-          type: string
-        description:
-          type: string
-        personality:
-          type: string
-        subjectPronoum:
-          type: string
-        objectPronoum:
-          type: string
-        possesivePronoum:
-          type: string
-        possesiveAdjective:
-          type: string
+          description: The API version of the Persona
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+            version:
+              type: string
+              description: Version number in the format x.x.x
+        spec:
+          type: object
+          properties:
+            fullName:
+              type: string
+            firstName:
+              type: string
+            description:
+              type: string
+            personality:
+              type: string
+            subjectPronoum:
+              type: string
+            objectPronoum:
+              type: string
+            possesivePronoum:
+              type: string
+            possesiveAdjective:
+              type: string
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-    NewPersona:
+    NewPersonaV1:
       type: object
       required:
-        - name
+        - apiVersion
+        - metadata
+        - spec
       properties:
-        name:
+        apiVersion:
           type: string
-        fullName:
-          type: string
-        firstName:
-          type: string
-        description:
-          type: string
-        personality:
-          type: string
-        subjectPronoum:
-          type: string
-        objectPronoum:
-          type: string
-        possesivePronoum:
-          type: string
-        possesiveAdjective:
-          type: string
-    UpdatePersona:
+          description: The API version of the Persona
+        metadata:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+        spec:
+          type: object
+          properties:
+            fullName:
+              type: string
+            firstName:
+              type: string
+            description:
+              type: string
+            personality:
+              type: string
+            subjectPronoum:
+              type: string
+            objectPronoum:
+              type: string
+            possesivePronoum:
+              type: string
+            possesiveAdjective:
+              type: string
+    UpdatePersonaV1:
       type: object
       required:
-        - name
-        - versionType
+        - apiVersion
+        - metadata
+        - spec
       properties:
-        name:
+        apiVersion:
           type: string
-        fullName:
-          type: string
-        firstName:
-          type: string
-        description:
-          type: string
-        personality:
-          type: string
-        subjectPronoum:
-          type: string
-        objectPronoum:
-          type: string
-        possesivePronoum:
-          type: string
-        possesiveAdjective:
-          type: string
-        versionType:
-          type: string
-          enum:
-            - major
-            - minor
-            - patch
+          description: The API version of the Persona
+        metadata:
+          type: object
+          required:
+            - name
+            - version
+          properties:
+            name:
+              type: string
+            version:
+              type: string
+        spec:
+          type: object
+          properties:
+            fullName:
+              type: string
+            firstName:
+              type: string
+            description:
+              type: string
+            personality:
+              type: string
+            subjectPronoum:
+              type: string
+            objectPronoum:
+              type: string
+            possesivePronoum:
+              type: string
+            possesiveAdjective:
+              type: string

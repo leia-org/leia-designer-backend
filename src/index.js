@@ -5,7 +5,7 @@ import logger from './utils/logger.js';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
 import requestLogger from './middlewares/requestLogger.js';
-import personaRoutes from './routes/personaRoutes.js';
+import personaRoutes from './routes/v1/personaRoutes.js';
 import YAML from 'yamljs';
 
 const app = express();
@@ -24,7 +24,7 @@ const swaggerDocument = YAML.load('./openapi.yaml');
 
 // Routes
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/api/personas', personaRoutes);
+app.use('/api/v1/personas', personaRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
