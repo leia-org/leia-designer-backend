@@ -30,6 +30,7 @@
     "joi": "^17.13.3",
     "mermaid": "file:mermaid/mermaid-11.4.1.tgz",
     "mongoose": "^8.10.0",
+    "swagger-parser": "^10.0.3",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",
     "yamljs": "^0.3.0"

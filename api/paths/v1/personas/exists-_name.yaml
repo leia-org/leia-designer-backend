@@ -1,0 +1,22 @@
+get:
+  tags:
+    - Personas v1
+  summary: Check if a Persona exists by name
+  operationId: existsPersonaByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Persona to check
+  responses:
+    '200':
+      description: Existence check result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              exists:
+                type: boolean

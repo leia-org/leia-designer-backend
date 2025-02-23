@@ -1,0 +1,41 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the Persona
+  apiVersion:
+    type: string
+    description: The API version of the Persona
+  metadata:
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+        description: Version number in the format x.x.x
+  spec:
+    type: object
+    properties:
+      fullName:
+        type: string
+      firstName:
+        type: string
+      description:
+        type: string
+      personality:
+        type: string
+      subjectPronoum:
+        type: string
+      objectPronoum:
+        type: string
+      possesivePronoum:
+        type: string
+      possesiveAdjective:
+        type: string
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

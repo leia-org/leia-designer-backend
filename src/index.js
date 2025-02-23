@@ -5,8 +5,10 @@ import logger from './utils/logger.js';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
 import requestLogger from './middlewares/requestLogger.js';
-import personaRoutes from './routes/v1/personaRoutes.js';
-import YAML from 'yamljs';
+import personaRoutesV1 from './routes/v1/personaRoutes.js';
+import problemRoutesV1 from './routes/v1/problemRoutes.js';
+import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
+import SwaggerParser from 'swagger-parser';
 
 const app = express();
 
@@ -20,11 +22,19 @@ app.use(
 app.use(express.json());
 app.use(requestLogger);
 
-const swaggerDocument = YAML.load('./openapi.yaml');
+// Swagger
+SwaggerParser.bundle('./api/openapi.yaml')
+  .then((bundledDoc) => {
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(bundledDoc));
+  })
+  .catch((error) => {
+    console.error('Error bundling OAS file:', error);
+  });
 
 // Routes
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/api/v1/personas', personaRoutes);
+app.use('/api/v1/personas', personaRoutesV1);
+app.use('/api/v1/problems', problemRoutesV1);
+app.use('/api/v1/behaviours', behaviourRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);

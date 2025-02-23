@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Personas v1
+  summary: Retrieve a list of Personas by its name
+  operationId: getPersonasByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Persona
+  responses:
+    '200':
+      description: Persona retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/persona/persona.yaml'
+    '404':
+      description: Persona not found

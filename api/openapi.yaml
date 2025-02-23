@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: LEIA API
+  version: '1.0.0'
+  description: LEIA API documentation
+servers:
+  - url: /api
+tags:
+  - name: Personas v1
+    description: Main Persona API and v1 endpoints
+paths:
+  /v1/personas:
+    $ref: './paths/v1/personas/index.yaml'
+  /v1/personas/version:
+    $ref: './paths/v1/personas/version.yaml'
+  /v1/personas/exists/{name}:
+    $ref: './paths/v1/personas/exists-_name.yaml'
+  /v1/personas/name/{name}:
+    $ref: './paths/v1/personas/name-_name.yaml'
+  /v1/personas/name/{name}/version/{version}:
+    $ref: './paths/v1/personas/name-_name-version-_version.yaml'
+  /v1/personas/{id}:
+    $ref: './paths/v1/personas/_id.yaml'

@@ -1,0 +1,35 @@
+type: object
+required:
+  - apiVersion
+  - metadata
+  - spec
+properties:
+  apiVersion:
+    type: string
+    description: The API version of the Persona
+  metadata:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+  spec:
+    type: object
+    properties:
+      fullName:
+        type: string
+      firstName:
+        type: string
+      description:
+        type: string
+      personality:
+        type: string
+      subjectPronoum:
+        type: string
+      objectPronoum:
+        type: string
+      possesivePronoum:
+        type: string
+      possesiveAdjective:
+        type: string
