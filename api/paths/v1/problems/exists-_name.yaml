@@ -1,0 +1,22 @@
+get:
+  tags:
+    - Problems v1
+  summary: Check if a Problem exists by name
+  operationId: existsProblemByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Problem to check
+  responses:
+    '200':
+      description: Existence check result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              exists:
+                type: boolean

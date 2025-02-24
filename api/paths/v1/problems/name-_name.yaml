@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Problems v1
+  summary: Retrieve a list of Problems by its name
+  operationId: getProblemsByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Problem
+  responses:
+    '200':
+      description: Problem retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/problem/problem.yaml'
+    '404':
+      description: Problem not found

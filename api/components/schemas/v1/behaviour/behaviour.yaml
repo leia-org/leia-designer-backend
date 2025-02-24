@@ -1,0 +1,35 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the Behaviour
+  apiVersion:
+    type: string
+    description: The API version of the Behaviour
+  metadata:
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+        description: Version number in the format x.x.x
+  spec:
+    type: object
+    properties:
+      description:
+        type: string
+      role:
+        type: string
+      process:
+        type: array
+        items:
+          type: string
+        enum:
+          $ref: '../../../enums/process.yaml'
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

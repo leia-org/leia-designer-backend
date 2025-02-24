@@ -1,0 +1,18 @@
+post:
+  tags:
+    - Behaviours v1
+  summary: Create a new version for an existing Behaviour
+  operationId: createNewBehaviourVersion
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/behaviour/newBehaviourVersion.yaml'
+  responses:
+    '201':
+      description: Behaviour version created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/behaviour/behaviour.yaml'

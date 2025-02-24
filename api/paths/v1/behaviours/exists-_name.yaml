@@ -1,0 +1,22 @@
+get:
+  tags:
+    - Behaviours v1
+  summary: Check if a Behaviour exists by name
+  operationId: existsBehaviourByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Behaviour to check
+  responses:
+    '200':
+      description: Existence check result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              exists:
+                type: boolean

@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Behaviours v1
+  summary: Retrieve a Behaviour by its ID
+  operationId: getBehaviourById
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the Behaviour
+  responses:
+    '200':
+      description: Behaviour retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/behaviour/behaviour.yaml'
+    '404':
+      description: Behaviour not found

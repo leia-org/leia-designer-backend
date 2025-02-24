@@ -1,0 +1,29 @@
+type: object
+required:
+  - apiVersion
+  - metadata
+  - spec
+properties:
+  apiVersion:
+    type: string
+    description: The API version of the Behaviour
+  metadata:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+  spec:
+    type: object
+    properties:
+      description:
+        type: string
+      role:
+        type: string
+      process:
+        type: array
+        items:
+          type: string
+        enum:
+          $ref: '../../../enums/process.yaml'

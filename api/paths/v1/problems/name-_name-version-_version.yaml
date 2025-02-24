@@ -1,0 +1,27 @@
+get:
+  tags:
+    - Problems v1
+  summary: Retrieve a Problem by its name and version
+  operationId: getProblemByNameAndVersion
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Problem
+    - in: path
+      name: version
+      required: true
+      schema:
+        type: string
+      description: Problem version in format x.y.z (use "latest" to retrieve the latest version)
+  responses:
+    '200':
+      description: Problem retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/problem/problem.yaml'
+    '404':
+      description: Problem not found

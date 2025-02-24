@@ -1,0 +1,45 @@
+post:
+  tags:
+    - Problems v1
+  summary: Create a new Problem
+  operationId: createProblem
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/problem/newProblem.yaml'
+  responses:
+    '201':
+      description: Problem created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/problem/problem.yaml'
+get:
+  tags:
+    - Problems v1
+  summary: Retrieve Problems using query parameters
+  operationId: getProblemByQuery
+  parameters:
+    - in: query
+      name: text
+      schema:
+        type: string
+      description: Problem text filter
+    - in: query
+      name: version
+      schema:
+        type: string
+      description: Problem version filter (use "latest" for only the latest versions of each Problem)
+  responses:
+    '200':
+      description: Successful response with one or more Problems
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '../../../components/schemas/v1/problem/problem.yaml'
+              - type: array
+                items:
+                  $ref: '../../../components/schemas/v1/problem/problem.yaml'

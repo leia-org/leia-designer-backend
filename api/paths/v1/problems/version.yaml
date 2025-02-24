@@ -1,0 +1,18 @@
+post:
+  tags:
+    - Problems v1
+  summary: Create a new version for an existing Problem
+  operationId: createNewProblemVersion
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/problem/newProblemVersion.yaml'
+  responses:
+    '201':
+      description: Problem version created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/problem/problem.yaml'

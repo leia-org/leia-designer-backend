@@ -8,6 +8,10 @@ servers:
 tags:
   - name: Personas v1
     description: Main Persona API and v1 endpoints
+  - name: Behaviours v1
+    description: Main Behaviour API and v1 endpoints
+  - name: Problems v1
+    description: Main Problem API and v1 endpoints
 paths:
   /v1/personas:
     $ref: './paths/v1/personas/index.yaml'
@@ -21,3 +25,27 @@ paths:
     $ref: './paths/v1/personas/name-_name-version-_version.yaml'
   /v1/personas/{id}:
     $ref: './paths/v1/personas/_id.yaml'
+  /v1/problems:
+    $ref: './paths/v1/problems/index.yaml'
+  /v1/problems/version:
+    $ref: './paths/v1/problems/version.yaml'
+  /v1/problems/exists/{name}:
+    $ref: './paths/v1/problems/exists-_name.yaml'
+  /v1/problems/name/{name}:
+    $ref: './paths/v1/problems/name-_name.yaml'
+  /v1/problems/name/{name}/version/{version}:
+    $ref: './paths/v1/problems/name-_name-version-_version.yaml'
+  /v1/problems/{id}:
+    $ref: './paths/v1/problems/_id.yaml'
+  /v1/behaviours:
+    $ref: './paths/v1/behaviours/index.yaml'
+  /v1/behaviours/version:
+    $ref: './paths/v1/behaviours/version.yaml'
+  /v1/behaviours/exists/{name}:
+    $ref: './paths/v1/behaviours/exists-_name.yaml'
+  /v1/behaviours/name/{name}:
+    $ref: './paths/v1/behaviours/name-_name.yaml'
+  /v1/behaviours/name/{name}/version/{version}:
+    $ref: './paths/v1/behaviours/name-_name-version-_version.yaml'
+  /v1/behaviours/{id}:
+    $ref: './paths/v1/behaviours/_id.yaml'

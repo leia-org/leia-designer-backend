@@ -1,0 +1,49 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the Problem
+  apiVersion:
+    type: string
+    description: The API version of the Problem
+  metadata:
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+        description: Version number in the format x.x.x
+  spec:
+    type: object
+    properties:
+      description:
+        type: string
+      personaBackground:
+        type: string
+      details:
+        type: string
+      solution:
+        type: string
+      solutionFormat:
+        type: string
+        enum:
+          $ref: '../../../enums/solutionFormat.yaml'
+      process:
+        type: array
+        items:
+          type: string
+          enum:
+            $ref: '../../../enums/process.yaml'
+      extends:
+        type: object
+      overrides:
+        type: object
+      constrainedTo:
+        type: object
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time
