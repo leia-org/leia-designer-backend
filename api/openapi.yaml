@@ -13,6 +13,7 @@ tags:
   - name: Problems v1
     description: Main Problem API and v1 endpoints
 paths:
+  # Persona v1 paths
   /v1/personas:
     $ref: './paths/v1/personas/index.yaml'
   /v1/personas/version:
@@ -25,6 +26,8 @@ paths:
     $ref: './paths/v1/personas/name-_name-version-_version.yaml'
   /v1/personas/{id}:
     $ref: './paths/v1/personas/_id.yaml'
+
+  # Problem v1 paths
   /v1/problems:
     $ref: './paths/v1/problems/index.yaml'
   /v1/problems/version:
@@ -37,6 +40,8 @@ paths:
     $ref: './paths/v1/problems/name-_name-version-_version.yaml'
   /v1/problems/{id}:
     $ref: './paths/v1/problems/_id.yaml'
+
+  # Behaviour v1 paths
   /v1/behaviours:
     $ref: './paths/v1/behaviours/index.yaml'
   /v1/behaviours/version:
