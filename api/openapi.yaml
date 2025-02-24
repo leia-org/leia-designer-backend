@@ -12,6 +12,8 @@ tags:
     description: Main Behaviour API and v1 endpoints
   - name: Problems v1
     description: Main Problem API and v1 endpoints
+  - name: Leias v1
+    description: Main Leia API and v1 endpoints
 paths:
   # Persona v1 paths
   /v1/personas:
@@ -54,3 +56,17 @@ paths:
     $ref: './paths/v1/behaviours/name-_name-version-_version.yaml'
   /v1/behaviours/{id}:
     $ref: './paths/v1/behaviours/_id.yaml'
+
+  # Leia v1 paths
+  /v1/leias:
+    $ref: './paths/v1/leias/index.yaml'
+  /v1/leias/version:
+    $ref: './paths/v1/leias/version.yaml'
+  /v1/leias/exists/{name}:
+    $ref: './paths/v1/leias/exists-_name.yaml'
+  /v1/leias/name/{name}:
+    $ref: './paths/v1/leias/name-_name.yaml'
+  /v1/leias/name/{name}/version/{version}:
+    $ref: './paths/v1/leias/name-_name-version-_version.yaml'
+  /v1/leias/{id}:
+    $ref: './paths/v1/leias/_id.yaml'

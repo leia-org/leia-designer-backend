@@ -1,0 +1,31 @@
+type: object
+required:
+  - apiVersion
+  - metadata
+  - spec
+properties:
+  apiVersion:
+    type: string
+    description: The API version of the Leia
+  metadata:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+  spec:
+    type: object
+    properties:
+      persona:
+        oneOf:
+          - $ref: '../../mongoId.yaml'
+          - $ref: '../../nameVersion.yaml'
+      problem:
+        oneOf:
+          - $ref: '../../mongoId.yaml'
+          - $ref: '../../nameVersion.yaml'
+      behaviour:
+        oneOf:
+          - $ref: '../../mongoId.yaml'
+          - $ref: '../../nameVersion.yaml'

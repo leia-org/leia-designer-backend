@@ -1,0 +1,11 @@
+type: object
+required:
+  - name
+  - version
+properties:
+  name:
+    type: string
+  version:
+    type: string
+    description: Version number in the format x.x.x
+    pattern: '^\d+\.\d+\.\d+$'

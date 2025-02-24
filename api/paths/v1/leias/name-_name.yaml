@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Leias v1
+  summary: Retrieve a list of Leias by its name
+  operationId: getLeiasByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Leia
+  responses:
+    '200':
+      description: Leia retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/leia/leia.yaml'
+    '404':
+      description: Leia not found

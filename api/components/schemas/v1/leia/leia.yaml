@@ -1,0 +1,32 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the Leia
+  apiVersion:
+    type: string
+    description: The API version of the Leia
+  metadata:
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+        description: Version number in the format x.x.x
+  spec:
+    type: object
+    properties:
+      persona:
+        $ref: '../persona/persona.yaml'
+      problem:
+        $ref: '../problem/problem.yaml'
+      behaviour:
+        $ref: '../behaviour/behaviour.yaml'
+
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

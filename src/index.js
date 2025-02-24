@@ -8,6 +8,7 @@ import requestLogger from './middlewares/requestLogger.js';
 import personaRoutesV1 from './routes/v1/personaRoutes.js';
 import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
+import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
 import SwaggerParser from 'swagger-parser';
 
 const app = express();
@@ -35,6 +36,7 @@ SwaggerParser.bundle('./api/openapi.yaml')
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);
+app.use('/api/v1/leias', leiaRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);

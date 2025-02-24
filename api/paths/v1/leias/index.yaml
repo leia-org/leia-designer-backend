@@ -1,0 +1,45 @@
+post:
+  tags:
+    - Leias v1
+  summary: Create a new Leia
+  operationId: createLeia
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/leia/newLeia.yaml'
+  responses:
+    '201':
+      description: Leia created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/leia/leia.yaml'
+get:
+  tags:
+    - Leias v1
+  summary: Retrieve Leias using query parameters
+  operationId: getLeiaByQuery
+  parameters:
+    - in: query
+      name: text
+      schema:
+        type: string
+      description: Leia text filter
+    - in: query
+      name: version
+      schema:
+        type: string
+      description: Leia version filter (use "latest" for only the latest versions of each Leia)
+  responses:
+    '200':
+      description: Successful response with one or more Leias
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '../../../components/schemas/v1/leia/leia.yaml'
+              - type: array
+                items:
+                  $ref: '../../../components/schemas/v1/leia/leia.yaml'

@@ -1,0 +1,22 @@
+get:
+  tags:
+    - Leias v1
+  summary: Check if a Leia exists by name
+  operationId: existsLeiaByName
+  parameters:
+    - in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: The name of the Leia to check
+  responses:
+    '200':
+      description: Existence check result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              exists:
+                type: boolean
