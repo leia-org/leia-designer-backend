@@ -38,6 +38,6 @@ export const updateProblemValidator = Joi.object({
     process: Joi.array().items(Joi.string()),
     extends: Joi.object().optional(),
     overrides: Joi.object().optional(),
-    constrainedTo: Joi.object,
+    constrainedTo: Joi.object().optional(),
   }).required(),
 });
