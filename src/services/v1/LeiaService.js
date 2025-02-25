@@ -1,5 +1,10 @@
 import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
+import PersonaService from './PersonaService.js';
+import BehaviourService from './BehaviourService.js';
+import ProblemService from './ProblemService.js';
+import { findEntity } from '../../utils/entity.js';
+import { checkConstraints } from '../../utils/leia.js';
 
 class LeiaService {
   // READ METHODS
@@ -41,9 +46,18 @@ class LeiaService {
   }
 
   // WRITE METHODS
-
   async create(leiaData) {
+    var persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found');
+    var behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found');
+    var problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found');
+
+    checkConstraints({ persona, behaviour, problem });
+
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
+    leiaData.spec.personaId = persona._id;
+    leiaData.spec.behaviourId = behaviour._id;
+    leiaData.spec.problemId = problem._id;
+
     return await LeiaRepository.create(leiaData);
   }
 
@@ -66,6 +80,16 @@ class LeiaService {
       error.statusCode = 400;
       throw error;
     }
+
+    var persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found');
+    var behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found');
+    var problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found');
+
+    checkConstraints({ persona, behaviour, problem });
+
+    leiaData.spec.personaId = persona._id;
+    leiaData.spec.behaviourId = behaviour._id;
+    leiaData.spec.problemId = problem._id;
 
     return await LeiaRepository.create(leiaData);
   }

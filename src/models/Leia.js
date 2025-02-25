@@ -32,15 +32,15 @@ const LeiaSchema = new Schema(
       },
     },
     spec: {
-      persona: {
+      personaId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Persona',
       },
-      behaviour: {
+      behaviourId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Behaviour',
       },
-      problem: {
+      problemId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Problem',
       },
