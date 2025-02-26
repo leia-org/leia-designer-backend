@@ -1,3 +1,4 @@
+import logger from './logger.js';
 /**
  * Validates that the result is not null, undefined, or an empty array.
  * Throws an error with statusCode 404 if validation fails.
@@ -34,7 +35,7 @@ export function flattenObject(obj) {
 }
 
 function flattenObjectInit(obj, key, res) {
-  if (typeof obj === 'object' && obj != null && !Array.isArray(obj)) {
+  if (isObject(obj)) {
     for (const k in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, k)) {
         const newKey = key ? `${key}.${k}` : k;
@@ -84,6 +85,18 @@ export function getValueFromFlattenedKey(obj, key) {
   return value;
 }
 
+export function existsFlattenedKey(obj, key) {
+  const keys = key.split('.');
+  let value = obj;
+  for (const k of keys) {
+    if (value[k] === undefined) {
+      return false;
+    }
+    value = value[k];
+  }
+  return true;
+}
+
 /**
  * Check if two processes are compatible.
  * At least one process must be in common.
@@ -98,7 +111,6 @@ export function isProcessCompatible(p1, p2) {
   }
   p1 = Array.isArray(p1) ? p1 : [p1];
   p2 = Array.isArray(p2) ? p2 : [p2];
-  console.log(p1, p2);
   if (p1.length >= p2.length) {
     const s = new Set(p1);
     return p2.some((v) => s.has(v));
@@ -106,4 +118,75 @@ export function isProcessCompatible(p1, p2) {
     const s = new Set(p2);
     return p1.some((v) => s.has(v));
   }
+}
+
+export function isObject(obj) {
+  return typeof obj === 'object' && obj != null && !Array.isArray(obj);
+}
+
+export function applyExtensionFlattenedKey(obj, key, value) {
+  const keys = key.split('.');
+  let current = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (current[keys[i]] === undefined) {
+      logger.warn(`Ignoring extension: ${key}. Key does not exist.`);
+      return;
+    }
+    current = current[keys[i]];
+  }
+
+  const lastKey = keys.at(-1);
+
+  if (!Object.prototype.hasOwnProperty.call(current, lastKey)) {
+    logger.warn(`Ignoring extension: ${key}. Property is inherited and cannot be modified.`);
+    return;
+  }
+
+  // Case: Property is a string
+  if (typeof current[lastKey] === 'string') {
+    if (typeof value === 'string') {
+      current[lastKey] += value;
+    } else if (Array.isArray(value)) {
+      current[lastKey] += value.join('\n');
+    } else {
+      logger.warn(`Ignoring extension: ${key}. Unexpected value data type.`);
+    }
+  }
+
+  // Case: Property is an array
+  else if (Array.isArray(current[lastKey])) {
+    if (typeof value === 'string') {
+      current[lastKey].push(value);
+    } else if (Array.isArray(value)) {
+      current[lastKey] = current[lastKey].concat(value);
+    } else {
+      logger.warn(`Ignoring extension: ${key}. Unexpected value data type.`);
+    }
+  }
+
+  // For other cases, we replace the value. TODO: Add more cases.
+  else {
+    current[lastKey] = value;
+  }
+}
+
+export function applyOverrideFlattenedKey(obj, key, value) {
+  const keys = key.split('.');
+  let current = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (current[keys[i]] === undefined) {
+      logger.warn(`Ignoring override: ${key}. Key does not exist.`);
+      return;
+    }
+    current = current[keys[i]];
+  }
+
+  const lastKey = keys.at(-1);
+
+  if (!Object.prototype.hasOwnProperty.call(current, lastKey)) {
+    logger.warn(`Ignoring override: ${key}. Property is inherited and cannot be modified.`);
+    return;
+  }
+
+  current[lastKey] = value;
 }

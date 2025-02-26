@@ -44,6 +44,15 @@ const LeiaSchema = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Problem',
       },
+      persona: {
+        type: Object,
+      },
+      behaviour: {
+        type: Object,
+      },
+      problem: {
+        type: Object,
+      },
     },
   },
   {
