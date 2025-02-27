@@ -52,6 +52,61 @@ function flattenObjectInit(obj, key, res) {
   return res;
 }
 
+export function replaceStringPlaceholders(str, view) {
+  if (typeof str === 'string') {
+    const soloPlaceholder = str.match(/^\s*{{\s*([\w.]+)\s*}}\s*$/);
+    // If the string has only one placeholder, return the value directly
+    if (soloPlaceholder) {
+      const flattenedKey = soloPlaceholder[1];
+      const value = getValueFromFlattenedKey(view, flattenedKey);
+      // If the value exists, replace it, if not, return the original string
+      if (value !== undefined) {
+        return value;
+      } else {
+        logger.warn(`replaceStringPlaceholders: Value not found for key: ${flattenedKey}`);
+        return str;
+      }
+    } else {
+      const regex = /\{\{\s*([\w.]+)\s*\}\}/g;
+      return str.replace(regex, (_, flattenedKey) => {
+        const value = getValueFromFlattenedKey(view, flattenedKey);
+        // If the value exists, replace it, if not, return the original string
+        if (isObject(value)) {
+          return JSON.stringify(value);
+        } else if (value !== undefined) {
+          return String(value);
+        } else {
+          logger.warn(`replaceStringPlaceholders: Value not found for key: ${flattenedKey}`);
+          return '{{ ' + flattenedKey + ' }}';
+        }
+      });
+    }
+  } else {
+    logger.warn('replaceStringPlaceholders: Object is not a string');
+    return str;
+  }
+}
+
+export function replacePlaceholders(obj, view) {
+  // If the object is a string, return the string with replaced placeholders
+  if (typeof obj === 'string') {
+    return replaceStringPlaceholders(obj, view);
+  } else if (isObject(obj)) {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        // For every key in the object, enter the recursion
+        obj[key] = replacePlaceholders(obj[key], view);
+      }
+    }
+  } else if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      // For every element in the array, enter the recursion
+      obj[i] = replacePlaceholders(obj[i], view);
+    }
+  }
+  return obj;
+}
+
 /**
  * Get a value from a flattened key.
  * If the key does not exist, return undefined.

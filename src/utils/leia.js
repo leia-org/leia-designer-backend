@@ -4,6 +4,7 @@ import {
   isProcessCompatible,
   applyExtensionFlattenedKey,
   applyOverrideFlattenedKey,
+  replacePlaceholders,
 } from './helper.js';
 import logger from './logger.js';
 
@@ -100,6 +101,29 @@ export function resolveOverrides(leia) {
       continue;
     }
     applyOverrideFlattenedKey(leia, key, value);
+  }
+  return leia;
+}
+
+export function resolvePlaceholders(leia) {
+  const replacementOrder = ['problem', 'persona', 'behaviour'];
+
+  // Create a view of the leia object with only the spec fields
+  const view = Object.fromEntries(Object.entries(leia).map(([key, value]) => [key, value?.spec]));
+
+  for (const entity of replacementOrder) {
+    const leiaEntitySpec = leia[entity]?.spec;
+
+    if (!leiaEntitySpec) {
+      logger.warn(`Ignoring: ${entity}. Entity not found.`);
+      continue;
+    }
+
+    // Replace placeholders in the object
+    leia[entity].spec = replacePlaceholders(leiaEntitySpec, view);
+
+    // Update the view
+    view[entity] = leia[entity].spec;
   }
   return leia;
 }

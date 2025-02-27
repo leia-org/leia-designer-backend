@@ -4,7 +4,7 @@ import PersonaService from './PersonaService.js';
 import BehaviourService from './BehaviourService.js';
 import ProblemService from './ProblemService.js';
 import { findEntity } from '../../utils/entity.js';
-import { checkConstraints, resolveExtensions, resolveOverrides } from '../../utils/leia.js';
+import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
 
 class LeiaService {
   // READ METHODS
@@ -47,24 +47,32 @@ class LeiaService {
 
   // WRITE METHODS
   async create(leiaData) {
-    const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found');
-    const behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found');
-    const problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found');
-
-    // Save the IDs of the entities
-    leiaData.spec.personaId = persona._id;
-    leiaData.spec.behaviourId = behaviour._id;
-    leiaData.spec.problemId = problem._id;
+    // Find the entities, save the IDs and convert them to JSON to simplify the object
+    const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
+      leiaData.spec.personaId = persona._id;
+      return persona.toJSON();
+    });
+    const behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found').then(
+      (behaviour) => {
+        leiaData.spec.behaviourId = behaviour._id;
+        return behaviour.toJSON();
+      }
+    );
+    const problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found').then((problem) => {
+      leiaData.spec.problemId = problem._id;
+      return problem.toJSON();
+    });
 
     const entities = { persona, behaviour, problem };
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
     const overriddenEntities = resolveOverrides(extendedEntities);
+    const replacedEntities = resolvePlaceholders(overriddenEntities);
 
-    leiaData.spec.persona = overriddenEntities.persona;
-    leiaData.spec.behaviour = overriddenEntities.behaviour;
-    leiaData.spec.problem = overriddenEntities.problem;
+    leiaData.spec.persona = replacedEntities.persona;
+    leiaData.spec.behaviour = replacedEntities.behaviour;
+    leiaData.spec.problem = replacedEntities.problem;
 
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
 
@@ -91,24 +99,32 @@ class LeiaService {
       throw error;
     }
 
-    const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found');
-    const behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found');
-    const problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found');
-
-    // Save the IDs of the entities
-    leiaData.spec.personaId = persona._id;
-    leiaData.spec.behaviourId = behaviour._id;
-    leiaData.spec.problemId = problem._id;
+    // Find the entities, save the IDs and convert them to JSON to simplify the object
+    const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
+      leiaData.spec.personaId = persona._id;
+      return persona.toJSON();
+    });
+    const behaviour = await findEntity(leiaData.spec.behaviour, BehaviourService, 'Behaviour not found').then(
+      (behaviour) => {
+        leiaData.spec.behaviourId = behaviour._id;
+        return behaviour.toJSON();
+      }
+    );
+    const problem = await findEntity(leiaData.spec.problem, ProblemService, 'Problem not found').then((problem) => {
+      leiaData.spec.problemId = problem._id;
+      return problem.toJSON();
+    });
 
     const entities = { persona, behaviour, problem };
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
     const overriddenEntities = resolveOverrides(extendedEntities);
+    const replacedEntities = resolvePlaceholders(overriddenEntities);
 
-    leiaData.spec.persona = overriddenEntities.persona;
-    leiaData.spec.behaviour = overriddenEntities.behaviour;
-    leiaData.spec.problem = overriddenEntities.problem;
+    leiaData.spec.persona = replacedEntities.persona;
+    leiaData.spec.behaviour = replacedEntities.behaviour;
+    leiaData.spec.problem = replacedEntities.problem;
 
     return await LeiaRepository.create(leiaData);
   }
