@@ -104,6 +104,7 @@ export function replacePlaceholders(obj, view) {
       obj[i] = replacePlaceholders(obj[i], view);
     }
   }
+  // In case of a number, boolean, undefined, or null, return the value directly
   return obj;
 }
 
