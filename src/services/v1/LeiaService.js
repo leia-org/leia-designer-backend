@@ -47,7 +47,7 @@ class LeiaService {
 
   // WRITE METHODS
   async create(leiaData) {
-    // Find the entities, save the IDs and convert them to JSON to simplify the object
+    // Find the entities, save the IDs and convert them to JSON to simplify the object (less computing/problems in object recursion)
     const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
       leiaData.spec.personaId = persona._id;
       return persona.toJSON();
@@ -99,7 +99,7 @@ class LeiaService {
       throw error;
     }
 
-    // Find the entities, save the IDs and convert them to JSON to simplify the object
+    // Find the entities, save the IDs and convert them to JSON to simplify the object (less computing/problems in object recursion)
     const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
       leiaData.spec.personaId = persona._id;
       return persona.toJSON();
