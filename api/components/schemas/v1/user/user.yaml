@@ -1,0 +1,17 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the Problem
+  email:
+    type: string
+    description: The email of the user
+  role:
+    type: string
+    description: The role of the user
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

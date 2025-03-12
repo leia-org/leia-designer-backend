@@ -1,0 +1,21 @@
+post:
+  tags:
+    - Users v1
+  summary: Login
+  operationId: login
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/user/login.yaml'
+  responses:
+    '201':
+      description: User logged in successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token:
+                type: string

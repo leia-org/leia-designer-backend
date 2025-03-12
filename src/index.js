@@ -9,7 +9,9 @@ import personaRoutesV1 from './routes/v1/personaRoutes.js';
 import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
 import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
+import userRoutesV1 from './routes/v1/userRoutes.js';
 import SwaggerParser from 'swagger-parser';
+import { auth, instructorOrAdmin } from './middlewares/auth.js';
 
 const app = express();
 
@@ -22,6 +24,7 @@ app.use(
 );
 app.use(express.json());
 app.use(requestLogger);
+app.use(auth);
 
 // Swagger
 SwaggerParser.bundle('./api/openapi.yaml')
@@ -33,6 +36,7 @@ SwaggerParser.bundle('./api/openapi.yaml')
   });
 
 // Routes
+app.use('/api/v1/users', userRoutesV1);
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);

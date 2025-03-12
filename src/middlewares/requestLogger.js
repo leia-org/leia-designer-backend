@@ -9,7 +9,7 @@ const requestLogger = (req, _res, next) => {
     body: req.body,
   };
   logger.debug(JSON.stringify(logDetails, null, 2));
-  next();
+  return next();
 };
 
 export default requestLogger;

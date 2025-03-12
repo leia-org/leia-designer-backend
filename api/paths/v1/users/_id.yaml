@@ -1,0 +1,67 @@
+get:
+  tags:
+    - Users v1
+  summary: Retrieve a User by its ID
+  operationId: getUserById
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the User
+  responses:
+    '200':
+      description: User retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/user/user.yaml'
+    '404':
+      description: User not found
+
+delete:
+  tags:
+    - Users v1
+  summary: Delete a User by its ID
+  operationId: deleteUserById
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the User
+  responses:
+    '204':
+      description: User deleted successfully
+    '404':
+      description: User not found
+
+put:
+  tags:
+    - Users v1
+  summary: Update a User by its ID
+  operationId: updateUserById
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the User
+    - in: body
+      name: user
+      required: true
+      description: The User to update
+      schema:
+        $ref: '../../../components/schemas/v1/user/updateUser.yaml'
+  responses:
+    '200':
+      description: User updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/user/user.yaml'
+    '404':
+      description: User not found

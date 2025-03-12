@@ -5,6 +5,17 @@ info:
   description: LEIA API documentation
 servers:
   - url: /api
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
 tags:
   - name: Personas v1
     description: Main Persona API and v1 endpoints
@@ -14,6 +25,8 @@ tags:
     description: Main Problem API and v1 endpoints
   - name: Leias v1
     description: Main Leia API and v1 endpoints
+  - name: Users v1
+    description: Main User API and v1 endpoints
 paths:
   # Persona v1 paths
   /v1/personas:
@@ -70,3 +83,13 @@ paths:
     $ref: './paths/v1/leias/name-_name-version-_version.yaml'
   /v1/leias/{id}:
     $ref: './paths/v1/leias/_id.yaml'
+
+  # User v1 paths
+  /v1/users:
+    $ref: './paths/v1/users/index.yaml'
+  /v1/users/login:
+    $ref: './paths/v1/users/login.yaml'
+  /v1/users/email/{email}:
+    $ref: './paths/v1/users/email-_email.yaml'
+  /v1/users/{id}:
+    $ref: './paths/v1/users/_id.yaml'

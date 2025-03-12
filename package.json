@@ -25,9 +25,11 @@
   "description": "",
   "dependencies": {
     "axios": "^1.7.9",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
     "mermaid": "file:mermaid/mermaid-11.4.1.tgz",
     "mongoose": "^8.10.0",
     "swagger-parser": "^10.0.3",

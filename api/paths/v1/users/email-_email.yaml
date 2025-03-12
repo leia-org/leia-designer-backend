@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Users v1
+  summary: Retrieve a User by its email
+  operationId: getUserByEmail
+  parameters:
+    - in: path
+      name: email
+      required: true
+      schema:
+        type: string
+      description: The email of the User
+  responses:
+    '200':
+      description: User retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/user/user.yaml'
+    '404':
+      description: User not found
