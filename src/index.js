@@ -23,8 +23,8 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(requestLogger);
 app.use(auth);
+app.use(requestLogger);
 
 // Swagger
 SwaggerParser.bundle('./api/openapi.yaml')
