@@ -5,8 +5,7 @@ import { isVersionQueryValid, isApiVersionValid } from '../../validators/version
 
 export const createLeia = async (req, res, next) => {
   try {
-    const { error, value } = createLeiaValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await createLeiaValidator.validateAsync(req.body, { abortEarly: false });
     const newLeia = await LeiaService.create(value);
     res.status(201).json(newLeia);
   } catch (err) {
@@ -16,8 +15,7 @@ export const createLeia = async (req, res, next) => {
 
 export const createNewLeiaVersion = async (req, res, next) => {
   try {
-    const { error, value } = updateLeiaValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await updateLeiaValidator.validateAsync(req.body, { abortEarly: false });
     const newLeia = await LeiaService.createNewVersion(value);
     res.status(201).json(newLeia);
   } catch (err) {

@@ -1,4 +1,4 @@
-import MessageRepository from '../../repositories/v1/MessageRepository';
+import MessageRepository from '../../repositories/v1/MessageRepository.js';
 
 class MessageService {
   // READ METHODS

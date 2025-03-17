@@ -5,8 +5,7 @@ import { isVersionQueryValid, isApiVersionValid } from '../../validators/version
 
 export const createPersona = async (req, res, next) => {
   try {
-    const { error, value } = createPersonaValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await createPersonaValidator.validateAsync(req.body, { abortEarly: false });
     const newPersona = await PersonaService.create(value);
     res.status(201).json(newPersona);
   } catch (err) {
@@ -16,8 +15,7 @@ export const createPersona = async (req, res, next) => {
 
 export const createNewPersonaVersion = async (req, res, next) => {
   try {
-    const { error, value } = updatePersonaValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await updatePersonaValidator.validateAsync(req.body, { abortEarly: false });
     const newPersona = await PersonaService.createNewVersion(value);
     res.status(201).json(newPersona);
   } catch (err) {

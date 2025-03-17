@@ -5,8 +5,7 @@ import { isVersionQueryValid, isApiVersionValid } from '../../validators/version
 
 export const createBehaviour = async (req, res, next) => {
   try {
-    const { error, value } = createBehaviourValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await createBehaviourValidator.validateAsync(req.body, { abortEarly: false });
     const newBehaviour = await BehaviourService.create(value);
     res.status(201).json(newBehaviour);
   } catch (err) {
@@ -16,8 +15,7 @@ export const createBehaviour = async (req, res, next) => {
 
 export const createNewBehaviourVersion = async (req, res, next) => {
   try {
-    const { error, value } = updateBehaviourValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error); // Pass the error to the error handling middleware.
+    const value = await updateBehaviourValidator.validateAsync(req.body, { abortEarly: false });
     const newBehaviour = await BehaviourService.createNewVersion(value);
     res.status(201).json(newBehaviour);
   } catch (err) {

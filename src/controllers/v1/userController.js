@@ -2,18 +2,9 @@ import UserService from '../../services/v1/UserService.js';
 import { createUserValidator, updateUserValidator, loginUserValidator } from '../../validators/v1/userValidator.js';
 import { generateToken } from '../../utils/jwt.js';
 
-// login,
-// createUser,
-// getUserById,
-// getUsers,
-// updateUser,
-// deleteUser,
-// getUserByEmail
-
 export const login = async (req, res, next) => {
   try {
-    const { error, value } = loginUserValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error);
+    const value = await loginUserValidator.validateAsync(req.body, { abortEarly: false });
 
     const user = await UserService.login(value.email, value.password);
     const token = generateToken(user.toJSON());
@@ -25,8 +16,7 @@ export const login = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { error, value } = createUserValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error);
+    const value = await createUserValidator.validateAsync(req.body, { abortEarly: false });
 
     if (['admin', 'instructor'].includes(value.role) && req.auth?.role !== 'admin') {
       const error = new Error('Only admins can create admin or instructor users');
@@ -66,8 +56,7 @@ export const getUsers = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    const { error, value } = updateUserValidator.validate(req.body, { abortEarly: false });
-    if (error) return next(error);
+    const value = await updateUserValidator.validateAsync(req.body, { abortEarly: false });
 
     if (value.role && req.auth?.role !== 'admin') {
       const error = new Error('Only admins can update roles');

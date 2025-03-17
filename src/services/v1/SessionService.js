@@ -1,4 +1,4 @@
-import SessionRepository from '../../repositories/v1/SessionRepository';
+import SessionRepository from '../../repositories/v1/SessionRepository.js';
 
 class SessionService {
   // READ METHODS
