@@ -25,6 +25,10 @@ const ExperimentSchema = new Schema(
       default: 1800,
     },
     leias: [LeiaConfigSchema],
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     strict: false,

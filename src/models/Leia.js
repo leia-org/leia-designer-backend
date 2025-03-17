@@ -54,6 +54,10 @@ const LeiaSchema = new Schema(
         type: Object,
       },
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     virtuals: {

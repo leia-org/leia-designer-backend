@@ -57,6 +57,10 @@ const PersonaSchema = new Schema(
         type: String,
       },
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     virtuals: {

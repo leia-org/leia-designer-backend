@@ -63,6 +63,10 @@ const ProblemSchema = new Schema(
         type: Schema.Types.Mixed,
       },
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     virtuals: {

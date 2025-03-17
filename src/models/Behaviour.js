@@ -44,6 +44,10 @@ const BehaviourSchema = new Schema(
         enum: ['requirements-elicitation', 'test'],
       },
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     virtuals: {
