@@ -53,7 +53,6 @@ ExperimentSchema.pre('validate', async function (next) {
 
 ExperimentSchema.methods.regenerateCode = async function () {
   this.code = await generateUniqueCode(ExperimentModel, 'X', 5);
-  await this.save();
 };
 
 const ExperimentModel = mongoose.model('Experiment', ExperimentSchema);

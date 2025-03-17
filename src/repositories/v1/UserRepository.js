@@ -1,6 +1,8 @@
 import User from '../../models/User.js';
 
 class UserRepository {
+  // READ METHODS
+
   async findAll() {
     return await User.find();
   }
@@ -17,6 +19,8 @@ class UserRepository {
     return !!(await User.exists({ email }));
   }
 
+  // WRITE METHODS
+
   async create(userData) {
     const user = new User(userData);
     return await user.save();
@@ -25,6 +29,8 @@ class UserRepository {
   async update(id, userData) {
     return await User.findByIdAndUpdate(id, userData, { new: true });
   }
+
+  // DELETE METHODS
 
   async delete(id) {
     return await User.findByIdAndDelete(id);
