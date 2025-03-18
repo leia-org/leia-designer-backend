@@ -1,0 +1,12 @@
+type: object
+required:
+  - name
+properties:
+  name:
+    type: string
+  isActive:
+    type: boolean
+    description: Whether the experiment is active or not
+  duration:
+    type: integer
+    description: Duration of the experiment in seconds

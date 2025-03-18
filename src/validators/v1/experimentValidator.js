@@ -14,15 +14,7 @@ export const updateExperimentDurationValidator = Joi.object({
   duration: Joi.number().min(1).required(),
 });
 
-export const addExperimentLeiaValidator = Joi.object({
-  leia: Joi.string().hex().length(24).required(),
-  configuration: Joi.object({
-    mode: Joi.string().valid('standard', 'transcription'),
-    data: Joi.object(),
-  }),
-});
-
-export const updateExperimentLeiaValidator = Joi.object({
+export const leiaConfigValidator = Joi.object({
   leia: Joi.string().hex().length(24).required(),
   configuration: Joi.object({
     mode: Joi.string().valid('standard', 'transcription'),

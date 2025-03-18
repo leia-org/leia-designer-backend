@@ -3,8 +3,7 @@ import {
   createExperimentValidator,
   updateExperimentNameValidator,
   updateExperimentDurationValidator,
-  addExperimentLeiaValidator,
-  updateExperimentLeiaValidator,
+  leiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
 
 export const createExperiment = async (req, res, next) => {
@@ -75,7 +74,7 @@ export const updateExperimentDuration = async (req, res, next) => {
 
 export const addExperimentLeia = async (req, res, next) => {
   try {
-    const value = await addExperimentLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
     const updatedExperiment = await ExperimentService.addLeia(req.params.id, value);
     res.json(updatedExperiment);
   } catch (err) {
@@ -85,7 +84,7 @@ export const addExperimentLeia = async (req, res, next) => {
 
 export const updateExperimentLeia = async (req, res, next) => {
   try {
-    const value = await updateExperimentLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
     const updatedExperiment = await ExperimentService.updateLeia(req.params.id, req.params.leiaId, value);
     res.json(updatedExperiment);
   } catch (err) {

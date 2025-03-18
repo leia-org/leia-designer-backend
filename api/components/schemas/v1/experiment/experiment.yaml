@@ -1,0 +1,28 @@
+type: object
+properties:
+  name:
+    type: string
+  code:
+    type: string
+    description: Unique identifier for the experiment, can be regenerated as needed
+  isActive:
+    type: boolean
+    description: Whether the experiment is active or not
+  duration:
+    type: integer
+    description: Duration of the experiment in seconds
+  leias:
+    type: array
+    items:
+      $ref: './leiaConfig.yaml'
+  user:
+    type: string
+    description: Unique identifier for the user who created the experiment
+  createdAt:
+    type: string
+    format: date-time
+    description: Date and time when the experiment was created
+  updatedAt:
+    type: string
+    format: date-time
+    description: Date and time when the experiment was last updated

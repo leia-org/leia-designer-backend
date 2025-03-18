@@ -1,0 +1,7 @@
+type: object
+required:
+  - duration
+properties:
+  duration:
+    type: integer
+    description: Duration of the experiment in seconds
