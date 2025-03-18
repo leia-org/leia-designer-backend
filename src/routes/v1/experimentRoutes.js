@@ -9,7 +9,7 @@ import {
   updateExperimentDuration,
   addExperimentLeia,
   updateExperimentLeia,
-  deleteExperimentLeia
+  deleteExperimentLeia,
 } from '../../controllers/v1/experimentController.js';
 
 const router = express.Router();

@@ -32,7 +32,11 @@ class ExperimentRepository {
   }
 
   async toggleIsActive(id) {
-    return await Experiment.findByIdAndUpdate(id, { $set: { isActive: { $not: '$isActive' } } }, { new: true }).populate('leias.$*.leia');
+    return await Experiment.findByIdAndUpdate(
+      id,
+      { $set: { isActive: { $not: '$isActive' } } },
+      { new: true }
+    ).populate('leias.$*.leia');
   }
 
   async addLeia(experimentId, leiaConfig) {
@@ -48,7 +52,9 @@ class ExperimentRepository {
   }
 
   async deleteLeia(experimentId, leiaConfigId) {
-    return await Experiment.findByIdAndUpdate(experimentId, { $pull: { leias: { _id: leiaConfigId } } }).populate('leias.$*.leia');
+    return await Experiment.findByIdAndUpdate(experimentId, { $pull: { leias: { _id: leiaConfigId } } }).populate(
+      'leias.$*.leia'
+    );
   }
 }
 

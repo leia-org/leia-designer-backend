@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi from 'joi';
 
 export const createExperimentValidator = Joi.object({
   name: Joi.string().required(),
@@ -17,7 +17,7 @@ export const updateExperimentDurationValidator = Joi.object({
 export const addExperimentLeiaValidator = Joi.object({
   leia: Joi.string().hex().length(24).required(),
   configuration: Joi.object({
-    mode: Joi.string().valid("standard", "transcription"),
+    mode: Joi.string().valid('standard', 'transcription'),
     data: Joi.object(),
   }),
 });
@@ -25,7 +25,7 @@ export const addExperimentLeiaValidator = Joi.object({
 export const updateExperimentLeiaValidator = Joi.object({
   leia: Joi.string().hex().length(24).required(),
   configuration: Joi.object({
-    mode: Joi.string().valid("standard", "transcription"),
+    mode: Joi.string().valid('standard', 'transcription'),
     data: Joi.object(),
   }),
 });
