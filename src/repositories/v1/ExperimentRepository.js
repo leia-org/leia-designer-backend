@@ -8,7 +8,7 @@ class ExperimentRepository {
   }
 
   async findById(id) {
-    return await Experiment.findById(id).populate('leias.leia');
+    return await Experiment.findById(id).populate('leias.$*.leia');
   }
 
   // WRITE METHODS
@@ -19,11 +19,11 @@ class ExperimentRepository {
   }
 
   async update(id, experimentData) {
-    return await Experiment.findByIdAndUpdate(id, experimentData, { new: true });
+    return await Experiment.findByIdAndUpdate(id, experimentData, { new: true }).populate('leias.$*.leia');
   }
 
   async regenerateCode(id) {
-    const experiment = await Experiment.findById(id);
+    const experiment = await Experiment.findById(id).populate('leias.$*.leia');
     if (!experiment) {
       throw new Error('Experiment not found');
     }
@@ -32,11 +32,11 @@ class ExperimentRepository {
   }
 
   async toggleIsActive(id) {
-    return await Experiment.findByIdAndUpdate(id, { $set: { isActive: { $not: '$isActive' } } }, { new: true });
+    return await Experiment.findByIdAndUpdate(id, { $set: { isActive: { $not: '$isActive' } } }, { new: true }).populate('leias.$*.leia');
   }
 
   async addLeia(experimentId, leiaConfig) {
-    return await Experiment.findByIdAndUpdate(experimentId, { $push: { leias: leiaConfig } });
+    return await Experiment.findByIdAndUpdate(experimentId, { $push: { leias: leiaConfig } }).populate('leias.$*.leia');
   }
 
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
@@ -44,11 +44,11 @@ class ExperimentRepository {
       { _id: experimentId, 'leias._id': leiaConfigId },
       { $set: { 'leias.$': leiaConfig } },
       { new: true }
-    );
+    ).populate('leias.$*.leia');
   }
 
   async deleteLeia(experimentId, leiaConfigId) {
-    return await Experiment.findByIdAndUpdate(experimentId, { $pull: { leias: { _id: leiaConfigId } } });
+    return await Experiment.findByIdAndUpdate(experimentId, { $pull: { leias: { _id: leiaConfigId } } }).populate('leias.$*.leia');
   }
 }
 

@@ -10,6 +10,7 @@ import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
 import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
 import userRoutesV1 from './routes/v1/userRoutes.js';
+import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth, instructorOrAdmin } from './middlewares/auth.js';
 
@@ -35,12 +36,13 @@ SwaggerParser.bundle('./api/openapi.yaml')
     console.error('Error bundling OAS file:', error);
   });
 
-// Routes
+// Routes v1
 app.use('/api/v1/users', userRoutesV1);
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);
 app.use('/api/v1/leias', leiaRoutesV1);
+app.use('/api/v1/experiments', experimentRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
