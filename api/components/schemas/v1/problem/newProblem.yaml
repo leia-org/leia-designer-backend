@@ -28,13 +28,13 @@ properties:
       solutionFormat:
         type: string
         enum:
-          $ref: '../../../enums/solutionFormat.yaml'
+          $ref: '../../../enums/v1/solutionFormat.yaml'
       process:
         type: array
         items:
           type: string
           enum:
-            $ref: '../../../enums/process.yaml'
+            $ref: '../../../enums/v1/process.yaml'
       extends:
         type: object
       overrides:

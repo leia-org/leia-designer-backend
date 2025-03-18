@@ -26,7 +26,7 @@ properties:
         items:
           type: string
         enum:
-          $ref: '../../../enums/process.yaml'
+          $ref: '../../../enums/v1/process.yaml'
   createdAt:
     type: string
     format: date-time
