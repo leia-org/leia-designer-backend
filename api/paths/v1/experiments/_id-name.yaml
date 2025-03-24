@@ -10,7 +10,7 @@ patch:
       description: ID of the Experiment to update
       schema:
         type: string
-  body:
+  requestBody:
     required: true
     content:
       application/json:
