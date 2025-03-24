@@ -1,0 +1,19 @@
+get:
+  tags:
+    - Experiments v1
+  summary: Retrieve experiment by ID
+  operationId: getExperimentById
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to retrieve
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Successful response with the Experiment
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

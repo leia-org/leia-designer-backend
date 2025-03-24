@@ -1,0 +1,56 @@
+put:
+  tags:
+    - Experiments v1
+  summary: Update the Leia of an Experiment
+  operationId: updateExperimentLeia
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to update
+      schema:
+        type: string
+    - in: path
+      name: leiaId
+      required: true
+      description: ID of the Leia to update
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/experiment/leiaConfig.yaml'
+  responses:
+    '200':
+      description: Successful response with the updated Experiment
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+delete:
+  tags:
+    - Experiments v1
+  summary: Delete the Leia of an Experiment
+  operationId: deleteExperimentLeia
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to update
+      schema:
+        type: string
+    - in: path
+      name: leiaId
+      required: true
+      description: ID of the Leia to delete
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Successful response with the updated Experiment
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

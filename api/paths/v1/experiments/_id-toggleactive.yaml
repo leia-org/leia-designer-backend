@@ -1,0 +1,19 @@
+patch:
+  tags:
+    - Experiments v1
+  summary: Toggle the active status of an Experiment
+  operationId: toggleExperimentActive
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to update
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Successful response with the updated Experiment
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

@@ -21,7 +21,6 @@ const LeiaConfigSchema = new Schema(
   },
   {
     strict: false,
-    timestamps: true,
     toJSON: {
       virtuals: true,
       transform: (doc, ret) => {

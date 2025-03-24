@@ -27,6 +27,8 @@ tags:
     description: Main Leia API and v1 endpoints
   - name: Users v1
     description: Main User API and v1 endpoints
+  - name: Experiments v1
+    description: Main Experiment API and v1 endpoints
 paths:
   # Persona v1 paths
   /v1/personas:
@@ -93,3 +95,21 @@ paths:
     $ref: './paths/v1/users/email-_email.yaml'
   /v1/users/{id}:
     $ref: './paths/v1/users/_id.yaml'
+
+  # Experiment v1 paths
+  /v1/experiments:
+    $ref: './paths/v1/experiments/index.yaml'
+  /v1/experiments/{id}:
+    $ref: './paths/v1/experiments/_id.yaml'
+  /v1/experiments/{id}/name:
+    $ref: './paths/v1/experiments/_id-name.yaml'
+  /v1/experiments/{id}/duration:
+    $ref: './paths/v1/experiments/_id-duration.yaml'
+  /v1/experiments/{id}/toggle-active:
+    $ref: './paths/v1/experiments/_id-toggleActive.yaml'
+  /v1/experiments/{id}/regenerate-code:
+    $ref: './paths/v1/experiments/_id-regenerateCode.yaml'
+  /v1/experiments/{id}/leias:
+    $ref: './paths/v1/experiments/_id-leias.yaml'
+  /v1/experiments/{id}/leias/{leiaId}:
+    $ref: './paths/v1/experiments/_id-leias-_leiaId.yaml'

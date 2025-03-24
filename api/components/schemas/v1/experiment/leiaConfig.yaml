@@ -12,7 +12,7 @@ properties:
         type: string
         description: The mode of the Leia
         enum:
-          $ref: '../../../../enums/v1/mode.yaml'
+          $ref: '../../../enums/v1/mode.yaml'
       data:
         type: object
         description: Aditional data such as the transcription to be displayed, the form...

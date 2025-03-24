@@ -1,0 +1,25 @@
+patch:
+  tags:
+    - Experiments v1
+  summary: Update the duration of an Experiment
+  operationId: updateExperimentDuration
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to update
+      schema:
+        type: string
+  body:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/experiment/updateExperimentDuration.yaml'
+  responses:
+    '200':
+      description: Successful response with the updated Experiment
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

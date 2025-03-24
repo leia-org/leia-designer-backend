@@ -1,0 +1,32 @@
+post:
+  tags:
+    - Experiments v1
+  summary: Create a new Experiment
+  operationId: createExperiment
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/experiment/newExperiment.yaml'
+  responses:
+    '201':
+      description: Experiment created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+get:
+  tags:
+    - Experiments v1
+  summary: Retrieve all Experiments
+  operationId: getAllExperiments
+  responses:
+    '200':
+      description: Successful response with Experiments
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

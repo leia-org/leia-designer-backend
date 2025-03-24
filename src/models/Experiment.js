@@ -45,8 +45,9 @@ const ExperimentSchema = new Schema(
 
 ExperimentSchema.pre('validate', async function (next) {
   try {
-    if (!this.experimentCode) {
-      this.experimentCode = await generateUniqueCode(ExperimentModel, 'X', 5);
+    if (!this.code) {
+      console.log('Generating unique code for experiment...');
+      this.code = await generateUniqueCode(ExperimentModel, 'X', 5);
     }
 
     next();

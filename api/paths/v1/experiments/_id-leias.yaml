@@ -1,0 +1,27 @@
+post:
+  tags:
+    - Experiments v1
+  summary: Add a leia to an Experiment
+  operationId: addLeiaToExperiment
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to which the leia will be added
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/experiment/leiaConfig.yaml'
+  responses:
+    '200':
+      description: Successful response with the resulting Experiment
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
