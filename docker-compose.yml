@@ -1,35 +1,33 @@
 services:
-  mongodb-leia:
+  mongodb-catalog:
     restart: unless-stopped
     image: mongo:latest
-    container_name: mongodb-leia
+    container_name: mongodb-catalog
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     ports:
       - '${MONGO_PORT}:27017'
     volumes:
-      - mongo-leia:/data/db
-  leia-backend:
+      - mongo-catalog:/data/db
+  catalog-backend:
     restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: leia-backend
+    container_name: catalog-backend
     environment:
-      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-leia:27017/leia?authSource=admin
+      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-catalog:27017/catalog?authSource=admin
       - FRONTEND_URL=${FRONTEND_URL}
-      - CUSTOMER_API_URL=${CUSTOMER_API_URL}
-      - CUSTOMER_API_KEY=${CUSTOMER_API_KEY}
       - NODE_ENV=${NODE_ENV}
       - PORT=80
       - JWT_SECRET=${JWT_SECRET}
       - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
     depends_on:
-      - mongodb-leia
+      - mongodb-catalog
     ports:
       - '${PORT}:80'
 
 volumes:
-  mongo-leia:
+  mongo-catalog:
