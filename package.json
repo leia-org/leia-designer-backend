@@ -31,7 +31,6 @@
     "express": "^4.21.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "mermaid": "file:mermaid/mermaid-11.4.1.tgz",
     "mongoose": "^8.10.0",
     "swagger-parser": "^10.0.3",
     "swagger-ui-express": "^5.0.1",
