@@ -12,7 +12,7 @@ import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
 import userRoutesV1 from './routes/v1/userRoutes.js';
 import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import SwaggerParser from 'swagger-parser';
-import { auth, instructorOrAdmin } from './middlewares/auth.js';
+import { auth } from './middlewares/auth.js';
 
 const app = express();
 

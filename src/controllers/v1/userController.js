@@ -18,8 +18,8 @@ export const createUser = async (req, res, next) => {
   try {
     const value = await createUserValidator.validateAsync(req.body, { abortEarly: false });
 
-    if (['admin', 'instructor'].includes(value.role) && req.auth?.role !== 'admin') {
-      const error = new Error('Only admins can create admin or instructor users');
+    if (req.auth?.role !== 'admin') {
+      const error = new Error('Only admins can create admins or instructors');
       error.statusCode = 403;
       throw error;
     }
@@ -66,7 +66,7 @@ export const updateUser = async (req, res, next) => {
 
     const id = req.params.id;
 
-    if (id !== req.auth?.id || ['admin', 'instructor'].includes(req.auth?.role)) {
+    if (id !== req.auth?.id && req.auth?.role !== 'admin') {
       const error = new Error('Unauthorized: Admin access required');
       error.statusCode = 403;
       next(error);
@@ -83,7 +83,7 @@ export const deleteUser = async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    if (['admin', 'instructor'].includes(req.auth?.role)) {
+    if (req.auth?.role !== 'admin') {
       const error = new Error('Unauthorized: Admin access required');
       error.statusCode = 403;
       next(error);

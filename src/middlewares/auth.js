@@ -46,15 +46,6 @@ export function instructor(req, res, next) {
   return next();
 }
 
-export function student(req, res, next) {
-  if (req.auth?.role !== 'student') {
-    const error = new Error('Unauthorized: Student access required');
-    error.statusCode = 403;
-    return next(error);
-  }
-  return next();
-}
-
 export function instructorOrAdmin(req, res, next) {
   if (req.auth?.role !== 'instructor' && req.auth?.role !== 'admin') {
     const error = new Error('Unauthorized: Instructor or Admin access required');

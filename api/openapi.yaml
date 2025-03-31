@@ -103,12 +103,6 @@ paths:
     $ref: './paths/v1/experiments/_id.yaml'
   /v1/experiments/{id}/name:
     $ref: './paths/v1/experiments/_id-name.yaml'
-  /v1/experiments/{id}/duration:
-    $ref: './paths/v1/experiments/_id-duration.yaml'
-  /v1/experiments/{id}/toggle-active:
-    $ref: './paths/v1/experiments/_id-toggleActive.yaml'
-  /v1/experiments/{id}/regenerate-code:
-    $ref: './paths/v1/experiments/_id-regenerateCode.yaml'
   /v1/experiments/{id}/leias:
     $ref: './paths/v1/experiments/_id-leias.yaml'
   /v1/experiments/{id}/leias/{leiaId}:

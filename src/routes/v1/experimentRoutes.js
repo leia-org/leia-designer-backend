@@ -4,9 +4,6 @@ import {
   getExperimentById,
   getAllExperiments,
   updateExperimentName,
-  regenerateExperimentCode,
-  toggleExperimentIsActive,
-  updateExperimentDuration,
   addExperimentLeia,
   updateExperimentLeia,
   deleteExperimentLeia,
@@ -20,9 +17,6 @@ router.post('/:id/leias', addExperimentLeia);
 
 // PATCH
 router.patch('/:id/name', updateExperimentName);
-router.patch('/:id/regenerate-code', regenerateExperimentCode);
-router.patch('/:id/toggle-active', toggleExperimentIsActive);
-router.patch('/:id/duration', updateExperimentDuration);
 
 // PUT
 router.put('/:id/leias/:leiaId', updateExperimentLeia);

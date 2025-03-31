@@ -2,15 +2,6 @@ type: object
 properties:
   name:
     type: string
-  code:
-    type: string
-    description: Unique identifier for the experiment, can be regenerated as needed
-  isActive:
-    type: boolean
-    description: Whether the experiment is active or not
-  duration:
-    type: integer
-    description: Duration of the experiment in seconds
   leias:
     type: array
     items:

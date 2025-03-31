@@ -21,18 +21,6 @@ class ExperimentService {
     return await ExperimentRepository.update(id, { name });
   }
 
-  async regenerateCode(id) {
-    return await ExperimentRepository.regenerateCode(id);
-  }
-
-  async toggleIsActive(id) {
-    return await ExperimentRepository.toggleIsActive(id);
-  }
-
-  async updateDuration(id, duration) {
-    return await ExperimentRepository.update(id, { duration });
-  }
-
   async addLeia(experimentId, leiaConfig) {
     return await ExperimentRepository.addLeia(experimentId, leiaConfig);
   }
@@ -40,6 +28,8 @@ class ExperimentService {
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
     return await ExperimentRepository.updateLeia(experimentId, leiaConfigId, leiaConfig);
   }
+
+  // DELETE METHODS
 
   async deleteLeia(experimentId, leiaConfigId) {
     return await ExperimentRepository.deleteLeia(experimentId, leiaConfigId);

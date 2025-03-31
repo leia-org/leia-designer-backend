@@ -1,5 +1,4 @@
 import mongoose, { Schema } from 'mongoose';
-import { generateUniqueCode } from '../utils/entity.js';
 import LeiaConfigSchema from './LeiaConfig.js';
 
 const ExperimentSchema = new Schema(
@@ -8,21 +7,6 @@ const ExperimentSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-    },
-    code: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    isActive: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    duration: {
-      type: Number,
-      required: true,
-      default: 1800,
     },
     leias: [LeiaConfigSchema],
     user: {
@@ -43,23 +27,4 @@ const ExperimentSchema = new Schema(
   }
 );
 
-ExperimentSchema.pre('validate', async function (next) {
-  try {
-    if (!this.code) {
-      console.log('Generating unique code for experiment...');
-      this.code = await generateUniqueCode(ExperimentModel, 'X', 5);
-    }
-
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-ExperimentSchema.methods.regenerateCode = async function () {
-  this.code = await generateUniqueCode(ExperimentModel, 'X', 5);
-};
-
-const ExperimentModel = mongoose.model('Experiment', ExperimentSchema);
-
-export default ExperimentModel;
+export default mongoose.model('Experiment', ExperimentSchema);

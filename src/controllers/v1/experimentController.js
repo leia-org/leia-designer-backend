@@ -2,7 +2,6 @@ import ExperimentService from '../../services/v1/ExperimentService.js';
 import {
   createExperimentValidator,
   updateExperimentNameValidator,
-  updateExperimentDurationValidator,
   leiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
 
@@ -38,34 +37,6 @@ export const updateExperimentName = async (req, res, next) => {
   try {
     const value = await updateExperimentNameValidator.validateAsync(req.body, { abortEarly: false });
     const updatedExperiment = await ExperimentService.updateName(req.params.id, value.name);
-    res.json(updatedExperiment);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const regenerateExperimentCode = async (req, res, next) => {
-  try {
-    const updatedExperiment = await ExperimentService.regenerateCode(req.params.id);
-    res.json(updatedExperiment);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const toggleExperimentIsActive = async (req, res, next) => {
-  try {
-    const updatedExperiment = await ExperimentService.toggleIsActive(req.params.id);
-    res.json(updatedExperiment);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const updateExperimentDuration = async (req, res, next) => {
-  try {
-    const value = await updateExperimentDurationValidator.validateAsync(req.body, { abortEarly: false });
-    const updatedExperiment = await ExperimentService.updateDuration(req.params.id, value.duration);
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
