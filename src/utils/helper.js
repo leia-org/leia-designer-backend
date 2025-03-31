@@ -201,9 +201,9 @@ export function applyExtensionFlattenedKey(obj, key, value) {
   // Case: Property is a string
   if (typeof current[lastKey] === 'string') {
     if (typeof value === 'string') {
-      current[lastKey] += value;
+      current[lastKey] += ' ' + value;
     } else if (Array.isArray(value)) {
-      current[lastKey] += value.join('\n');
+      current[lastKey] += ', ' + value.join(', ');
     } else {
       logger.warn(`Ignoring extension: ${key}. Unexpected value data type.`);
     }
