@@ -44,5 +44,5 @@ export default function errorHandler(err, req, res, next) {
     errorResponse.stack = err.stack;
   }
 
-  res.status(statusCode).json({ error: errorResponse });
+  res.status(statusCode).json({ ...errorResponse });
 }
