@@ -24,6 +24,10 @@ class BehaviourService {
     return await BehaviourRepository.findLatestVersionByName(name);
   }
 
+  async findFirstVersionByName(name) {
+    return await BehaviourRepository.findFirstVersionByName(name);
+  }
+
   async findByNameAndVersion(name, version) {
     if (version === 'latest') {
       return await BehaviourRepository.findLatestVersionByName(name);

@@ -3,9 +3,27 @@ import { createProblemValidator, updateProblemValidator } from '../../validators
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
 
+const checkEditable = async (name, userId) => {
+  const problem = await ProblemService.findFirstVersionByName(name);
+  if (!problem) {
+    const error = new Error('Problem not found, please create a new problem instead');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!problem.user.equals(userId)) {
+    const error = new Error(
+      "Unauthorized, a problem with this name already exists and you don't have permission to version it"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 export const createProblem = async (req, res, next) => {
   try {
     const value = await createProblemValidator.validateAsync(req.body, { abortEarly: false });
+    value.user = req.auth?.payload?.id;
+    // database will check if the name and version 1.0.0 exists as it must be unique
     const newProblem = await ProblemService.create(value);
     res.status(201).json(newProblem);
   } catch (err) {
@@ -16,6 +34,8 @@ export const createProblem = async (req, res, next) => {
 export const createNewProblemVersion = async (req, res, next) => {
   try {
     const value = await updateProblemValidator.validateAsync(req.body, { abortEarly: false });
+    await checkEditable(value.metadata.name, req.auth?.payload?.id);
+    value.user = req.auth?.payload?.id;
     const newProblem = await ProblemService.createNewVersion(value);
     res.status(201).json(newProblem);
   } catch (err) {

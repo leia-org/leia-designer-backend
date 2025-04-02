@@ -24,6 +24,10 @@ class PersonaService {
     return await PersonaRepository.findLatestVersionByName(name);
   }
 
+  async findFirstVersionByName(name) {
+    return await PersonaRepository.findFirstVersionByName(name);
+  }
+
   async findByNameAndVersion(name, version) {
     if (version === 'latest') {
       return await PersonaRepository.findLatestVersionByName(name);

@@ -3,9 +3,27 @@ import { createPersonaValidator, updatePersonaValidator } from '../../validators
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
 
+const checkEditable = async (name, userId) => {
+  const persona = await PersonaService.findFirstVersionByName(name);
+  if (!persona) {
+    const error = new Error('Persona not found, please create a new persona instead');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!persona.user.equals(userId)) {
+    const error = new Error(
+      "Unauthorized, a persona with this name already exists and you don't have permission to version it"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 export const createPersona = async (req, res, next) => {
   try {
     const value = await createPersonaValidator.validateAsync(req.body, { abortEarly: false });
+    value.user = req.auth?.payload?.id;
+    // database will check if the name and version 1.0.0 exists as it must be unique
     const newPersona = await PersonaService.create(value);
     res.status(201).json(newPersona);
   } catch (err) {
@@ -16,6 +34,8 @@ export const createPersona = async (req, res, next) => {
 export const createNewPersonaVersion = async (req, res, next) => {
   try {
     const value = await updatePersonaValidator.validateAsync(req.body, { abortEarly: false });
+    await checkEditable(value.metadata.name, req.auth?.payload?.id);
+    value.user = req.auth?.payload?.id;
     const newPersona = await PersonaService.createNewVersion(value);
     res.status(201).json(newPersona);
   } catch (err) {

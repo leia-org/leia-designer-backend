@@ -3,9 +3,27 @@ import { createLeiaValidator, updateLeiaValidator } from '../../validators/v1/le
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
 
+const checkEditable = async (name, userId) => {
+  const leia = await LeiaService.findFirstVersionByName(name);
+  if (!leia) {
+    const error = new Error('Leia not found, please create a new leia instead');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!leia.user.equals(userId)) {
+    const error = new Error(
+      "Unauthorized, a leia with this name already exists and you don't have permission to version it"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 export const createLeia = async (req, res, next) => {
   try {
     const value = await createLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    value.user = req.auth?.payload?.id;
+    // database will check if the name and version 1.0.0 exists as it must be unique
     const newLeia = await LeiaService.create(value);
     res.status(201).json(newLeia);
   } catch (err) {
@@ -16,6 +34,8 @@ export const createLeia = async (req, res, next) => {
 export const createNewLeiaVersion = async (req, res, next) => {
   try {
     const value = await updateLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    await checkEditable(value.metadata.name, req.auth?.payload?.id);
+    value.user = req.auth?.payload?.id;
     const newLeia = await LeiaService.createNewVersion(value);
     res.status(201).json(newLeia);
   } catch (err) {

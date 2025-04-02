@@ -28,6 +28,15 @@ class ProblemRepository {
     });
   }
 
+  findFirstVersionByName(name) {
+    return Problem.findOne({
+      'metadata.name': name,
+      'metadata.version.major': 1,
+      'metadata.version.minor': 0,
+      'metadata.version.patch': 0,
+    });
+  }
+
   async findByNameAndVersion(name, version) {
     return await Problem.findOne({ 'metadata.name': name, 'metadata.version': version });
   }

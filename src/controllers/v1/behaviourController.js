@@ -3,9 +3,27 @@ import { createBehaviourValidator, updateBehaviourValidator } from '../../valida
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
 
+const checkEditable = async (name, userId) => {
+  const behaviour = await BehaviourService.findFirstVersionByName(name);
+  if (!behaviour) {
+    const error = new Error('Behaviour not found, please create a new behaviour instead');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!behaviour.user.equals(userId)) {
+    const error = new Error(
+      "Unauthorized, a behaviour with this name already exists and you don't have permission to version it"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 export const createBehaviour = async (req, res, next) => {
   try {
     const value = await createBehaviourValidator.validateAsync(req.body, { abortEarly: false });
+    value.user = req.auth?.payload?.id;
+    // database will check if the name and version 1.0.0 exists as it must be unique
     const newBehaviour = await BehaviourService.create(value);
     res.status(201).json(newBehaviour);
   } catch (err) {
@@ -16,6 +34,8 @@ export const createBehaviour = async (req, res, next) => {
 export const createNewBehaviourVersion = async (req, res, next) => {
   try {
     const value = await updateBehaviourValidator.validateAsync(req.body, { abortEarly: false });
+    await checkEditable(value.metadata.name, req.auth?.payload?.id);
+    value.user = req.auth?.payload?.id;
     const newBehaviour = await BehaviourService.createNewVersion(value);
     res.status(201).json(newBehaviour);
   } catch (err) {

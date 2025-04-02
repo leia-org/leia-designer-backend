@@ -29,6 +29,10 @@ class LeiaService {
     return await LeiaRepository.findLatestVersionByName(name);
   }
 
+  async findFirstVersionByName(name) {
+    return await LeiaRepository.findFirstVersionByName(name);
+  }
+
   async findByNameAndVersion(name, version) {
     if (version === 'latest') {
       return await LeiaRepository.findLatestVersionByName(name);

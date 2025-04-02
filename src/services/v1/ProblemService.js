@@ -24,6 +24,10 @@ class ProblemService {
     return await ProblemRepository.findLatestVersionByName(name);
   }
 
+  async findFirstVersionByName(name) {
+    return await ProblemRepository.findFirstVersionByName(name);
+  }
+
   async findByNameAndVersion(name, version) {
     if (version === 'latest') {
       return await ProblemRepository.findLatestVersionByName(name);
