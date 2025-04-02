@@ -8,18 +8,19 @@ import {
   getLeiaByNameAndVersion,
   getLeiasByName,
 } from '../../controllers/v1/leiaController.js';
+import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
 // POST
-router.post('/version', createNewLeiaVersion);
-router.post('/', createLeia);
+router.post('/version', requireJwtAuthentication, createNewLeiaVersion);
+router.post('/', requireJwtAuthentication, createLeia);
 
 // GET
-router.get('/exists/:name', existsLeiaByName);
-router.get('/name/:name', getLeiasByName);
-router.get('/name/:name/version/:version', getLeiaByNameAndVersion);
-router.get('/', getLeiasByQuery);
-router.get('/:id', getLeiaById);
+router.get('/exists/:name', requireAuthentication, existsLeiaByName);
+router.get('/name/:name', requireAuthentication, getLeiasByName);
+router.get('/name/:name/version/:version', requireAuthentication, getLeiaByNameAndVersion);
+router.get('/', requireAuthentication, getLeiasByQuery);
+router.get('/:id', requireAuthentication, getLeiaById);
 
 export default router;

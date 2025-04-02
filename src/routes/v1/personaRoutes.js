@@ -9,17 +9,19 @@ import {
   getPersonasByName,
 } from '../../controllers/v1/personaController.js';
 
+import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
+
 const router = express.Router();
 
 // POST
-router.post('/version', createNewPersonaVersion);
-router.post('/', createPersona);
+router.post('/version', requireJwtAuthentication, createNewPersonaVersion);
+router.post('/', requireJwtAuthentication, createPersona);
 
 // GET
-router.get('/exists/:name', existsPersonaByName);
-router.get('/name/:name', getPersonasByName);
-router.get('/name/:name/version/:version', getPersonaByNameAndVersion);
-router.get('/', getPersonasByQuery);
-router.get('/:id', getPersonaById);
+router.get('/exists/:name', requireAuthentication, existsPersonaByName);
+router.get('/name/:name', requireJwtAuthentication, getPersonasByName);
+router.get('/name/:name/version/:version', requireAuthentication, getPersonaByNameAndVersion);
+router.get('/', requireAuthentication, getPersonasByQuery);
+router.get('/:id', requireAuthentication, getPersonaById);
 
 export default router;

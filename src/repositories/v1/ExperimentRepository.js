@@ -8,6 +8,10 @@ class ExperimentRepository {
   }
 
   async findById(id) {
+    return await Experiment.findById(id);
+  }
+
+  async findByIdPopulated(id) {
     return await Experiment.findById(id).populate('leias.leia');
   }
 

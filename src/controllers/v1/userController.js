@@ -2,6 +2,7 @@ import UserService from '../../services/v1/UserService.js';
 import { createUserValidator, updateUserValidator, loginUserValidator } from '../../validators/v1/userValidator.js';
 import { generateToken } from '../../utils/jwt.js';
 
+// No authentication required
 export const login = async (req, res, next) => {
   try {
     const value = await loginUserValidator.validateAsync(req.body, { abortEarly: false });
@@ -14,15 +15,10 @@ export const login = async (req, res, next) => {
   }
 };
 
+// Admin access managed by middleware in routes
 export const createUser = async (req, res, next) => {
   try {
     const value = await createUserValidator.validateAsync(req.body, { abortEarly: false });
-
-    if (req.auth?.role !== 'admin') {
-      const error = new Error('Only admins can create admins or instructors');
-      error.statusCode = 403;
-      throw error;
-    }
 
     const savedUser = await UserService.create(value);
     res.status(201).json(savedUser);
@@ -31,6 +27,7 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+// Admin access managed by middleware in routes
 export const getUserById = async (req, res, next) => {
   try {
     const user = await UserService.findById(req.params.id);
@@ -45,6 +42,7 @@ export const getUserById = async (req, res, next) => {
   }
 };
 
+// Admin access managed by middleware in routes
 export const getUsers = async (req, res, next) => {
   try {
     const users = await UserService.findAll();
@@ -54,11 +52,14 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
+// Custom authorization check
 export const updateUser = async (req, res, next) => {
   try {
+    console.log('req.body', req.body);
     const value = await updateUserValidator.validateAsync(req.body, { abortEarly: false });
+    console.log('value', value);
 
-    if (value.role && req.auth?.role !== 'admin') {
+    if (value.role && req.auth?.payload?.role !== 'admin') {
       const error = new Error('Only admins can update roles');
       error.statusCode = 403;
       throw error;
@@ -66,7 +67,7 @@ export const updateUser = async (req, res, next) => {
 
     const id = req.params.id;
 
-    if (id !== req.auth?.id && req.auth?.role !== 'admin') {
+    if (id !== req.auth?.payload?.id && req.auth?.payload?.role !== 'admin') {
       const error = new Error('Unauthorized: Admin access required');
       error.statusCode = 403;
       next(error);
@@ -82,12 +83,6 @@ export const updateUser = async (req, res, next) => {
 export const deleteUser = async (req, res, next) => {
   try {
     const id = req.params.id;
-
-    if (req.auth?.role !== 'admin') {
-      const error = new Error('Unauthorized: Admin access required');
-      error.statusCode = 403;
-      next(error);
-    }
 
     await UserService.delete(id);
     res.status(204).end();

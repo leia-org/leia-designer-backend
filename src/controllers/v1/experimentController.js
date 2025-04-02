@@ -5,9 +5,29 @@ import {
   leiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
 
+async function checkEditable(experimentId, userId) {
+  const experiment = await ExperimentService.findById(experimentId);
+  if (!experiment) {
+    const error = new Error('Experiment not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!experiment.user.equals(userId)) {
+    const error = new Error('Unauthorized');
+    error.statusCode = 403;
+    throw error;
+  }
+  if (experiment.isPublished) {
+    const error = new Error('Experiment is published');
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
 export const createExperiment = async (req, res, next) => {
   try {
     const value = await createExperimentValidator.validateAsync(req.body, { abortEarly: false });
+    value.user = req.auth?.payload?.id;
     const newExperiment = await ExperimentService.create(value);
     res.status(201).json(newExperiment);
   } catch (err) {
@@ -17,7 +37,8 @@ export const createExperiment = async (req, res, next) => {
 
 export const getExperimentById = async (req, res, next) => {
   try {
-    const experiment = await ExperimentService.findById(req.params.id);
+    const experimentId = req.params.id;
+    const experiment = await ExperimentService.findById(experimentId);
     if (!experiment) {
       const error = new Error('Experiment not found');
       error.statusCode = 404;
@@ -41,7 +62,12 @@ export const getAllExperiments = async (req, res, next) => {
 export const updateExperimentName = async (req, res, next) => {
   try {
     const value = await updateExperimentNameValidator.validateAsync(req.body, { abortEarly: false });
-    const updatedExperiment = await ExperimentService.updateName(req.params.id, value.name);
+
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await checkEditable(experimentId, userId);
+
+    const updatedExperiment = await ExperimentService.updateName(experimentId, value.name);
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -51,7 +77,12 @@ export const updateExperimentName = async (req, res, next) => {
 export const addExperimentLeia = async (req, res, next) => {
   try {
     const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
-    const updatedExperiment = await ExperimentService.addLeia(req.params.id, value);
+
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await checkEditable(experimentId, userId);
+
+    const updatedExperiment = await ExperimentService.addLeia(experimentId, value);
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -61,7 +92,12 @@ export const addExperimentLeia = async (req, res, next) => {
 export const updateExperimentLeia = async (req, res, next) => {
   try {
     const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
-    const updatedExperiment = await ExperimentService.updateLeia(req.params.id, req.params.leiaId, value);
+
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await checkEditable(experimentId, userId);
+
+    const updatedExperiment = await ExperimentService.updateLeia(experimentId, req.params.leiaId, value);
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -70,7 +106,24 @@ export const updateExperimentLeia = async (req, res, next) => {
 
 export const deleteExperimentLeia = async (req, res, next) => {
   try {
-    const updatedExperiment = await ExperimentService.deleteLeia(req.params.id, req.params.leiaId);
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await checkEditable(experimentId, userId);
+
+    const updatedExperiment = await ExperimentService.deleteLeia(experimentId, req.params.leiaId);
+    res.json(updatedExperiment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const publishExperiment = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await checkEditable(experimentId, userId);
+
+    const updatedExperiment = await ExperimentService.publish(experimentId);
     res.json(updatedExperiment);
   } catch (err) {
     next(err);

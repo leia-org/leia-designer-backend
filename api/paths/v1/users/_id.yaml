@@ -50,12 +50,11 @@ put:
       schema:
         type: string
       description: The unique identifier of the User
-    - in: body
-      name: user
-      required: true
-      description: The User to update
-      schema:
-        $ref: '../../../components/schemas/v1/user/updateUser.yaml'
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/user/updateUser.yaml'
   responses:
     '200':
       description: User updated successfully

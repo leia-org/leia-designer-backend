@@ -11,6 +11,10 @@ class ExperimentService {
     return await ExperimentRepository.findById(id);
   }
 
+  async findByIdPopulated(id) {
+    return await ExperimentRepository.findByIdPopulated(id);
+  }
+
   // WRITE METHODS
 
   async create(experimentData) {
@@ -19,6 +23,10 @@ class ExperimentService {
 
   async updateName(id, name) {
     return await ExperimentRepository.update(id, { name });
+  }
+
+  async publish(id) {
+    return await ExperimentRepository.update(id, { isPublished: true });
   }
 
   async addLeia(experimentId, leiaConfig) {

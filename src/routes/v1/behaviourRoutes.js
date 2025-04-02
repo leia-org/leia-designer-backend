@@ -8,18 +8,19 @@ import {
   getBehaviourByNameAndVersion,
   getBehavioursByName,
 } from '../../controllers/v1/behaviourController.js';
+import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
 // POST
-router.post('/version', createNewBehaviourVersion);
-router.post('/', createBehaviour);
+router.post('/version', requireJwtAuthentication, createNewBehaviourVersion);
+router.post('/', requireJwtAuthentication, createBehaviour);
 
 // GET
-router.get('/exists/:name', existsBehaviourByName);
-router.get('/name/:name', getBehavioursByName);
-router.get('/name/:name/version/:version', getBehaviourByNameAndVersion);
-router.get('/', getBehavioursByQuery);
-router.get('/:id', getBehaviourById);
+router.get('/exists/:name', requireAuthentication, existsBehaviourByName);
+router.get('/name/:name', requireAuthentication, getBehavioursByName);
+router.get('/name/:name/version/:version', requireAuthentication, getBehaviourByNameAndVersion);
+router.get('/', requireAuthentication, getBehavioursByQuery);
+router.get('/:id', requireAuthentication, getBehaviourById);
 
 export default router;

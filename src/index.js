@@ -36,7 +36,7 @@ SwaggerParser.bundle('./api/openapi.yaml')
     console.error('Error bundling OAS file:', error);
   });
 
-// Routes v1
+// Routes v1 authentication and authorization checks in routers
 app.use('/api/v1/users', userRoutesV1);
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);

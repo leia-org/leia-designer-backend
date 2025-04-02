@@ -12,9 +12,14 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
 
 security:
   - bearerAuth: []
+  - ApiKeyAuth: []
 
 tags:
   - name: Personas v1
@@ -107,3 +112,5 @@ paths:
     $ref: './paths/v1/experiments/_id-leias.yaml'
   /v1/experiments/{id}/leias/{leiaId}:
     $ref: './paths/v1/experiments/_id-leias-_leiaId.yaml'
+  /v1/experiments/{id}/publish:
+    $ref: './paths/v1/experiments/_id-publish.yaml'

@@ -9,6 +9,10 @@ const ExperimentSchema = new Schema(
       unique: true,
     },
     leias: [LeiaConfigSchema],
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
