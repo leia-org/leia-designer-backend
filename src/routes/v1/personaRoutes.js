@@ -19,7 +19,7 @@ router.post('/', requireJwtAuthentication, createPersona);
 
 // GET
 router.get('/exists/:name', requireAuthentication, existsPersonaByName);
-router.get('/name/:name', requireJwtAuthentication, getPersonasByName);
+router.get('/name/:name', requireAuthentication, getPersonasByName);
 router.get('/name/:name/version/:version', requireAuthentication, getPersonaByNameAndVersion);
 router.get('/', requireAuthentication, getPersonasByQuery);
 router.get('/:id', requireAuthentication, getPersonaById);
