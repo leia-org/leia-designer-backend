@@ -55,22 +55,14 @@ export const getUsers = async (req, res, next) => {
 // Custom authorization check
 export const updateUser = async (req, res, next) => {
   try {
-    console.log('req.body', req.body);
     const value = await updateUserValidator.validateAsync(req.body, { abortEarly: false });
-    console.log('value', value);
-
-    if (value.role && req.auth?.payload?.role !== 'admin') {
-      const error = new Error('Only admins can update roles');
-      error.statusCode = 403;
-      throw error;
-    }
 
     const id = req.params.id;
 
-    if (id !== req.auth?.payload?.id && req.auth?.payload?.role !== 'admin') {
+    if ((id !== req.auth?.payload?.id || value.role) && req.auth?.payload?.role !== 'admin') {
       const error = new Error('Unauthorized: Admin access required');
       error.statusCode = 403;
-      next(error);
+      throw error;
     }
 
     const updatedUser = await UserService.update(id, value);
