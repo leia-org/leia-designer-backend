@@ -38,7 +38,7 @@ export const createExperiment = async (req, res, next) => {
 export const getExperimentById = async (req, res, next) => {
   try {
     const experimentId = req.params.id;
-    const experiment = await ExperimentService.findById(experimentId);
+    const experiment = await ExperimentService.findByIdPopulated(experimentId);
     if (!experiment) {
       const error = new Error('Experiment not found');
       error.statusCode = 404;
