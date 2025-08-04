@@ -1,5 +1,6 @@
-import { flattenObject, isObject } from './helper.js';
 import {
+  flattenObject,
+  isObject,
   getValueFromFlattenedKey,
   isProcessCompatible,
   applyExtensionFlattenedKey,

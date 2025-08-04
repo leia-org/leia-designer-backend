@@ -37,3 +37,15 @@ export const updateLeiaValidator = Joi.object({
     problem: Joi.alternatives().try(mongoId, nameVersion).required(),
   }).required(),
 });
+
+export const runnerLeiaValidator = Joi.object({
+  spec: Joi.object({
+    persona: Joi.object().required(),
+    behaviour: Joi.object({
+      spec: Joi.object({
+        description: Joi.string().required(),
+      }).required().unknown(true)
+    }).required().unknown(true),
+    problem: Joi.object().required(),
+  }).required(),
+});

@@ -25,6 +25,8 @@ services:
       - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
       - API_KEY=${API_KEY}
+      - RUNNER_URL=${RUNNER_URL}
+      - RUNNER_KEY=${RUNNER_KEY}
     depends_on:
       - mongodb-catalog
     ports:
