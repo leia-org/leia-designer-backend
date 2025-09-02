@@ -40,6 +40,9 @@ export const updateLeiaValidator = Joi.object({
 
 export const runnerLeiaValidator = Joi.object({
   spec: Joi.object({
+    personaId: mongoId.optional(),
+    behaviourId: mongoId.optional(),
+    problemId: mongoId.optional(),
     persona: Joi.object().required(),
     behaviour: Joi.object({
       spec: Joi.object({
