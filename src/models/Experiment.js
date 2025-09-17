@@ -31,4 +31,9 @@ const ExperimentSchema = new Schema(
   }
 );
 
+// Auto-populate user field in find queries
+ExperimentSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
+  this.populate('user');
+});
+
 export default mongoose.model('Experiment', ExperimentSchema);

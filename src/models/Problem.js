@@ -97,4 +97,9 @@ ProblemSchema.index(
 
 ProblemSchema.index({ 'metadata.name': 'text' });
 
+// Auto-populate user field in find queries
+ProblemSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
+  this.populate('user');
+});
+
 export default mongoose.model('Problem', ProblemSchema);
