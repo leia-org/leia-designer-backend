@@ -78,4 +78,9 @@ BehaviourSchema.index(
 
 BehaviourSchema.index({ 'metadata.name': 'text' });
 
+// Auto-populate user field in find queries
+BehaviourSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
+  this.populate('user');
+});
+
 export default mongoose.model('Behaviour', BehaviourSchema);

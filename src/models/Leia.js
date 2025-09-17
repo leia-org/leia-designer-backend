@@ -88,4 +88,9 @@ LeiaSchema.index(
 
 LeiaSchema.index({ 'metadata.name': 'text' });
 
+// Auto-populate user field in find queries
+LeiaSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
+  this.populate('user');
+});
+
 export default mongoose.model('Leia', LeiaSchema);
