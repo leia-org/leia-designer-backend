@@ -41,7 +41,7 @@ const BehaviourSchema = new Schema(
       process: {
         type: [String],
         default: [],
-        enum: ['requirements-elicitation', 'test'],
+        enum: ['requirements-elicitation', 'game'],
       },
     },
     user: {
