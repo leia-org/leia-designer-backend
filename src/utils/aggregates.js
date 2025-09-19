@@ -33,6 +33,20 @@ export function aggregateFindLatestVersions(text) {
       $replaceRoot: { newRoot: '$latest' },
     },
     {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    {
+      $unwind: {
+        path: '$user',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $addFields: {
         'metadata.version': {
           $concat: [
@@ -43,6 +57,8 @@ export function aggregateFindLatestVersions(text) {
             { $toString: '$metadata.version.patch' },
           ],
         },
+        // Transform user object like toJSON does
+        'user.id': '$user._id',
       },
     },
     {
@@ -54,6 +70,9 @@ export function aggregateFindLatestVersions(text) {
       $project: {
         _id: 0,
         __v: 0,
+        'user._id': 0,
+        'user.__v': 0,
+        'user.password': 0,
       },
     }
   );

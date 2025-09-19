@@ -91,4 +91,9 @@ PersonaSchema.index(
 
 PersonaSchema.index({ 'metadata.name': 'text' });
 
+// Auto-populate user field in find queries
+PersonaSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
+  this.populate('user');
+});
+
 export default mongoose.model('Persona', PersonaSchema);
