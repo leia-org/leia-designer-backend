@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 /**
  * @typedef {Object} Context
  * @property {string|null} userId - ID of the current user (null if not authenticated)
@@ -14,6 +16,9 @@
  * @returns {boolean} Returns false if should return empty result, true otherwise
  */
 export function applyVisibilityFilters(query, userId, visibility = 'all', privileged = false) {
+  // Convert userId to ObjectId if it's a string (needed for aggregation pipelines)
+  const userObjectId = userId ? new mongoose.Types.ObjectId(userId) : null;
+
   if (visibility === 'public') {
     query['isPublished'] = true;
   }
@@ -23,7 +28,7 @@ export function applyVisibilityFilters(query, userId, visibility = 'all', privil
       if (!userId) {
         return false; // Signal that we should return empty result
       }
-      query['user'] = userId;
+      query['user'] = userObjectId;
       query['isPublished'] = false;
     } else {
       query['isPublished'] = false;
@@ -34,7 +39,7 @@ export function applyVisibilityFilters(query, userId, visibility = 'all', privil
     if (userId) {
       query['$or'] = [
         { isPublished: true },
-        { user: userId }
+        { user: userObjectId }
       ];
     } else {
       query['isPublished'] = true;
