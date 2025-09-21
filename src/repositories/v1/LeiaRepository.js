@@ -1,5 +1,6 @@
 import Leia from '../../models/Leia.js';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
+import { applyVisibilityFilters } from '../../utils/entity.js';
 
 class LeiaRepository {
   // READ METHODS
@@ -16,8 +17,14 @@ class LeiaRepository {
     return !!(await Leia.exists({ 'metadata.name': name }));
   }
 
-  async findByName(name) {
-    return await Leia.find({ 'metadata.name': name });
+  async findByName(name, userId, visibility = 'all', privileged = false) {
+    const query = { 'metadata.name': name };
+
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
+    }
+
+    return await Leia.find(query);
   }
 
   async findLatestVersionByName(name) {
@@ -41,14 +48,15 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
     const query = {};
 
-    if (version === 'latest') {
-      return await Leia.aggregate(aggregateFindLatestVersions(text));
-    } else if (version) {
-      query['metadata.version'] = version;
+    // Apply visibility filters
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
     }
+
+    // Add text and apiVersion filters to query
     if (text) {
       query['$text'] = { $search: text };
     }
@@ -56,7 +64,14 @@ class LeiaRepository {
       query['apiVersion'] = apiVersion;
     }
 
-    return await Leia.find(query);
+    if (version === 'latest') {
+      // Pass the complete query to the aggregation
+      return await Leia.aggregate(aggregateFindLatestVersions(query));
+    } else if (version) {
+      query['metadata.version'] = version;
+    }
+
+    return await Leia.find(query).populate('user');
   }
 
   // WRITE METHODS

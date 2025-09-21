@@ -2,29 +2,19 @@ import LeiaService from '../../services/v1/LeiaService.js';
 import { createLeiaValidator, updateLeiaValidator } from '../../validators/v1/leiaValidator.js';
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
-
-const checkEditable = async (name, userId) => {
-  const leia = await LeiaService.findFirstVersionByName(name);
-  if (!leia) {
-    const error = new Error('Leia not found, please create a new leia instead');
-    error.statusCode = 404;
-    throw error;
-  }
-  if (!leia.user.equals(userId)) {
-    const error = new Error(
-      "Unauthorized, a leia with this name already exists and you don't have permission to version it"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
-};
+import { validateVisibility, validateBoolean } from '../../validators/queryValidator.js';
 
 export const createLeia = async (req, res, next) => {
   try {
     const value = await createLeiaValidator.validateAsync(req.body, { abortEarly: false });
     value.user = req.auth?.payload?.id;
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
     // database will check if the name and version 1.0.0 exists as it must be unique
-    const newLeia = await LeiaService.create(value);
+    // Public by default only for admins, query only for admins (see service)
+    const newLeia = await LeiaService.create(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newLeia);
   } catch (err) {
     next(err);
@@ -34,9 +24,14 @@ export const createLeia = async (req, res, next) => {
 export const createNewLeiaVersion = async (req, res, next) => {
   try {
     const value = await updateLeiaValidator.validateAsync(req.body, { abortEarly: false });
-    await checkEditable(value.metadata.name, req.auth?.payload?.id);
     value.user = req.auth?.payload?.id;
-    const newLeia = await LeiaService.createNewVersion(value);
+
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    // Public by default for admins, query only for admins (see service)
+    const newLeia = await LeiaService.createNewVersion(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newLeia);
   } catch (err) {
     next(err);
@@ -45,7 +40,11 @@ export const createNewLeiaVersion = async (req, res, next) => {
 
 export const getLeiaById = async (req, res, next) => {
   try {
-    const leia = await LeiaService.findById(req.params.id);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const leia = await LeiaService.findById(req.params.id, context);
     if (isNotFound(leia)) {
       const error = new Error('Leia not found');
       error.statusCode = 404;
@@ -68,7 +67,11 @@ export const existsLeiaByName = async (req, res, next) => {
 
 export const getLeiasByName = async (req, res, next) => {
   try {
-    const leias = await LeiaService.findByName(req.params.name);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const leias = await LeiaService.findByName(req.params.name, 'all', context);
     res.json(leias);
   } catch (err) {
     next(err);
@@ -85,7 +88,12 @@ export const getLeiaByNameAndVersion = async (req, res, next) => {
       throw error;
     }
 
-    const leia = await LeiaService.findByNameAndVersion(name, version);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const leia = await LeiaService.findByNameAndVersion(name, version, context);
 
     if (isNotFound(leia)) {
       const error = new Error('Leia not found');
@@ -114,7 +122,12 @@ export const getLeiasByQuery = async (req, res, next) => {
       throw error;
     }
 
-    const result = await LeiaService.findByQuery(text, version, apiVersion);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context);
 
     res.json(result);
   } catch (err) {
