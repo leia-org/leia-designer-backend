@@ -33,6 +33,13 @@ properties:
         type: string
       possesiveAdjective:
         type: string
+  isPublished:
+    type: boolean
+    description: Whether the persona is public (true) or private (false)
+    default: false
+  user:
+    type: string
+    description: ID of the user who owns this persona
   createdAt:
     type: string
     format: date-time

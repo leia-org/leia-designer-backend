@@ -3,6 +3,18 @@ post:
     - Problems v1
   summary: Create a new version for an existing Problem
   operationId: createNewProblemVersion
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the new version as public (true) or private (false).
+        - `true`: New version will be visible to all users
+        - `false`: New version will only be visible to the owner
+
+        Note: Only admin users can create public problem versions by default
   requestBody:
     required: true
     content:

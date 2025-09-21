@@ -2,29 +2,19 @@ import PersonaService from '../../services/v1/PersonaService.js';
 import { createPersonaValidator, updatePersonaValidator } from '../../validators/v1/personaValidator.js';
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
-
-const checkEditable = async (name, userId) => {
-  const persona = await PersonaService.findFirstVersionByName(name);
-  if (!persona) {
-    const error = new Error('Persona not found, please create a new persona instead');
-    error.statusCode = 404;
-    throw error;
-  }
-  if (!persona.user.equals(userId)) {
-    const error = new Error(
-      "Unauthorized, a persona with this name already exists and you don't have permission to version it"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
-};
+import { validateVisibility, validateBoolean } from '../../validators/queryValidator.js';
 
 export const createPersona = async (req, res, next) => {
   try {
     const value = await createPersonaValidator.validateAsync(req.body, { abortEarly: false });
     value.user = req.auth?.payload?.id;
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
     // database will check if the name and version 1.0.0 exists as it must be unique
-    const newPersona = await PersonaService.create(value);
+    // Public by default only for admins, query only for admins (see service)
+    const newPersona = await PersonaService.create(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newPersona);
   } catch (err) {
     next(err);
@@ -34,9 +24,14 @@ export const createPersona = async (req, res, next) => {
 export const createNewPersonaVersion = async (req, res, next) => {
   try {
     const value = await updatePersonaValidator.validateAsync(req.body, { abortEarly: false });
-    await checkEditable(value.metadata.name, req.auth?.payload?.id);
     value.user = req.auth?.payload?.id;
-    const newPersona = await PersonaService.createNewVersion(value);
+
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    // Public by default for admins, query only for admins (see service)
+    const newPersona = await PersonaService.createNewVersion(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newPersona);
   } catch (err) {
     next(err);
@@ -45,7 +40,11 @@ export const createNewPersonaVersion = async (req, res, next) => {
 
 export const getPersonaById = async (req, res, next) => {
   try {
-    const persona = await PersonaService.findById(req.params.id);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const persona = await PersonaService.findByIdPopulatedUser(req.params.id, context);
     if (isNotFound(persona)) {
       const error = new Error('Persona not found');
       error.statusCode = 404;
@@ -68,7 +67,12 @@ export const existsPersonaByName = async (req, res, next) => {
 
 export const getPersonasByName = async (req, res, next) => {
   try {
-    const personas = await PersonaService.findByName(req.params.name);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const personas = await PersonaService.findByName(req.params.name, validateVisibility(req.query.visibility), context);
     res.json(personas);
   } catch (err) {
     next(err);
@@ -85,7 +89,12 @@ export const getPersonaByNameAndVersion = async (req, res, next) => {
       throw error;
     }
 
-    const persona = await PersonaService.findByNameAndVersion(name, version);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const persona = await PersonaService.findByNameAndVersion(name, version, context);
 
     if (isNotFound(persona)) {
       const error = new Error('Persona not found');
@@ -114,7 +123,12 @@ export const getPersonasByQuery = async (req, res, next) => {
       throw error;
     }
 
-    const result = await PersonaService.findByQuery(text, version, apiVersion);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const result = await PersonaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context);
 
     res.json(result);
   } catch (err) {

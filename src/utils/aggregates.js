@@ -1,17 +1,14 @@
 /**
- * Returns an aggregation pipeline that finds the latest version of each package that contains the given text.
- * @param {string} text - The text to search for, if none is provided it will return all the latest versions.
+ * Returns an aggregation pipeline that finds the latest version of each package.
+ * @param {Object} match - The complete match query object containing all filters (text, visibility, apiVersion, etc.).
  * @returns {Array} An array of aggregation pipeline stages.
  */
-export function aggregateFindLatestVersions(text) {
+export function aggregateFindLatestVersions(match = {}) {
   const pipeline = [];
 
-  if (typeof text === 'string' && text.trim() !== '') {
-    pipeline.push({
-      $match: {
-        $text: { $search: text },
-      },
-    });
+  // Only add $match stage if there are conditions
+  if (Object.keys(match).length > 0) {
+    pipeline.push({ $match: match });
   }
 
   pipeline.push(
@@ -57,7 +54,6 @@ export function aggregateFindLatestVersions(text) {
             { $toString: '$metadata.version.patch' },
           ],
         },
-        // Transform user object like toJSON does
         'user.id': '$user._id',
       },
     },

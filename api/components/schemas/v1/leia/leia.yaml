@@ -23,7 +23,13 @@ properties:
         $ref: '../problem/problem.yaml'
       behaviour:
         $ref: '../behaviour/behaviour.yaml'
-
+  user:
+    type: string
+    description: ID of the user who owns this leia
+  isPublished:
+    type: boolean
+    description: Whether this leia is published (public) or private
+    default: false
   createdAt:
     type: string
     format: date-time

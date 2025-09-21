@@ -27,6 +27,13 @@ properties:
           type: string
         enum:
           $ref: '../../../enums/v1/process.yaml'
+  isPublished:
+    type: boolean
+    description: Whether the behaviour is public (true) or private (false)
+    default: false
+  user:
+    type: string
+    description: ID of the user who owns this behaviour
   createdAt:
     type: string
     format: date-time

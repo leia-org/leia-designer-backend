@@ -3,6 +3,11 @@ get:
     - Problems v1
   summary: Retrieve a Problem by its ID
   operationId: getProblemById
+  description: |
+    Retrieves a specific problem by its ID. Access is controlled based on visibility:
+    - Users can access their own problems (both public and private)
+    - Users can access public problems from other users
+    - Admin users can access all problems
   parameters:
     - in: path
       name: id
@@ -17,5 +22,7 @@ get:
         application/json:
           schema:
             $ref: '../../../components/schemas/v1/problem/problem.yaml'
+    '403':
+      description: Access denied - user cannot access this private problem
     '404':
       description: Problem not found

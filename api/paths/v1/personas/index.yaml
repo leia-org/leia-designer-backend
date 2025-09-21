@@ -3,6 +3,18 @@ post:
     - Personas v1
   summary: Create a new Persona
   operationId: createPersona
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the persona as public (true) or private (false).
+        - `true`: Persona will be visible to all users
+        - `false`: Persona will only be visible to the owner
+
+        Note: Only admin users can create public personas by default
   requestBody:
     required: true
     content:
@@ -32,6 +44,24 @@ get:
       schema:
         type: string
       description: Persona version filter (use "latest" for only the latest versions of each Persona)
+    - in: query
+      name: visibility
+      schema:
+        type: string
+        enum: [all, public, private]
+        default: all
+      description: |
+        Filter personas by visibility:
+        - `all`: Show user's own personas (both public and private) plus all public personas from other users
+        - `public`: Show only public personas (from all users)
+        - `private`: Show only user's private personas
+
+        Note: Admin users can see all personas regardless of this parameter
+    - in: query
+      name: apiVersion
+      schema:
+        type: string
+      description: API version filter
   responses:
     '200':
       description: Successful response with one or more Personas

@@ -1,5 +1,6 @@
 import Persona from '../../models/Persona.js';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
+import { applyVisibilityFilters } from '../../utils/entity.js';
 
 class PersonaRepository {
   // READ METHODS
@@ -12,12 +13,22 @@ class PersonaRepository {
     return await Persona.findById(id);
   }
 
+  async findByIdPopulatedUser(id) {
+    return await Persona.findById(id).populate('user');
+  }
+
   async existsByName(name) {
     return !!(await Persona.exists({ 'metadata.name': name }));
   }
 
-  async findByName(name) {
-    return await Persona.find({ 'metadata.name': name });
+  async findByName(name, userId, visibility = 'all', privileged = false) {
+    const query = { 'metadata.name': name };
+
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
+    }
+
+    return await Persona.find(query);
   }
 
   async findLatestVersionByName(name) {
@@ -41,14 +52,15 @@ class PersonaRepository {
     return await Persona.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
     const query = {};
 
-    if (version === 'latest') {
-      return await Persona.aggregate(aggregateFindLatestVersions(text));
-    } else if (version) {
-      query['metadata.version'] = version;
+    // Apply visibility filters
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
     }
+
+    // Add text and apiVersion filters to query
     if (text) {
       query['$text'] = { $search: text };
     }
@@ -56,7 +68,14 @@ class PersonaRepository {
       query['apiVersion'] = apiVersion;
     }
 
-    return await Persona.find(query);
+    if (version === 'latest') {
+      // Pass the complete query to the aggregation
+      return await Persona.aggregate(aggregateFindLatestVersions(query));
+    } else if (version) {
+      query['metadata.version'] = version;
+    }
+
+    return await Persona.find(query).populate('user');
   }
 
   // WRITE METHODS

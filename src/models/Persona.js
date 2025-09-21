@@ -61,6 +61,10 @@ const PersonaSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     virtuals: {
@@ -91,9 +95,7 @@ PersonaSchema.index(
 
 PersonaSchema.index({ 'metadata.name': 'text' });
 
-// Auto-populate user field in find queries
-PersonaSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
-  this.populate('user');
-});
+// Index for user-based queries (private resources)
+PersonaSchema.index({ user: 1, isPublished: 1 });
 
 export default mongoose.model('Persona', PersonaSchema);
