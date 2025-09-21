@@ -3,6 +3,18 @@ post:
     - Leias v1
   summary: Create a new Leia
   operationId: createLeia
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the leia as public (true) or private (false).
+        - `true`: Leia will be visible to all users
+        - `false`: Leia will only be visible to the owner
+
+        Note: Only admin users can use the query parameter, and by default, admin creates public leias and users create private leias
   requestBody:
     required: true
     content:
@@ -32,6 +44,23 @@ get:
       schema:
         type: string
       description: Leia version filter (use "latest" for only the latest versions of each Leia)
+    - in: query
+      name: visibility
+      schema:
+        type: string
+        enum: [all, public, private]
+        default: all
+      description: |
+        Filter leias by visibility:
+        - `all`: Show public leias and user's own private leias (default)
+        - `public`: Show only public leias
+        - `private`: Show only private leias (user's own if not admin, all if admin)
+
+        **Access Control System:**
+        - **Public leias**: Visible to all users
+        - **Private leias**: Only visible to their owners and administrators
+        - **Default visibility**: Normal users see their own private leias + all public leias
+        - **Admin override**: Administrators can see all leias regardless of visibility
   responses:
     '200':
       description: Successful response with one or more Leias
