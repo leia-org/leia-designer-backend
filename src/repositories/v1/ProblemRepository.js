@@ -71,7 +71,7 @@ class ProblemRepository {
       query['metadata.version'] = version;
     }
 
-    return await Problem.find(query);
+    return await Problem.find(query).populate('user');
   }
 
   // WRITE METHODS

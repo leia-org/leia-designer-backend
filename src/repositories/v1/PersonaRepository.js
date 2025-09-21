@@ -71,7 +71,7 @@ class PersonaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Persona.find(query);
+    return await Persona.find(query).populate('user');
   }
 
   // WRITE METHODS
