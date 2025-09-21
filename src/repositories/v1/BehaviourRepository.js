@@ -1,5 +1,6 @@
 import Behaviour from '../../models/Behaviour.js';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
+import { applyVisibilityFilters } from '../../utils/entity.js';
 
 class BehaviourRepository {
   // READ METHODS
@@ -16,11 +17,15 @@ class BehaviourRepository {
     return !!(await Behaviour.exists({ 'metadata.name': name }));
   }
 
-  async findByName(name) {
-    return await Behaviour.find({ 'metadata.name': name });
-  }
+  async findByName(name, userId, visibility = 'all', privileged = false) {
+    const query = { 'metadata.name': name };
 
-  async findLatestVersionByName(name) {
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
+    }
+
+    return await Behaviour.find(query);
+  } async findLatestVersionByName(name) {
     return await Behaviour.findOne({ 'metadata.name': name }).sort({
       'metadata.version.major': -1,
       'metadata.version.minor': -1,
@@ -41,14 +46,15 @@ class BehaviourRepository {
     return await Behaviour.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
     const query = {};
 
-    if (version === 'latest') {
-      return await Behaviour.aggregate(aggregateFindLatestVersions(text));
-    } else if (version) {
-      query['metadata.version'] = version;
+    // Apply visibility filters
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
     }
+
+    // Add text and apiVersion filters to query
     if (text) {
       query['$text'] = { $search: text };
     }
@@ -56,7 +62,14 @@ class BehaviourRepository {
       query['apiVersion'] = apiVersion;
     }
 
-    return await Behaviour.find(query);
+    if (version === 'latest') {
+      // Pass the complete query to the aggregation
+      return await Behaviour.aggregate(aggregateFindLatestVersions(query));
+    } else if (version) {
+      query['metadata.version'] = version;
+    }
+
+    return await Behaviour.find(query).populate('user');
   }
 
   // WRITE METHODS

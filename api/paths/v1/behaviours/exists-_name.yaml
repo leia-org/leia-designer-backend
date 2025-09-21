@@ -3,6 +3,13 @@ get:
     - Behaviours v1
   summary: Check if a Behaviour exists by name
   operationId: existsBehaviourByName
+  description: |
+    Checks if a behaviour with the given name exists in the system.
+    This endpoint is accessible to all authenticated users for validation purposes
+    (e.g., checking name availability before creating a new behaviour).
+
+    Note: This endpoint only returns existence information and does not respect
+    visibility restrictions, as it's designed for name validation during creation.
   parameters:
     - in: path
       name: name
@@ -20,3 +27,4 @@ get:
             properties:
               exists:
                 type: boolean
+                description: Whether a behaviour with this name exists
