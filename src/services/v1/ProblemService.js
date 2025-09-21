@@ -26,6 +26,16 @@ class ProblemService {
     return problem;
   }
 
+  async findByIdPopulatedUser(id, context = {}) {
+    const problem = await ProblemRepository.findByIdPopulatedUser(id);
+
+    if (!canAccess(problem, context)) {
+      throw createUnauthorizedError('Problem');
+    }
+
+    return problem;
+  }
+
   async existsByName(name) {
     return await ProblemRepository.existsByName(name);
   }

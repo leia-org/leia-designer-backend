@@ -30,6 +30,16 @@ class LeiaService {
     return leia;
   }
 
+  async findByIdPopulatedUser(id, context = {}) {
+    const leia = await LeiaRepository.findByIdPopulatedUser(id);
+
+    if (!canAccess(leia, context)) {
+      throw createUnauthorizedError('Leia');
+    }
+
+    return leia;
+  }
+
   async existsByName(name) {
     return await LeiaRepository.existsByName(name);
   }

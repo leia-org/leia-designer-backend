@@ -44,7 +44,7 @@ export const getBehaviourById = async (req, res, next) => {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
-    const behaviour = await BehaviourService.findById(req.params.id, context);
+    const behaviour = await BehaviourService.findByIdPopulatedUser(req.params.id, context);
     if (isNotFound(behaviour)) {
       const error = new Error('Behaviour not found');
       error.statusCode = 404;

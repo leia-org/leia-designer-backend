@@ -26,6 +26,16 @@ class PersonaService {
     return persona;
   }
 
+  async findByIdPopulatedUser(id, context = {}) {
+    const persona = await PersonaRepository.findByIdPopulatedUser(id);
+
+    if (!canAccess(persona, context)) {
+      throw createUnauthorizedError('Persona');
+    }
+
+    return persona;
+  }
+
   async existsByName(name) {
     return await PersonaRepository.existsByName(name);
   }

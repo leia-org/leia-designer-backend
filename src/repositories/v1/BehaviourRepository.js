@@ -13,6 +13,10 @@ class BehaviourRepository {
     return await Behaviour.findById(id);
   }
 
+  async findByIdPopulatedUser(id) {
+    return await Behaviour.findById(id).populate('user');
+  }
+
   async existsByName(name) {
     return !!(await Behaviour.exists({ 'metadata.name': name }));
   }

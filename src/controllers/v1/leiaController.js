@@ -44,7 +44,7 @@ export const getLeiaById = async (req, res, next) => {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
-    const leia = await LeiaService.findById(req.params.id, context);
+    const leia = await LeiaService.findByIdPopulatedUser(req.params.id, context);
     if (isNotFound(leia)) {
       const error = new Error('Leia not found');
       error.statusCode = 404;

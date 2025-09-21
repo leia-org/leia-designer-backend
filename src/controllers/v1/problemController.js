@@ -44,7 +44,7 @@ export const getProblemById = async (req, res, next) => {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
-    const problem = await ProblemService.findById(req.params.id, context);
+    const problem = await ProblemService.findByIdPopulatedUser(req.params.id, context);
     if (isNotFound(problem)) {
       const error = new Error('Problem not found');
       error.statusCode = 404;

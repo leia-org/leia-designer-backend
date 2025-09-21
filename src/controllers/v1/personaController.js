@@ -44,7 +44,7 @@ export const getPersonaById = async (req, res, next) => {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
-    const persona = await PersonaService.findById(req.params.id, context);
+    const persona = await PersonaService.findByIdPopulatedUser(req.params.id, context);
     if (isNotFound(persona)) {
       const error = new Error('Persona not found');
       error.statusCode = 404;

@@ -13,6 +13,10 @@ class LeiaRepository {
     return await Leia.findById(id);
   }
 
+  async findByIdPopulatedUser(id) {
+    return await Leia.findById(id).populate('user');
+  }
+
   async existsByName(name) {
     return !!(await Leia.exists({ 'metadata.name': name }));
   }

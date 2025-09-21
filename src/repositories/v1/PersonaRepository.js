@@ -13,6 +13,10 @@ class PersonaRepository {
     return await Persona.findById(id);
   }
 
+  async findByIdPopulatedUser(id) {
+    return await Persona.findById(id).populate('user');
+  }
+
   async existsByName(name) {
     return !!(await Persona.exists({ 'metadata.name': name }));
   }

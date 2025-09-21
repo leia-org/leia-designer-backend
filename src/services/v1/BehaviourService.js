@@ -26,6 +26,16 @@ class BehaviourService {
     return behaviour;
   }
 
+  async findByIdPopulatedUser(id, context = {}) {
+    const behaviour = await BehaviourRepository.findByIdPopulatedUser(id);
+
+    if (!canAccess(behaviour, context)) {
+      throw createUnauthorizedError('Behaviour');
+    }
+
+    return behaviour;
+  }
+
   async existsByName(name) {
     return await BehaviourRepository.existsByName(name);
   }
