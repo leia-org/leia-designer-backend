@@ -2,29 +2,19 @@ import ProblemService from '../../services/v1/ProblemService.js';
 import { createProblemValidator, updateProblemValidator } from '../../validators/v1/problemValidator.js';
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
-
-const checkEditable = async (name, userId) => {
-  const problem = await ProblemService.findFirstVersionByName(name);
-  if (!problem) {
-    const error = new Error('Problem not found, please create a new problem instead');
-    error.statusCode = 404;
-    throw error;
-  }
-  if (!problem.user.equals(userId)) {
-    const error = new Error(
-      "Unauthorized, a problem with this name already exists and you don't have permission to version it"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
-};
+import { validateVisibility, validateBoolean } from '../../validators/queryValidator.js';
 
 export const createProblem = async (req, res, next) => {
   try {
     const value = await createProblemValidator.validateAsync(req.body, { abortEarly: false });
     value.user = req.auth?.payload?.id;
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
     // database will check if the name and version 1.0.0 exists as it must be unique
-    const newProblem = await ProblemService.create(value);
+    // Public by default only for admins, query only for admins (see service)
+    const newProblem = await ProblemService.create(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newProblem);
   } catch (err) {
     next(err);
@@ -34,9 +24,14 @@ export const createProblem = async (req, res, next) => {
 export const createNewProblemVersion = async (req, res, next) => {
   try {
     const value = await updateProblemValidator.validateAsync(req.body, { abortEarly: false });
-    await checkEditable(value.metadata.name, req.auth?.payload?.id);
     value.user = req.auth?.payload?.id;
-    const newProblem = await ProblemService.createNewVersion(value);
+
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    // Public by default for admins, query only for admins (see service)
+    const newProblem = await ProblemService.createNewVersion(value, context, validateBoolean(req.query.publish, true));
     res.status(201).json(newProblem);
   } catch (err) {
     next(err);
@@ -45,7 +40,11 @@ export const createNewProblemVersion = async (req, res, next) => {
 
 export const getProblemById = async (req, res, next) => {
   try {
-    const problem = await ProblemService.findById(req.params.id);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const problem = await ProblemService.findById(req.params.id, context);
     if (isNotFound(problem)) {
       const error = new Error('Problem not found');
       error.statusCode = 404;
@@ -68,7 +67,12 @@ export const existsProblemByName = async (req, res, next) => {
 
 export const getProblemsByName = async (req, res, next) => {
   try {
-    const problems = await ProblemService.findByName(req.params.name);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const problems = await ProblemService.findByName(req.params.name, validateVisibility(req.query.visibility), context);
     res.json(problems);
   } catch (err) {
     next(err);
@@ -85,7 +89,12 @@ export const getProblemByNameAndVersion = async (req, res, next) => {
       throw error;
     }
 
-    const problem = await ProblemService.findByNameAndVersion(name, version);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const problem = await ProblemService.findByNameAndVersion(name, version, context);
 
     if (isNotFound(problem)) {
       const error = new Error('Problem not found');
@@ -114,7 +123,12 @@ export const getProblemsByQuery = async (req, res, next) => {
       throw error;
     }
 
-    const result = await ProblemService.findByQuery(text, version, apiVersion);
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+
+    const result = await ProblemService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context);
 
     res.json(result);
   } catch (err) {

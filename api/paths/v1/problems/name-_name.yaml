@@ -10,12 +10,27 @@ get:
       schema:
         type: string
       description: The name of the Problem
+    - in: query
+      name: visibility
+      schema:
+        type: string
+        enum: [all, public, private]
+        default: all
+      description: |
+        Filter problems by visibility:
+        - `all`: Show user's own problems (both public and private) plus all public problems from other users
+        - `public`: Show only public problems (from all users)
+        - `private`: Show only user's private problems
+
+        Note: Admin users can see all problems regardless of this parameter
   responses:
     '200':
       description: Problem retrieved successfully
       content:
         application/json:
           schema:
-            $ref: '../../../components/schemas/v1/problem/problem.yaml'
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/problem/problem.yaml'
     '404':
       description: Problem not found

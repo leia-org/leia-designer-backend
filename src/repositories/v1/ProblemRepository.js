@@ -1,5 +1,6 @@
 import Problem from '../../models/Problem.js';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
+import { applyVisibilityFilters } from '../../utils/entity.js';
 
 class ProblemRepository {
   // READ METHODS
@@ -16,8 +17,14 @@ class ProblemRepository {
     return !!(await Problem.exists({ 'metadata.name': name }));
   }
 
-  async findByName(name) {
-    return await Problem.find({ 'metadata.name': name });
+  async findByName(name, userId, visibility = 'all', privileged = false) {
+    const query = { 'metadata.name': name };
+
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
+    }
+
+    return await Problem.find(query);
   }
 
   async findLatestVersionByName(name) {
@@ -41,19 +48,27 @@ class ProblemRepository {
     return await Problem.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
     const query = {};
 
-    if (version === 'latest') {
-      return await Problem.aggregate(aggregateFindLatestVersions(text));
-    } else if (version) {
-      query['metadata.version'] = version;
+    // Apply visibility filters
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return []; // User requested private resources but has no userId
     }
+
+    // Add text and apiVersion filters to query
     if (text) {
       query['$text'] = { $search: text };
     }
     if (apiVersion) {
       query['apiVersion'] = apiVersion;
+    }
+
+    if (version === 'latest') {
+      // Pass the complete query to the aggregation
+      return await Problem.aggregate(aggregateFindLatestVersions(query));
+    } else if (version) {
+      query['metadata.version'] = version;
     }
 
     return await Problem.find(query);
