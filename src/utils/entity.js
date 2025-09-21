@@ -60,7 +60,13 @@ export function canAccess(resource, context) {
   if (context.internal) return true; // Internal calls bypass permissions
   if (context.role === 'admin') return true; // Admin can access everything
   if (resource.isPublished) return true; // Public resource
-  if (context.userId && resource.user && resource.user.toString() === context.userId) return true; // Own resource
+
+  // Handle both populated user object and ObjectId
+  if (context.userId && resource.user) {
+    const resourceUserId = resource.user._id ? resource.user._id.toString() : resource.user.toString();
+    if (resourceUserId === context.userId) return true; // Own resource
+  }
+
   return false;
 }
 
