@@ -2,7 +2,7 @@ import BehaviourService from '../../services/v1/BehaviourService.js';
 import { createBehaviourValidator, updateBehaviourValidator } from '../../validators/v1/behaviourValidator.js';
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
-import { validateVisibility, validateBoolean } from '../../validators/queryValidator.js';
+import { validateVisibility, validateBoolean, validateProcess } from '../../validators/queryValidator.js';
 
 export const createBehaviour = async (req, res, next) => {
   try {
@@ -109,7 +109,7 @@ export const getBehaviourByNameAndVersion = async (req, res, next) => {
 
 export const getBehavioursByQuery = async (req, res, next) => {
   try {
-    const { text, version, apiVersion } = req.query;
+    const { text, version, apiVersion, process, visibility } = req.query;
 
     if (version && !isVersionQueryValid(version)) {
       const error = new Error('Invalid version format');
@@ -128,7 +128,14 @@ export const getBehavioursByQuery = async (req, res, next) => {
       role: req.auth?.payload?.role
     };
 
-    const result = await BehaviourService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context);
+    const result = await BehaviourService.findByQuery(
+      text,
+      version,
+      apiVersion,
+      validateProcess(process),
+      validateVisibility(visibility),
+      context
+    );
 
     res.json(result);
   } catch (err) {

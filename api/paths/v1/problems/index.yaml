@@ -62,6 +62,17 @@ get:
       schema:
         type: string
       description: API version filter
+    - in: query
+      name: process
+      schema:
+        type: string
+        enum: [requirements-elicitation, game]
+      description: |
+        Filter problems by process type:
+        - `requirements-elicitation`: Show only problems for requirements elicitation process
+        - `game`: Show only problems for game process
+
+        If not provided, problems from all processes will be returned
   responses:
     '200':
       description: Successful response with one or more Problems

@@ -103,12 +103,12 @@ class ProblemService {
     return problem;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}) {
+  async findByQuery(text, version, apiVersion, process, visibility = 'all', context = {}) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
 
-    return await ProblemRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
+    return await ProblemRepository.findByQuery(text, version, apiVersion, process, context.userId, visibility, context.role === 'admin' || context.internal);
   }
 
   // WRITE METHODS
