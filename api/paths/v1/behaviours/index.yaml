@@ -3,6 +3,18 @@ post:
     - Behaviours v1
   summary: Create a new Behaviour
   operationId: createBehaviour
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the behaviour as public (true) or private (false).
+        - `true`: Behaviour will be visible to all users
+        - `false`: Behaviour will only be visible to the owner
+
+        Note: Only admin users can use the query parameter, and by default, admin creates public behaviours and users create private behaviours
   requestBody:
     required: true
     content:
@@ -32,6 +44,35 @@ get:
       schema:
         type: string
       description: Behaviour version filter (use "latest" for only the latest versions of each Behaviour)
+    - in: query
+      name: visibility
+      schema:
+        type: string
+        enum: [all, public, private]
+        default: all
+      description: |
+        Filter behaviours by visibility:
+        - `all`: Show user's own behaviours (both public and private) plus all public behaviours from other users
+        - `public`: Show only public behaviours (from all users)
+        - `private`: Show only user's private behaviours
+
+        Note: Admin users can see all behaviours regardless of this parameter
+    - in: query
+      name: apiVersion
+      schema:
+        type: string
+      description: API version filter
+    - in: query
+      name: process
+      schema:
+        type: string
+        enum: [requirements-elicitation, game]
+      description: |
+        Filter behaviours by process type:
+        - `requirements-elicitation`: Show only behaviours for requirements elicitation process
+        - `game`: Show only behaviours for game process
+
+        If not provided, behaviours from all processes will be returned
   responses:
     '200':
       description: Successful response with one or more Behaviours

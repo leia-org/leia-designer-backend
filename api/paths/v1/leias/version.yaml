@@ -3,6 +3,18 @@ post:
     - Leias v1
   summary: Create a new version for an existing Leia
   operationId: createNewLeiaVersion
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the new leia version as public (true) or private (false).
+        - `true`: Leia version will be visible to all users
+        - `false`: Leia version will only be visible to the owner
+
+        Note: Only admin users can use the query parameter, and by default, admin creates public leia versions and users create private leia versions
   requestBody:
     required: true
     content:

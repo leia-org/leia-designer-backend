@@ -48,6 +48,10 @@ const BehaviourSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     virtuals: {
@@ -78,9 +82,7 @@ BehaviourSchema.index(
 
 BehaviourSchema.index({ 'metadata.name': 'text' });
 
-// Auto-populate user field in find queries
-BehaviourSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
-  this.populate('user');
-});
+// Index for user-based queries (private resources)
+BehaviourSchema.index({ user: 1, isPublished: 1 });
 
 export default mongoose.model('Behaviour', BehaviourSchema);

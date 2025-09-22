@@ -41,6 +41,13 @@ properties:
         type: object
       constrainedTo:
         type: object
+  isPublished:
+    type: boolean
+    description: Whether the problem is public (true) or private (false)
+    default: false
+  user:
+    type: string
+    description: ID of the user who owns this problem
   createdAt:
     type: string
     format: date-time

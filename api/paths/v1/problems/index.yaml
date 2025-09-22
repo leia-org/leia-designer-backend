@@ -3,6 +3,18 @@ post:
     - Problems v1
   summary: Create a new Problem
   operationId: createProblem
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the problem as public (true) or private (false).
+        - `true`: Problem will be visible to all users
+        - `false`: Problem will only be visible to the owner
+
+        Note: Only admin users can create public problems by default
   requestBody:
     required: true
     content:
@@ -32,6 +44,35 @@ get:
       schema:
         type: string
       description: Problem version filter (use "latest" for only the latest versions of each Problem)
+    - in: query
+      name: visibility
+      schema:
+        type: string
+        enum: [all, public, private]
+        default: all
+      description: |
+        Filter problems by visibility:
+        - `all`: Show user's own problems (both public and private) plus all public problems from other users
+        - `public`: Show only public problems (from all users)
+        - `private`: Show only user's private problems
+
+        Note: Admin users can see all problems regardless of this parameter
+    - in: query
+      name: apiVersion
+      schema:
+        type: string
+      description: API version filter
+    - in: query
+      name: process
+      schema:
+        type: string
+        enum: [requirements-elicitation, game]
+      description: |
+        Filter problems by process type:
+        - `requirements-elicitation`: Show only problems for requirements elicitation process
+        - `game`: Show only problems for game process
+
+        If not provided, problems from all processes will be returned
   responses:
     '200':
       description: Successful response with one or more Problems

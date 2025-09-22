@@ -3,6 +3,18 @@ post:
     - Behaviours v1
   summary: Create a new version for an existing Behaviour
   operationId: createNewBehaviourVersion
+  parameters:
+    - in: query
+      name: publish
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Whether to publish the new version as public (true) or private (false).
+        - `true`: New version will be visible to all users
+        - `false`: New version will only be visible to the owner
+
+        Note: Only admin users can use the query parameter, and by default, admin creates public behaviours and other users create private behaviours
   requestBody:
     required: true
     content:

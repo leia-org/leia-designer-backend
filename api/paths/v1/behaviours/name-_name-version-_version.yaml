@@ -3,6 +3,11 @@ get:
     - Behaviours v1
   summary: Retrieve a Behaviour by its name and version
   operationId: getBehaviourByNameAndVersion
+  description: |
+    Retrieves a specific behaviour by name and version. Access is controlled based on visibility:
+    - Users can access their own behaviours (both public and private)
+    - Users can access public behaviours from other users
+    - Admin users can access all behaviours
   parameters:
     - in: path
       name: name
@@ -23,5 +28,7 @@ get:
         application/json:
           schema:
             $ref: '../../../components/schemas/v1/behaviour/behaviour.yaml'
+    '403':
+      description: Access denied - user cannot access this private behaviour
     '404':
       description: Behaviour not found
