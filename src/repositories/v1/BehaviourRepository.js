@@ -50,7 +50,7 @@ class BehaviourRepository {
     return await Behaviour.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
+  async findByQuery(text, version, apiVersion, process, userId = null, visibility = 'all', privileged = false) {
     const query = {};
 
     // Apply visibility filters
@@ -65,7 +65,9 @@ class BehaviourRepository {
     if (apiVersion) {
       query['apiVersion'] = apiVersion;
     }
-
+    if (process && process != 'all') {
+      query['spec.process'] = process;
+    }
     if (version === 'latest') {
       // Pass the complete query to the aggregation
       return await Behaviour.aggregate(aggregateFindLatestVersions(query));

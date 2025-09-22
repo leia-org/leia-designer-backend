@@ -19,3 +19,14 @@ export const validateBoolean = (value, defaultValue = false) => {
   if (value && value.toLowerCase() === 'false' || value === '0') return false;
   return defaultValue;
 };
+
+/**
+ * Validates and returns a sanitized process parameter
+ * @param {string} process - The process parameter to validate
+ * @returns {string|null} - Valid process value ('requirements-elicitation', 'game') or null if invalid/empty
+ */
+export const validateProcess = (process) => {
+  // TODO: When the process table is implemented, fetch allowed processes from there
+  const allowedProcesses = ['requirements-elicitation', 'game'];
+  return process && allowedProcesses.includes(process) ? process : 'all';
+};

@@ -103,7 +103,7 @@ class BehaviourService {
     return behaviour;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}) {
+  async findByQuery(text, version, apiVersion, process, visibility = 'all', context = {}) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
@@ -112,6 +112,7 @@ class BehaviourService {
       text,
       version,
       apiVersion,
+      process,
       context.userId,
       visibility,
       context.role === 'admin' || context.internal
