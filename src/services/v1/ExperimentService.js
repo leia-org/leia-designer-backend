@@ -15,6 +15,10 @@ class ExperimentService {
     return await ExperimentRepository.findByIdPopulated(id);
   }
 
+  async findByUserId(userId, visibility = 'all') {
+    return await ExperimentRepository.findByUserId(userId, visibility);
+  }
+
   // WRITE METHODS
 
   async create(experimentData) {
