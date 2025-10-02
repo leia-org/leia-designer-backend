@@ -4,7 +4,7 @@ import {
   updateExperimentNameValidator,
   leiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
-import { validateVisibility } from '../../validators/queryValidator.js';
+import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
 
 async function checkEditable(experimentId, userId) {
   const experiment = await ExperimentService.findById(experimentId);
@@ -63,8 +63,9 @@ export const getAllExperiments = async (req, res, next) => {
 export const getAllExperimentsByUser = async (req, res, next) => {
   try {
     const visibility = validateVisibility(req.query.visibility);
+    const populated = validateBoolean(req.query.populated, false);
     const userId = req.auth?.payload?.id;
-    const experiments = await ExperimentService.findByUserId(userId, visibility);
+    const experiments = await ExperimentService.findByUserId(userId, visibility, populated);
     res.json(experiments);
   } catch (err) {
     next(err);

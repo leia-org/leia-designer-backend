@@ -15,14 +15,14 @@ class ExperimentRepository {
     return await Experiment.findById(id).populate('leias.leia');
   }
 
-  async findByUserId(userId, visibility = 'all') {
+  async findByUserId(userId, visibility = 'all', populated = false) {
     const query = { user: userId };
     if (visibility === 'public') {
       query.isPublished = true;
     } else if (visibility === 'private') {
       query.isPublished = false;
     }
-    return await Experiment.find(query);
+    return populated ? await Experiment.find(query).populate('leias.leia') : await Experiment.find(query);
   }
 
   // WRITE METHODS
