@@ -96,3 +96,51 @@ export const getUserByEmail = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const userId = req.auth?.payload?.id;
+
+    if (!userId) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const updatedUser = await UserService.updateProfile(userId, email);
+    res.json(updatedUser);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.auth?.payload?.id;
+
+    if (!userId) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    if (!currentPassword || !newPassword) {
+      const error = new Error('Current password and new password are required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (newPassword.length < 6) {
+      const error = new Error('New password must be at least 6 characters');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await UserService.changePassword(userId, currentPassword, newPassword);
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
