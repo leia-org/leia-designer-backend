@@ -7,6 +7,8 @@ import {
   updateUser,
   deleteUser,
   getUserByEmail,
+  updateProfile,
+  changePassword,
 } from '../../controllers/v1/userController.js';
 
 import { requireAdmin, requireJwtAuthentication } from '../../middlewares/auth.js';
@@ -24,6 +26,8 @@ router.get('/email/:email', requireAdmin, getUserByEmail);
 
 // PUT
 router.put('/:id', requireJwtAuthentication, updateUser); // Custom authorization check in controller
+router.put('/profile/update', requireJwtAuthentication, updateProfile);
+router.put('/profile/change-password', requireJwtAuthentication, changePassword);
 
 // DELETE
 router.delete('/:id', requireAdmin, deleteUser);
