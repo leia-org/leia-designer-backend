@@ -63,6 +63,15 @@ export function requireInstructor(req, res, next) {
   return next();
 }
 
+export function requireAdvance(req, res, next) {
+  if (req.auth?.payload?.role !== 'advance' && req.auth?.payload?.role !== 'admin') {
+    const error = new Error('Unauthorized: Advance access required');
+    error.statusCode = 403;
+    return next(error);
+  }
+  return next();
+}
+
 // This middleware is used to check if the user or service is authenticated
 export function requireAuthentication(req, res, next) {
   if (!req.auth) {
