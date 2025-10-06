@@ -13,5 +13,5 @@ export const leiaConfigValidator = Joi.object({
   configuration: Joi.object({
     mode: Joi.string().valid('standard', 'transcription'),
     data: Joi.object(),
-  }),
+  }).optional(),
 });
