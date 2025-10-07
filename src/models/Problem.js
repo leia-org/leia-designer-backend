@@ -46,7 +46,7 @@ const ProblemSchema = new Schema(
       },
       solutionFormat: {
         type: String,
-        enum: ['text', 'mermaid'],
+        enum: ['text', 'mermaid', 'yaml', 'markdown', 'html', 'json', 'xml'],
       },
       process: {
         type: [String],
