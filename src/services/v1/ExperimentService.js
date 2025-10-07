@@ -15,6 +15,10 @@ class ExperimentService {
     return await ExperimentRepository.findByIdPopulated(id);
   }
 
+  async existsByLeiaId(leiaId) {
+    return await ExperimentRepository.existsByLeiaId(leiaId);
+  }
+
   // WRITE METHODS
 
   async create(experimentData) {

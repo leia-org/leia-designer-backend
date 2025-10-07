@@ -15,6 +15,10 @@ class ExperimentRepository {
     return await Experiment.findById(id).populate('leias.leia');
   }
 
+  async existsByLeiaId(leiaId) {
+    return !!(await Experiment.exists({ 'leias.leia': leiaId }));
+  }
+
   // WRITE METHODS
 
   async create(experimentData) {
