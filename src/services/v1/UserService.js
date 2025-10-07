@@ -68,7 +68,7 @@ class UserService {
     const isCorrect = await user.isCorrectPassword(currentPassword);
     if (!isCorrect) {
       const error = new Error('Current password is incorrect');
-      error.statusCode = 401;
+      error.statusCode = 400;
       throw error;
     }
 
