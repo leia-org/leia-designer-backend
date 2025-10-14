@@ -142,3 +142,21 @@ export const getProblemsByQuery = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteProblemById = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const problem = await ProblemService.deleteById(req.params.id, context);
+    if (isNotFound(problem)) {
+      const error = new Error('Problem not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.json(problem);
+  } catch (err) {
+    next(err);
+  }
+};

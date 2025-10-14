@@ -7,6 +7,7 @@ import {
   getBehavioursByQuery,
   getBehaviourByNameAndVersion,
   getBehavioursByName,
+  deleteBehaviourById
 } from '../../controllers/v1/behaviourController.js';
 import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
 
@@ -22,5 +23,8 @@ router.get('/name/:name', requireAuthentication, getBehavioursByName);
 router.get('/name/:name/version/:version', requireAuthentication, getBehaviourByNameAndVersion);
 router.get('/', requireAuthentication, getBehavioursByQuery);
 router.get('/:id', requireAuthentication, getBehaviourById);
+
+// DELETE
+router.delete('/:id', requireJwtAuthentication, deleteBehaviourById);
 
 export default router;
