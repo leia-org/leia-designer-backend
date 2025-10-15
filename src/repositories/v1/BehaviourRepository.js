@@ -84,6 +84,12 @@ class BehaviourRepository {
     const behaviour = new Behaviour(behaviourData);
     return await behaviour.save();
   }
+
+  // DELETE METHODS
+
+  async deleteById(id) {
+    return await Behaviour.findByIdAndDelete(id);
+  }
 }
 
 export default new BehaviourRepository();

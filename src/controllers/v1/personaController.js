@@ -135,3 +135,21 @@ export const getPersonasByQuery = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deletePersonaById = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const deleted = await PersonaService.deleteById(req.params.id, context);
+    if (isNotFound(deleted)) {
+      const error = new Error('Persona not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.json(deleted);
+  } catch (err) {
+    next(err);
+  }
+};

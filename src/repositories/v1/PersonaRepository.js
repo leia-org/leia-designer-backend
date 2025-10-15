@@ -84,6 +84,12 @@ class PersonaRepository {
     const persona = new Persona(personaData);
     return await persona.save();
   }
+
+  // DELETE METHODS
+
+  async deleteById(id) {
+    return await Persona.findByIdAndDelete(id);
+  }
 }
 
 export default new PersonaRepository();

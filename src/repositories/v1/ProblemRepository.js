@@ -87,6 +87,12 @@ class ProblemRepository {
     const problem = new Problem(problemData);
     return await problem.save();
   }
+
+  // DELETE METHODS
+
+  async deleteById(id) {
+    return await Problem.findByIdAndDelete(id);
+  }
 }
 
 export default new ProblemRepository();

@@ -15,6 +15,10 @@ class ExperimentService {
     return await ExperimentRepository.findByIdPopulated(id);
   }
 
+  async existsByLeiaId(leiaId) {
+    return await ExperimentRepository.existsByLeiaId(leiaId);
+  }
+  
   async findByUserId(userId, visibility = 'all', populated = false) {
     return await ExperimentRepository.findByUserId(userId, visibility, populated);
   }

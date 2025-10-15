@@ -7,6 +7,7 @@ import {
   getPersonasByQuery,
   getPersonaByNameAndVersion,
   getPersonasByName,
+  deletePersonaById
 } from '../../controllers/v1/personaController.js';
 
 import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
@@ -23,5 +24,8 @@ router.get('/name/:name', requireAuthentication, getPersonasByName);
 router.get('/name/:name/version/:version', requireAuthentication, getPersonaByNameAndVersion);
 router.get('/', requireAuthentication, getPersonasByQuery);
 router.get('/:id', requireAuthentication, getPersonaById);
+
+// DELETE
+router.delete('/:id', requireJwtAuthentication, deletePersonaById);
 
 export default router;

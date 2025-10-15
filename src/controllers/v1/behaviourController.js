@@ -142,3 +142,21 @@ export const getBehavioursByQuery = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteBehaviourById = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const behaviour = await BehaviourService.deleteById(req.params.id, context);
+    if (isNotFound(behaviour)) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.json(behaviour);
+  } catch (err) {
+    next(err);
+  }
+};
