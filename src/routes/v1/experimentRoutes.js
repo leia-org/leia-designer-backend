@@ -8,8 +8,9 @@ import {
   updateExperimentLeia,
   deleteExperimentLeia,
   publishExperiment,
+  getAllExperimentsByUser,
 } from '../../controllers/v1/experimentController.js';
-import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
+import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -27,6 +28,8 @@ router.put('/:id/leias/:leiaId', requireJwtAuthentication, updateExperimentLeia)
 // GET
 router.get('/', requireAuthentication, getAllExperiments);
 router.get('/:id', requireAuthentication, getExperimentById);
+router.get('/user/me', requireJwtAuthentication, getAllExperimentsByUser);
+router.get('/user/:userId', requireAdmin, getAllExperimentsByUser);
 
 // DELETE
 router.delete('/:id/leias/:leiaId', requireJwtAuthentication, deleteExperimentLeia);

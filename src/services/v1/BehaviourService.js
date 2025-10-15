@@ -125,8 +125,9 @@ class BehaviourService {
   async create(behaviourData, context = {}, publish = true) {
     delete behaviourData.metadata.version; // Remove to set the version to 1.0.0
     if (context.role === 'admin') {
-      behaviourData.isPublished = publish; // Admin can decide to publish or not when creating a new resource
+      behaviourData.isPublished = publish; // Only admin can decide to publish or not when creating a new resource
     }
+    // Advance users can create but not publish (isPublished defaults to false)
     return await BehaviourRepository.create(behaviourData);
   }
 
@@ -170,8 +171,9 @@ class BehaviourService {
     }
 
     if (context.role === 'admin') {
-      behaviourData.isPublished = publish; // Admin can decide to publish or not when creating a new version of resource
+      behaviourData.isPublished = publish; // Only admin can decide to publish or not when creating a new version of resource
     }
+    // Advance users can create new versions but not publish (isPublished defaults to false)
 
     return await BehaviourRepository.create(behaviourData);
   }

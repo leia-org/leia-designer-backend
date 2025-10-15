@@ -9,13 +9,13 @@ import {
   getBehavioursByName,
   deleteBehaviourById
 } from '../../controllers/v1/behaviourController.js';
-import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
+import { requireAdvance, requireAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
 // POST
-router.post('/version', requireJwtAuthentication, createNewBehaviourVersion);
-router.post('/', requireJwtAuthentication, createBehaviour);
+router.post('/version', requireAdvance, createNewBehaviourVersion);
+router.post('/', requireAdvance, createBehaviour);
 
 // GET
 router.get('/exists/:name', requireAuthentication, existsBehaviourByName);
