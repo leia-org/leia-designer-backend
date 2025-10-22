@@ -126,9 +126,6 @@ class LeiaService {
 
   async create(leiaData, context = {}, publish = true) {
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
-    if (context.role === 'admin') {
-      leiaData.isPublished = publish; // Admin can decide to publish or not when creating a new resource
-    }
 
     // Find the entities, save the IDs and convert them to JSON to simplify the object (less computing/problems in object recursion)
     const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
@@ -158,6 +155,22 @@ class LeiaService {
     leiaData.spec.problem = replacedEntities.problem;
 
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
+
+    if ((context.role === 'admin' || context.internal) && publish) {
+      leiaData.isPublished = true;
+      if (!persona.isPublished) {
+        await PersonaService.publish(persona.id, context); // Admin can publish unpublished entities when creating a leia
+        leiaData.spec.persona.isPublished = true;
+      }
+      if (!behaviour.isPublished) {
+        await BehaviourService.publish(behaviour.id, context);
+        leiaData.spec.behaviour.isPublished = true;
+      }
+      if (!problem.isPublished) {
+        await ProblemService.publish(problem.id, context);
+        leiaData.spec.problem.isPublished = true;
+      }
+    }
 
     return await LeiaRepository.create(leiaData);
   }
@@ -226,7 +239,71 @@ class LeiaService {
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
 
+    if ((context.role === 'admin' || context.internal) && publish) {
+      leiaData.isPublished = true;
+      if (!persona.isPublished) {
+        await PersonaService.publish(persona.id, context); // Admin can publish unpublished entities when creating a leia
+        leiaData.spec.persona.isPublished = true;
+      }
+      if (!behaviour.isPublished) {
+        await BehaviourService.publish(behaviour.id, context);
+        leiaData.spec.behaviour.isPublished = true;
+      }
+      if (!problem.isPublished) {
+        await ProblemService.publish(problem.id, context);
+        leiaData.spec.problem.isPublished = true;
+      }
+    }
+
     return await LeiaRepository.create(leiaData);
+  }
+
+  async publish(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a leia');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (leia.isPublished) {
+      return leia; // If already published, do nothing
+    }
+
+    leia.isPublished = true;
+    return await leia.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a leia');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!leia.isPublished) {
+      return leia; // If already unpublished, do nothing
+    }
+
+    leia.isPublished = false;
+    return await leia.save();
   }
 }
 
