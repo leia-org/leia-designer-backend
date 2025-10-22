@@ -178,6 +178,54 @@ class BehaviourService {
     return await BehaviourRepository.create(behaviourData);
   }
 
+  async publish(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a behaviour');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (behaviour.isPublished) {
+      return behaviour; // If already published, do nothing
+    }
+
+    behaviour.isPublished = true;
+    return await behaviour.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a behaviour');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!behaviour.isPublished) {
+      return behaviour; // If already unpublished, do nothing
+    }
+
+    behaviour.isPublished = false;
+    return await behaviour.save();
+  }
+  
   // DELETE METHODS
 
   async deleteById(id, context = {}) {

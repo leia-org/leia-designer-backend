@@ -162,6 +162,54 @@ class ProblemService {
     return await ProblemRepository.create(problemData);
   }
 
+  async publish(id, context = {}) {
+    const problem = await ProblemRepository.findById(id);
+
+    if (!problem) {
+      const error = new Error('Problem not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a problem');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (problem.isPublished) {
+      return problem; // If already published, do nothing
+    }
+
+    problem.isPublished = true;
+    return await problem.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const problem = await ProblemRepository.findById(id);
+
+    if (!problem) {
+      const error = new Error('Problem not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a problem');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!problem.isPublished) {
+      return problem; // If already unpublished, do nothing
+    }
+
+    problem.isPublished = false;
+    return await problem.save();
+  }
+  
   // DELETE METHODS
 
   async deleteById(id, context = {}) {
