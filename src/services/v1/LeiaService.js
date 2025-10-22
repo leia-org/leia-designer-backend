@@ -3,6 +3,7 @@ import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/
 import PersonaService from './PersonaService.js';
 import BehaviourService from './BehaviourService.js';
 import ProblemService from './ProblemService.js';
+import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
 
@@ -42,6 +43,30 @@ class LeiaService {
 
   async existsByName(name) {
     return await LeiaRepository.existsByName(name);
+  }
+
+  async existsByPersonaId(personaId) {
+    return await LeiaRepository.existsByPersonaId(personaId);
+  }
+
+  async findByPersonaId(personaId) {
+    return await LeiaRepository.findByPersonaId(personaId);
+  }
+
+  async existsByProblemId(problemId) {
+    return await LeiaRepository.existsByProblemId(problemId);
+  }
+
+  async findByProblemId(problemId) {
+    return await LeiaRepository.findByProblemId(problemId);
+  }
+
+  async existsByBehaviourId(behaviourId) {
+    return await LeiaRepository.existsByBehaviourId(behaviourId);
+  }
+
+  async findByBehaviourId(behaviourId) {
+    return await LeiaRepository.findByBehaviourId(behaviourId);
   }
 
   async findByName(name, visibility = 'all', context = {}) {
@@ -304,6 +329,36 @@ class LeiaService {
 
     leia.isPublished = false;
     return await leia.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if user owns the leia (only owner can delete) or is admin
+    if (context.role !== 'admin' && !context.internal && (!leia.user || !leia.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Check if LEIA is being used in any experiment
+    const inUse = await ExperimentService.findByLeiaId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error("LEIA is being used in an experiment");
+      error.statusCode = 400;
+      error.data = inUse.map((experiment) => ({ id: experiment._id, name: experiment.name }));
+      throw error;
+    }
+
+    const deletedLeia = await LeiaRepository.deleteById(id);
+    return deletedLeia;
   }
 }
 

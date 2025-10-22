@@ -1,6 +1,7 @@
 import ProblemRepository from '../../repositories/v1/ProblemRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
+import LeiaService from './LeiaService.js';
 
 class ProblemService {
   // READ METHODS
@@ -207,6 +208,34 @@ class ProblemService {
 
     problem.isPublished = false;
     return await problem.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const problem = await ProblemRepository.findById(id);
+
+    if (!problem) {
+      const error = new Error('Problem not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (context.role !== 'admin' && !context.internal && (!problem.user || !problem.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const inUse = await LeiaService.findByProblemId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error("Cannot delete problem in use");
+      error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
+      throw error;
+    }
+
+    return await ProblemRepository.deleteById(id);
   }
 }
 

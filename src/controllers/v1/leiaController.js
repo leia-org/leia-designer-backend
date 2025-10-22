@@ -134,3 +134,21 @@ export const getLeiasByQuery = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteLeiaById = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const deletedLeia = await LeiaService.deleteById(req.params.id, context);
+    if (isNotFound(deletedLeia)) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.json(deletedLeia);
+  } catch (err) {
+    next(err);
+  }
+};

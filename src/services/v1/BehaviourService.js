@@ -1,6 +1,7 @@
 import BehaviourRepository from '../../repositories/v1/BehaviourRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
+import LeiaService from './LeiaService.js';
 
 class BehaviourService {
   // READ METHODS
@@ -223,6 +224,34 @@ class BehaviourService {
 
     behaviour.isPublished = false;
     return await behaviour.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (context.role !== 'admin' && !context.internal && (!behaviour.user || !behaviour.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const inUse = await LeiaService.findByBehaviourId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error('Cannot delete behaviour, it is used in one or more leias');
+      error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
+      throw error;
+    }
+
+    return await BehaviourRepository.deleteById(id);
   }
 }
 
