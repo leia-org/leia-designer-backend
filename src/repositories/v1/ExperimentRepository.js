@@ -18,7 +18,11 @@ class ExperimentRepository {
   async existsByLeiaId(leiaId) {
     return !!(await Experiment.exists({ 'leias.leia': leiaId }));
   }
-  
+
+  async findByLeiaId(leiaId) {
+    return await Experiment.find({ 'leias.leia': leiaId });
+  }
+
   async findByUserId(userId, visibility = 'all', populated = false) {
     const query = { user: userId };
     if (visibility === 'public') {

@@ -9,7 +9,7 @@ import {
   getBehavioursByName,
   deleteBehaviourById
 } from '../../controllers/v1/behaviourController.js';
-import { requireAdvance, requireAuthentication } from '../../middlewares/auth.js';
+import { requireAdvance, requireAuthentication, requireJwtAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 

@@ -179,10 +179,11 @@ class PersonaService {
       throw error;
     }
 
-    const isInUse = await LeiaService.existsByPersonaId(id);
-    if (isInUse) {
+    const inUse = await LeiaService.findByPersonaId(id);
+    if (inUse && inUse.length > 0) {
       const error = new Error("Cannot delete persona in use");
       error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
       throw error;
     }
 

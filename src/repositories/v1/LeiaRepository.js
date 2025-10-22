@@ -25,12 +25,24 @@ class LeiaRepository {
     return !!(await Leia.exists({ 'spec.personaId': personaId }));
   }
 
+  async findByPersonaId(personaId) {
+    return await Leia.find({ 'spec.personaId': personaId });
+  }
+
   async existsByProblemId(problemId) {
     return !!(await Leia.exists({ 'spec.problemId': problemId }));
   }
 
+  async findByProblemId(problemId) {
+    return await Leia.find({ 'spec.problemId': problemId });
+  }
+
   async existsByBehaviourId(behaviourId) {
     return !!(await Leia.exists({ 'spec.behaviourId': behaviourId }));
+  }
+
+  async findByBehaviourId(behaviourId) {
+    return await Leia.find({ 'spec.behaviourId': behaviourId });
   }
 
   async findByName(name, userId, visibility = 'all', privileged = false) {

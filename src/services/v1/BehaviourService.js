@@ -195,10 +195,11 @@ class BehaviourService {
       throw error;
     }
 
-    const isInUse = await LeiaService.existsByBehaviourId(id);
-    if (isInUse) {
+    const inUse = await LeiaService.findByBehaviourId(id);
+    if (inUse && inUse.length > 0) {
       const error = new Error('Cannot delete behaviour, it is used in one or more leias');
       error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
       throw error;
     }
 

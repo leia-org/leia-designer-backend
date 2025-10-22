@@ -49,12 +49,24 @@ class LeiaService {
     return await LeiaRepository.existsByPersonaId(personaId);
   }
 
+  async findByPersonaId(personaId) {
+    return await LeiaRepository.findByPersonaId(personaId);
+  }
+
   async existsByProblemId(problemId) {
     return await LeiaRepository.existsByProblemId(problemId);
   }
 
+  async findByProblemId(problemId) {
+    return await LeiaRepository.findByProblemId(problemId);
+  }
+
   async existsByBehaviourId(behaviourId) {
     return await LeiaRepository.existsByBehaviourId(behaviourId);
+  }
+
+  async findByBehaviourId(behaviourId) {
+    return await LeiaRepository.findByBehaviourId(behaviourId);
   }
 
   async findByName(name, visibility = 'all', context = {}) {
@@ -260,10 +272,11 @@ class LeiaService {
     }
 
     // Check if LEIA is being used in any experiment
-    const isInUse = await ExperimentService.existsByLeiaId(id);
-    if (isInUse) {
+    const inUse = await ExperimentService.findByLeiaId(id);
+    if (inUse && inUse.length > 0) {
       const error = new Error("LEIA is being used in an experiment");
       error.statusCode = 400;
+      error.data = inUse.map((experiment) => ({ id: experiment._id, name: experiment.name }));
       throw error;
     }
 
