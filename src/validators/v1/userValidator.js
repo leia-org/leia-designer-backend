@@ -3,12 +3,12 @@ import Joi from 'joi';
 export const createUserValidator = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
-  role: Joi.string().valid('admin', 'instructor', 'advance').required(),
+  role: Joi.string().valid('admin', 'instructor', 'advanced').required(),
 });
 
 export const updateUserValidator = Joi.object({
   email: Joi.string().email().optional(),
-  role: Joi.string().valid('admin', 'instructor', 'advance').optional(),
+  role: Joi.string().valid('admin', 'instructor', 'advanced').optional(),
   password: Joi.string().optional(),
 });
 
