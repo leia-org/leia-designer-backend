@@ -14,18 +14,17 @@ export const getPublicPersonas = async (req, res, next) => {
       isPublished: true // Only public components
     };
 
-    if (topic) {
+    // Build comprehensive search across all persona fields
+    const searchTerm = topic || search;
+    if (searchTerm) {
       filter['$or'] = [
-        { 'spec.personality': { $regex: topic, $options: 'i' } },
-        { 'metadata.name': { $regex: topic, $options: 'i' } }
-      ];
-    }
-
-    if (search) {
-      filter['$or'] = [
-        { 'spec.personality': { $regex: search, $options: 'i' } },
-        { 'spec.name': { $regex: search, $options: 'i' } },
-        { 'metadata.name': { $regex: search, $options: 'i' } }
+        { 'metadata.name': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.fullName': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.firstName': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.description': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.personality': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.topic': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.emotionRange': { $regex: searchTerm, $options: 'i' } }
       ];
     }
 
@@ -56,14 +55,20 @@ export const getPublicProblems = async (req, res, next) => {
       isPublished: true
     };
 
-    if (topic || search) {
+    // Build comprehensive search across all problem fields
+    const searchTerm = topic || search;
+    if (searchTerm) {
       filter['$or'] = [
-        { 'spec.description': { $regex: topic || search, $options: 'i' } },
-        { 'spec.background': { $regex: topic || search, $options: 'i' } },
-        { 'metadata.name': { $regex: topic || search, $options: 'i' } }
+        { 'metadata.name': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.description': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.personaBackground': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.details': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.solution': { $regex: searchTerm, $options: 'i' } },
+        { 'spec.solutionFormat': { $regex: searchTerm, $options: 'i' } }
       ];
     }
 
+    // Add specific filters if provided
     if (difficulty) {
       filter['spec.difficulty'] = difficulty;
     }
@@ -99,20 +104,25 @@ export const getPublicBehaviours = async (req, res, next) => {
       isPublished: true
     };
 
-    if (role) {
+    // Build comprehensive search across all behaviour fields
+    if (search) {
+      filter['$or'] = [
+        { 'metadata.name': { $regex: search, $options: 'i' } },
+        { 'spec.description': { $regex: search, $options: 'i' } },
+        { 'spec.role': { $regex: search, $options: 'i' } },
+        { 'spec.process': { $regex: search, $options: 'i' } },
+        { 'spec.instructions': { $regex: search, $options: 'i' } },
+        { 'spec.approach': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Add specific filters if provided (these are exact matches, not searches)
+    if (role && !search) {
       filter['spec.role'] = role;
     }
 
-    if (process) {
+    if (process && !search) {
       filter['spec.process'] = process;
-    }
-
-    if (search) {
-      filter['$or'] = [
-        { 'spec.description': { $regex: search, $options: 'i' } },
-        { 'spec.role': { $regex: search, $options: 'i' } },
-        { 'metadata.name': { $regex: search, $options: 'i' } }
-      ];
     }
 
     const behaviours = await BehaviourService.getAll(filter);
