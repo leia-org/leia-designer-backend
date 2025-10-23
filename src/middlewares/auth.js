@@ -101,3 +101,22 @@ export function requireApiKeyAuthentication(req, res, next) {
   }
   return next();
 }
+
+// This middleware is used to check catalog API key (for Runner access)
+export function requireCatalogApiKey(req, res, next) {
+  const catalogApiKey = req.headers['x-catalog-api-key'];
+
+  if (!catalogApiKey || catalogApiKey !== process.env.CATALOG_API_KEY) {
+    const error = new Error('Unauthorized: Invalid catalog API key');
+    error.statusCode = 403;
+    return next(error);
+  }
+
+  // Set auth info for catalog access
+  req.auth = {
+    method: 'CATALOG_API_KEY',
+    payload: { role: 'catalog_read' }
+  };
+
+  return next();
+}

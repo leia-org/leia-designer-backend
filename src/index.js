@@ -12,6 +12,8 @@ import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
 import userRoutesV1 from './routes/v1/userRoutes.js';
 import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
+import catalogRoutesV1 from './routes/v1/catalogRoutes.js';
+import wizardRoutesV1 from './routes/v1/wizardRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
@@ -45,6 +47,8 @@ app.use('/api/v1/behaviours', behaviourRoutesV1);
 app.use('/api/v1/leias', leiaRoutesV1);
 app.use('/api/v1/experiments', experimentRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
+app.use('/api/v1/catalog', catalogRoutesV1);
+app.use('/api/v1/wizard', wizardRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
