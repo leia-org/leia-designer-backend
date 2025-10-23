@@ -6,6 +6,7 @@ export function auth(req, res, next) {
 
   const authorizationHeader = req.headers['authorization'];
   const apiKeyHeader = req.headers['x-api-key'];
+  const tokenFromQuery = req.query.token; // For EventSource compatibility
 
   logger.debug('Authorization header found');
 
@@ -22,6 +23,13 @@ export function auth(req, res, next) {
       req.auth = {
         method: 'JWT',
         payload: verifyToken(token),
+      };
+      return next();
+    } else if (tokenFromQuery) {
+      // Support token in query parameter for EventSource (SSE)
+      req.auth = {
+        method: 'JWT',
+        payload: verifyToken(tokenFromQuery),
       };
       return next();
     } else if (apiKeyHeader) {

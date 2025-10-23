@@ -11,6 +11,15 @@ class BehaviourService {
   }
 
   /**
+   * Get all behaviours matching the filter (for catalog API)
+   * @param {Object} filter - MongoDB filter object
+   * @returns {Promise<Array>} Array of behaviours
+   */
+  async getAll(filter = {}) {
+    return await BehaviourRepository.find(filter);
+  }
+
+  /**
    * Find behaviour by ID with access control
    * @param {string} id - Behaviour ID
    * @param {Context} context - User context

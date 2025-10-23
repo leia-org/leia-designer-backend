@@ -9,6 +9,10 @@ class ProblemRepository {
     return await Problem.find();
   }
 
+  async find(filter) {
+    return await Problem.find(filter);
+  }
+
   async findById(id) {
     return await Problem.findById(id);
   }

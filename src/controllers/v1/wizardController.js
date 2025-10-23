@@ -3,9 +3,9 @@
  */
 
 import axios from 'axios';
-import PersonaService from '../../services/PersonaService.js';
-import ProblemService from '../../services/ProblemService.js';
-import BehaviourService from '../../services/BehaviourService.js';
+import PersonaService from '../../services/v1/PersonaService.js';
+import ProblemService from '../../services/v1/ProblemService.js';
+import BehaviourService from '../../services/v1/BehaviourService.js';
 
 const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:5002';
 const RUNNER_KEY = process.env.RUNNER_KEY;
@@ -99,30 +99,13 @@ export const sendWizardMessage = async (req, res, next) => {
 
 /**
  * Stream wizard progress via SSE (proxied to Runner)
- * Supports token in header or query parameter for EventSource compatibility
+ * Token authentication is handled by auth middleware (supports query param for EventSource)
  */
 export const streamWizardProgress = async (req, res, next) => {
   try {
     const { sessionId } = req.params;
-    const tokenFromQuery = req.query.token;
 
-    // If token is in query, validate it
-    if (tokenFromQuery && !req.auth) {
-      try {
-        const { verifyToken } = await import('../utils/jwt.js');
-        req.auth = {
-          method: 'JWT',
-          payload: verifyToken(tokenFromQuery)
-        };
-      } catch (error) {
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.write(`data: ${JSON.stringify({ type: 'error', message: 'Invalid token' })}\n\n`);
-        res.end();
-        return;
-      }
-    }
-
-    // Ensure user is authenticated
+    // Ensure user is authenticated (should be set by auth middleware)
     if (!req.auth) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Unauthorized' })}\n\n`);
@@ -182,6 +165,17 @@ export const saveGeneratedLeia = async (req, res, next) => {
 
     const { persona, problem, behaviour, completed } = sessionResponse.data;
 
+    // Debug logging
+    console.log('Session data received:', {
+      completed,
+      hasPersona: !!persona,
+      hasProblem: !!problem,
+      hasBehaviour: !!behaviour,
+      personaKeys: persona ? Object.keys(persona) : [],
+      problemKeys: problem ? Object.keys(problem) : [],
+      behaviourKeys: behaviour ? Object.keys(behaviour) : []
+    });
+
     if (!completed) {
       const error = new Error('LEIA is not completed yet');
       error.statusCode = 400;
@@ -194,26 +188,62 @@ export const saveGeneratedLeia = async (req, res, next) => {
       return next(error);
     }
 
-    // Save persona
-    const savedPersona = await PersonaService.create({
-      ...persona,
+    // Validate structure
+    if (!persona.metadata || !persona.spec) {
+      console.error('Invalid persona structure:', persona);
+      const error = new Error('Invalid persona structure - missing metadata or spec');
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    if (!problem.metadata || !problem.spec) {
+      console.error('Invalid problem structure:', problem);
+      const error = new Error('Invalid problem structure - missing metadata or spec');
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    if (!behaviour.metadata || !behaviour.spec) {
+      console.error('Invalid behaviour structure:', behaviour);
+      const error = new Error('Invalid behaviour structure - missing metadata or spec');
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    // Prepare data for saving
+    // The wizard generates components with apiVersion, metadata, spec structure
+    const personaData = {
+      apiVersion: persona.apiVersion || 'v1',
+      metadata: persona.metadata,
+      spec: persona.spec,
       user: userId,
       isPublished: false
-    });
+    };
+
+    const problemData = {
+      apiVersion: problem.apiVersion || 'v1',
+      metadata: problem.metadata,
+      spec: problem.spec,
+      user: userId,
+      isPublished: false
+    };
+
+    const behaviourData = {
+      apiVersion: behaviour.apiVersion || 'v1',
+      metadata: behaviour.metadata,
+      spec: behaviour.spec,
+      user: userId,
+      isPublished: false
+    };
+
+    // Save persona
+    const savedPersona = await PersonaService.create(personaData);
 
     // Save problem
-    const savedProblem = await ProblemService.create({
-      ...problem,
-      user: userId,
-      isPublished: false
-    });
+    const savedProblem = await ProblemService.create(problemData);
 
     // Save behaviour
-    const savedBehaviour = await BehaviourService.create({
-      ...behaviour,
-      user: userId,
-      isPublished: false
-    });
+    const savedBehaviour = await BehaviourService.create(behaviourData);
 
     // Delete the session from Runner
     await axios.delete(

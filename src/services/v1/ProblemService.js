@@ -11,6 +11,15 @@ class ProblemService {
   }
 
   /**
+   * Get all problems matching the filter (for catalog API)
+   * @param {Object} filter - MongoDB filter object
+   * @returns {Promise<Array>} Array of problems
+   */
+  async getAll(filter = {}) {
+    return await ProblemRepository.find(filter);
+  }
+
+  /**
    * Find problem by ID with access control
    * @param {string} id - Problem ID
    * @param {Context} context - User context

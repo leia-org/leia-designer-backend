@@ -11,29 +11,29 @@ import {
   saveGeneratedLeia,
   deleteWizardSession
 } from '../../controllers/v1/wizardController.js';
-import { requireAuth } from '../../middlewares/auth.js';
+import { auth, requireAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
-// All wizard routes require authentication
-router.use(requireAuth);
+// Apply auth middleware to parse tokens from headers or query params
+router.use(auth);
 
 // Create new wizard session
-router.post('/sessions', createWizardSession);
+router.post('/sessions', requireAuthentication, createWizardSession);
 
 // Get wizard session status
-router.get('/sessions/:sessionId', getWizardSession);
+router.get('/sessions/:sessionId', requireAuthentication, getWizardSession);
 
 // Send message to wizard (refinement/feedback)
-router.post('/sessions/:sessionId/message', sendWizardMessage);
+router.post('/sessions/:sessionId/message', requireAuthentication, sendWizardMessage);
 
-// Stream wizard progress via SSE
+// Stream wizard progress via SSE (handles token in query param)
 router.get('/sessions/:sessionId/stream', streamWizardProgress);
 
 // Save generated LEIA to database
-router.post('/sessions/:sessionId/save', saveGeneratedLeia);
+router.post('/sessions/:sessionId/save', requireAuthentication, saveGeneratedLeia);
 
 // Delete wizard session
-router.delete('/sessions/:sessionId', deleteWizardSession);
+router.delete('/sessions/:sessionId', requireAuthentication, deleteWizardSession);
 
 export default router;

@@ -11,6 +11,15 @@ class PersonaService {
   }
 
   /**
+   * Get all personas matching the filter (for catalog API)
+   * @param {Object} filter - MongoDB filter object
+   * @returns {Promise<Array>} Array of personas
+   */
+  async getAll(filter = {}) {
+    return await PersonaRepository.find(filter);
+  }
+
+  /**
    * Find persona by ID with access control
    * @param {string} id - Persona ID
    * @param {Context} context - User context

@@ -9,6 +9,10 @@ class BehaviourRepository {
     return await Behaviour.find();
   }
 
+  async find(filter) {
+    return await Behaviour.find(filter);
+  }
+
   async findById(id) {
     return await Behaviour.findById(id);
   }

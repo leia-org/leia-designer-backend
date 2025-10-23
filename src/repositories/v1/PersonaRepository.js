@@ -9,6 +9,10 @@ class PersonaRepository {
     return await Persona.find();
   }
 
+  async find(filter) {
+    return await Persona.find(filter);
+  }
+
   async findById(id) {
     return await Persona.findById(id);
   }
