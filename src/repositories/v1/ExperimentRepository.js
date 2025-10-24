@@ -82,6 +82,12 @@ class ExperimentRepository {
       { new: true }
     ).populate('leias.leia');
   }
+
+  // DELETE METHODS
+
+  async deleteById(id) {
+    return await Experiment.findByIdAndDelete(id);
+  }
 }
 
 export default new ExperimentRepository();
