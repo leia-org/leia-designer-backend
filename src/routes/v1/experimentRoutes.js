@@ -9,6 +9,7 @@ import {
   deleteExperimentLeia,
   publishExperiment,
   getAllExperimentsByUser,
+  deleteExperimentById,
 } from '../../controllers/v1/experimentController.js';
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 
@@ -33,5 +34,6 @@ router.get('/user/:userId', requireAdmin, getAllExperimentsByUser);
 
 // DELETE
 router.delete('/:id/leias/:leiaId', requireJwtAuthentication, deleteExperimentLeia);
+router.delete('/:id', requireJwtAuthentication, deleteExperimentById);
 
 export default router;
