@@ -9,7 +9,11 @@ import {
   sendWizardMessage,
   streamWizardProgress,
   saveGeneratedLeia,
-  deleteWizardSession
+  deleteWizardSession,
+  searchUserPersonas,
+  searchUserProblems,
+  searchUserBehaviours,
+  searchUserLeias
 } from '../../controllers/v1/wizardController.js';
 import { auth, requireAuthentication } from '../../middlewares/auth.js';
 
@@ -35,5 +39,11 @@ router.post('/sessions/:sessionId/save', requireAuthentication, saveGeneratedLei
 
 // Delete wizard session
 router.delete('/sessions/:sessionId', requireAuthentication, deleteWizardSession);
+
+// Search endpoints for wizard (includes user's private components)
+router.get('/search/personas', requireAuthentication, searchUserPersonas);
+router.get('/search/problems', requireAuthentication, searchUserProblems);
+router.get('/search/behaviours', requireAuthentication, searchUserBehaviours);
+router.get('/search/leias', requireAuthentication, searchUserLeias);
 
 export default router;

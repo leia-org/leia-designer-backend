@@ -1,6 +1,7 @@
 import PersonaService from '../../services/v1/PersonaService.js';
 import ProblemService from '../../services/v1/ProblemService.js';
 import BehaviourService from '../../services/v1/BehaviourService.js';
+import LeiaService from '../../services/v1/LeiaService.js';
 
 /**
  * Get public personas from catalog
@@ -198,6 +199,64 @@ export const getBehaviourById = async (req, res, next) => {
     }
 
     res.json(behaviour);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Get public LEIAs from catalog
+ * GET /api/v1/catalog/leias
+ */
+export const getPublicLeias = async (req, res, next) => {
+  try {
+    const { search, limit = 10 } = req.query;
+
+    const filter = {
+      isPublished: true
+    };
+
+    // Build comprehensive search across LEIA name fields
+    if (search) {
+      filter['$or'] = [
+        { 'metadata.name': { $regex: search, $options: 'i' } },
+        { 'metadata.description': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const leias = await LeiaService.getAll(filter);
+
+    // Limit results
+    const limitedLeias = leias.slice(0, parseInt(limit));
+
+    res.json({
+      count: limitedLeias.length,
+      leias: limitedLeias
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Get a specific LEIA by ID with populated components
+ * GET /api/v1/catalog/leias/:id
+ */
+export const getLeiaById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Get LEIA with populated components
+    const leia = await LeiaService.findByIdPopulatedComponents(id, { internal: true });
+
+    if (!leia || !leia.isPublished) {
+      const error = new Error('LEIA not found or not public');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.json(leia);
   } catch (err) {
     next(err);
   }

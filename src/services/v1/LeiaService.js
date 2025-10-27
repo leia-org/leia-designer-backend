@@ -41,6 +41,25 @@ class LeiaService {
     return leia;
   }
 
+  async findByIdPopulatedComponents(id, context = {}) {
+    const leia = await LeiaRepository.findByIdPopulatedComponents(id);
+
+    if (!canAccess(leia, context)) {
+      throw createUnauthorizedError('Leia');
+    }
+
+    return leia;
+  }
+
+  /**
+   * Get all leias matching the filter (for catalog API)
+   * @param {Object} filter - MongoDB filter object
+   * @returns {Promise<Array>} Array of leias
+   */
+  async getAll(filter = {}) {
+    return await LeiaRepository.find(filter);
+  }
+
   async existsByName(name) {
     return await LeiaRepository.existsByName(name);
   }

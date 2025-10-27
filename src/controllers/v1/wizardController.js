@@ -6,6 +6,7 @@ import axios from 'axios';
 import PersonaService from '../../services/v1/PersonaService.js';
 import ProblemService from '../../services/v1/ProblemService.js';
 import BehaviourService from '../../services/v1/BehaviourService.js';
+import LeiaService from '../../services/v1/LeiaService.js';
 
 const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:5002';
 const RUNNER_KEY = process.env.RUNNER_KEY;
@@ -16,6 +17,7 @@ const RUNNER_KEY = process.env.RUNNER_KEY;
 export const createWizardSession = async (req, res, next) => {
   try {
     const { userPrompt } = req.body;
+    const userToken = req.headers.authorization?.split(' ')[1]; // Extract JWT token
 
     if (!userPrompt) {
       const error = new Error('userPrompt is required');
@@ -23,10 +25,10 @@ export const createWizardSession = async (req, res, next) => {
       return next(error);
     }
 
-    // Forward to Runner
+    // Forward to Runner with user token
     const response = await axios.post(
       `${RUNNER_URL}/api/v1/wizard/sessions`,
-      { userPrompt },
+      { userPrompt, userToken },
       {
         headers: {
           'Authorization': `Bearer ${RUNNER_KEY}`
@@ -291,5 +293,192 @@ export const deleteWizardSession = async (req, res, next) => {
   } catch (error) {
     console.error('Error deleting wizard session:', error);
     next(error.response?.data || error);
+  }
+};
+
+/**
+ * Search personas (public + user's private)
+ * GET /api/v1/wizard/search/personas
+ */
+export const searchUserPersonas = async (req, res, next) => {
+  try {
+    const { search, topic, limit = 10 } = req.query;
+    const userId = req.auth.payload.userId;
+
+    const filter = {
+      $or: [
+        { isPublished: true }, // Public components
+        { user: userId } // User's private components
+      ]
+    };
+
+    // Build comprehensive search
+    const searchTerm = topic || search;
+    if (searchTerm) {
+      filter['$and'] = [{
+        $or: [
+          { 'metadata.name': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.fullName': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.firstName': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.description': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.personality': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.topic': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.emotionRange': { $regex: searchTerm, $options: 'i' } }
+        ]
+      }];
+    }
+
+    const personas = await PersonaService.getAll(filter);
+    const limitedPersonas = personas.slice(0, parseInt(limit));
+
+    res.json({
+      count: limitedPersonas.length,
+      personas: limitedPersonas
+    });
+  } catch (error) {
+    console.error('Error searching user personas:', error);
+    next(error);
+  }
+};
+
+/**
+ * Search problems (public + user's private)
+ * GET /api/v1/wizard/search/problems
+ */
+export const searchUserProblems = async (req, res, next) => {
+  try {
+    const { search, topic, difficulty, format, limit = 10 } = req.query;
+    const userId = req.auth.payload.userId;
+
+    const filter = {
+      $or: [
+        { isPublished: true },
+        { user: userId }
+      ]
+    };
+
+    // Build comprehensive search
+    const searchTerm = topic || search;
+    if (searchTerm) {
+      filter['$and'] = [{
+        $or: [
+          { 'metadata.name': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.description': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.personaBackground': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.details': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.solution': { $regex: searchTerm, $options: 'i' } },
+          { 'spec.solutionFormat': { $regex: searchTerm, $options: 'i' } }
+        ]
+      }];
+    }
+
+    // Add specific filters
+    if (difficulty) {
+      filter['spec.difficulty'] = difficulty;
+    }
+    if (format) {
+      filter['spec.solutionFormat'] = format;
+    }
+
+    const problems = await ProblemService.getAll(filter);
+    const limitedProblems = problems.slice(0, parseInt(limit));
+
+    res.json({
+      count: limitedProblems.length,
+      problems: limitedProblems
+    });
+  } catch (error) {
+    console.error('Error searching user problems:', error);
+    next(error);
+  }
+};
+
+/**
+ * Search behaviours (public + user's private)
+ * GET /api/v1/wizard/search/behaviours
+ */
+export const searchUserBehaviours = async (req, res, next) => {
+  try {
+    const { search, role, process, limit = 10 } = req.query;
+    const userId = req.auth.payload.userId;
+
+    const filter = {
+      $or: [
+        { isPublished: true },
+        { user: userId }
+      ]
+    };
+
+    // Build comprehensive search
+    if (search) {
+      filter['$and'] = [{
+        $or: [
+          { 'metadata.name': { $regex: search, $options: 'i' } },
+          { 'spec.description': { $regex: search, $options: 'i' } },
+          { 'spec.role': { $regex: search, $options: 'i' } },
+          { 'spec.process': { $regex: search, $options: 'i' } },
+          { 'spec.instructions': { $regex: search, $options: 'i' } },
+          { 'spec.approach': { $regex: search, $options: 'i' } }
+        ]
+      }];
+    }
+
+    // Add specific filters
+    if (role && !search) {
+      filter['spec.role'] = role;
+    }
+    if (process && !search) {
+      filter['spec.process'] = process;
+    }
+
+    const behaviours = await BehaviourService.getAll(filter);
+    const limitedBehaviours = behaviours.slice(0, parseInt(limit));
+
+    res.json({
+      count: limitedBehaviours.length,
+      behaviours: limitedBehaviours
+    });
+  } catch (error) {
+    console.error('Error searching user behaviours:', error);
+    next(error);
+  }
+};
+
+/**
+ * Search LEIAs (public + user's private)
+ * GET /api/v1/wizard/search/leias
+ */
+export const searchUserLeias = async (req, res, next) => {
+  try {
+    const { search, limit = 10 } = req.query;
+    const userId = req.auth.payload.userId;
+
+    const filter = {
+      $or: [
+        { isPublished: true },
+        { user: userId }
+      ]
+    };
+
+    // Build comprehensive search
+    if (search) {
+      filter['$and'] = [{
+        $or: [
+          { 'metadata.name': { $regex: search, $options: 'i' } },
+          { 'metadata.description': { $regex: search, $options: 'i' } }
+        ]
+      }];
+    }
+
+    const leias = await LeiaService.getAll(filter);
+    const limitedLeias = leias.slice(0, parseInt(limit));
+
+    res.json({
+      count: limitedLeias.length,
+      leias: limitedLeias
+    });
+  } catch (error) {
+    console.error('Error searching user LEIAs:', error);
+    next(error);
   }
 };
