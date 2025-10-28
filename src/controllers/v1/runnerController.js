@@ -31,3 +31,13 @@ export const sendMessage = async (req, res, next) => {
     next(err);
   }
 };
+
+export const generateTranscription = async (req, res, next) => {
+  try {
+    const value = await runnerLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const transcription = await RunnerService.generateTranscription(value);
+    res.json(transcription);
+  } catch (err) {
+    next(err);
+  }
+};

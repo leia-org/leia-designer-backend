@@ -36,6 +36,21 @@ class RunnerService {
     );
     return response.data.message;
   }
+
+  async generateTranscription(leia) {
+    const response = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/transcriptions/generate`,
+      {
+        leia,
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        },
+      }
+    );
+    return response.data.messages;
+  }
 }
 
 export default new RunnerService();
