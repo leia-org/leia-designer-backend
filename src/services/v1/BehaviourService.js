@@ -1,6 +1,7 @@
 import BehaviourRepository from '../../repositories/v1/BehaviourRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
+import LeiaService from './LeiaService.js';
 
 class BehaviourService {
   // READ METHODS
@@ -126,7 +127,7 @@ class BehaviourService {
     if (context.role === 'admin') {
       behaviourData.isPublished = publish; // Only admin can decide to publish or not when creating a new resource
     }
-    // Advance users can create but not publish (isPublished defaults to false)
+    // Advanced users can create but not publish (isPublished defaults to false)
     return await BehaviourRepository.create(behaviourData);
   }
 
@@ -172,9 +173,85 @@ class BehaviourService {
     if (context.role === 'admin') {
       behaviourData.isPublished = publish; // Only admin can decide to publish or not when creating a new version of resource
     }
-    // Advance users can create new versions but not publish (isPublished defaults to false)
+    // Advanced users can create new versions but not publish (isPublished defaults to false)
 
     return await BehaviourRepository.create(behaviourData);
+  }
+
+  async publish(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a behaviour');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (behaviour.isPublished) {
+      return behaviour; // If already published, do nothing
+    }
+
+    behaviour.isPublished = true;
+    return await behaviour.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a behaviour');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!behaviour.isPublished) {
+      return behaviour; // If already unpublished, do nothing
+    }
+
+    behaviour.isPublished = false;
+    return await behaviour.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const behaviour = await BehaviourRepository.findById(id);
+
+    if (!behaviour) {
+      const error = new Error('Behaviour not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (context.role !== 'admin' && !context.internal && (!behaviour.user || !behaviour.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const inUse = await LeiaService.findByBehaviourId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error('Cannot delete behaviour, it is used in one or more leias');
+      error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
+      throw error;
+    }
+
+    return await BehaviourRepository.deleteById(id);
   }
 }
 

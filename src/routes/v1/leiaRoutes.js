@@ -7,6 +7,7 @@ import {
   getLeiasByQuery,
   getLeiaByNameAndVersion,
   getLeiasByName,
+  deleteLeiaById
 } from '../../controllers/v1/leiaController.js';
 import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
 
@@ -22,5 +23,8 @@ router.get('/name/:name', requireAuthentication, getLeiasByName);
 router.get('/name/:name/version/:version', requireAuthentication, getLeiaByNameAndVersion);
 router.get('/', requireAuthentication, getLeiasByQuery);
 router.get('/:id', requireAuthentication, getLeiaById);
+
+// DELETE
+router.delete('/:id', requireJwtAuthentication, deleteLeiaById);
 
 export default router;

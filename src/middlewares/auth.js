@@ -63,9 +63,9 @@ export function requireInstructor(req, res, next) {
   return next();
 }
 
-export function requireAdvance(req, res, next) {
-  if (req.auth?.payload?.role !== 'advance' && req.auth?.payload?.role !== 'admin') {
-    const error = new Error('Unauthorized: Advance access required');
+export function requireAdvanced(req, res, next) {
+  if (req.auth?.payload?.role !== 'advanced' && req.auth?.payload?.role !== 'admin') {
+    const error = new Error('Unauthorized: Advanced access required');
     error.statusCode = 403;
     return next(error);
   }

@@ -1,6 +1,7 @@
 import PersonaRepository from '../../repositories/v1/PersonaRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
+import LeiaService from './LeiaService.js';
 
 class PersonaService {
   // READ METHODS
@@ -159,6 +160,82 @@ class PersonaService {
     }
 
     return await PersonaRepository.create(personaData);
+  }
+
+  async publish(id, context = {}) {
+    const persona = await PersonaRepository.findById(id);
+
+    if (!persona) {
+      const error = new Error('Persona not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a persona');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (persona.isPublished) {
+      return persona; // Already published
+    }
+
+    persona.isPublished = true;
+    return await persona.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const persona = await PersonaRepository.findById(id);
+
+    if (!persona) {
+      const error = new Error('Persona not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a persona');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!persona.isPublished) {
+      return persona; // If already unpublished, do nothing
+    }
+
+    persona.isPublished = false;
+    return await persona.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const persona = await PersonaRepository.findById(id);
+
+    if (!persona) {
+      const error = new Error('Persona not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (context.role !== 'admin' && !context.internal && (!persona.user || !persona.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const inUse = await LeiaService.findByPersonaId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error("Cannot delete persona in use");
+      error.statusCode = 400;
+      error.data = inUse.map((leia) => ({ id: leia._id, name: leia.metadata.name }));
+      throw error;
+    }
+
+    return await PersonaRepository.deleteById(id);
   }
 }
 

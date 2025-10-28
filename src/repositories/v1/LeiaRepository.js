@@ -21,6 +21,30 @@ class LeiaRepository {
     return !!(await Leia.exists({ 'metadata.name': name }));
   }
 
+  async existsByPersonaId(personaId) {
+    return !!(await Leia.exists({ 'spec.personaId': personaId }));
+  }
+
+  async findByPersonaId(personaId) {
+    return await Leia.find({ 'spec.personaId': personaId });
+  }
+
+  async existsByProblemId(problemId) {
+    return !!(await Leia.exists({ 'spec.problemId': problemId }));
+  }
+
+  async findByProblemId(problemId) {
+    return await Leia.find({ 'spec.problemId': problemId });
+  }
+
+  async existsByBehaviourId(behaviourId) {
+    return !!(await Leia.exists({ 'spec.behaviourId': behaviourId }));
+  }
+
+  async findByBehaviourId(behaviourId) {
+    return await Leia.find({ 'spec.behaviourId': behaviourId });
+  }
+
   async findByName(name, userId, visibility = 'all', privileged = false) {
     const query = { 'metadata.name': name };
 
@@ -83,6 +107,11 @@ class LeiaRepository {
   async create(leiaData) {
     const leia = new Leia(leiaData);
     return await leia.save();
+  }
+
+  // Delete Leia by ID
+  async deleteById(id) {
+    return await Leia.findByIdAndDelete(id);
   }
 }
 

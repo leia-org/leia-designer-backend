@@ -15,8 +15,35 @@ class ExperimentService {
     return await ExperimentRepository.findByIdPopulated(id);
   }
 
+  async existsByLeiaId(leiaId) {
+    return await ExperimentRepository.existsByLeiaId(leiaId);
+  }
+
+  async findByLeiaId(leiaId) {
+    return await ExperimentRepository.findByLeiaId(leiaId);
+  }
+
   async findByUserId(userId, visibility = 'all', populated = false) {
     return await ExperimentRepository.findByUserId(userId, visibility, populated);
+  }
+
+  async checkEditable(experimentId, userId) {
+    const experiment = await ExperimentRepository.findById(experimentId);
+    if (!experiment) {
+      const error = new Error('Experiment not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    if (!experiment.user.equals(userId)) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 403;
+      throw error;
+    }
+    if (experiment.isPublished) {
+      const error = new Error('Experiment is published');
+      error.statusCode = 409;
+      throw error;
+    }
   }
 
   // WRITE METHODS
@@ -45,6 +72,10 @@ class ExperimentService {
 
   async deleteLeia(experimentId, leiaConfigId) {
     return await ExperimentRepository.deleteLeia(experimentId, leiaConfigId);
+  }
+
+  async deleteById(id) {
+    return await ExperimentRepository.deleteById(id);
   }
 }
 

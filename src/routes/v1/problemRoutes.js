@@ -7,6 +7,7 @@ import {
   getProblemsByQuery,
   getProblemByNameAndVersion,
   getProblemsByName,
+  deleteProblemById
 } from '../../controllers/v1/problemController.js';
 import { requireAuthentication, requireJwtAuthentication } from '../../middlewares/auth.js';
 
@@ -22,5 +23,8 @@ router.get('/name/:name', requireAuthentication, getProblemsByName);
 router.get('/name/:name/version/:version', requireAuthentication, getProblemByNameAndVersion);
 router.get('/', requireAuthentication, getProblemsByQuery);
 router.get('/:id', requireAuthentication, getProblemById);
+
+// DELETE
+router.delete('/:id', requireJwtAuthentication, deleteProblemById);
 
 export default router;

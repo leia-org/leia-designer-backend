@@ -15,6 +15,14 @@ class ExperimentRepository {
     return await Experiment.findById(id).populate('leias.leia');
   }
 
+  async existsByLeiaId(leiaId) {
+    return !!(await Experiment.exists({ 'leias.leia': leiaId }));
+  }
+
+  async findByLeiaId(leiaId) {
+    return await Experiment.find({ 'leias.leia': leiaId });
+  }
+
   async findByUserId(userId, visibility = 'all', populated = false) {
     const query = { user: userId };
     if (visibility === 'public') {
@@ -73,6 +81,12 @@ class ExperimentRepository {
       { $pull: { leias: { _id: leiaConfigId } } },
       { new: true }
     ).populate('leias.leia');
+  }
+
+  // DELETE METHODS
+
+  async deleteById(id) {
+    return await Experiment.findByIdAndDelete(id);
   }
 }
 

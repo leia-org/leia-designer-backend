@@ -3,6 +3,7 @@ import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/
 import PersonaService from './PersonaService.js';
 import BehaviourService from './BehaviourService.js';
 import ProblemService from './ProblemService.js';
+import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
 
@@ -42,6 +43,30 @@ class LeiaService {
 
   async existsByName(name) {
     return await LeiaRepository.existsByName(name);
+  }
+
+  async existsByPersonaId(personaId) {
+    return await LeiaRepository.existsByPersonaId(personaId);
+  }
+
+  async findByPersonaId(personaId) {
+    return await LeiaRepository.findByPersonaId(personaId);
+  }
+
+  async existsByProblemId(problemId) {
+    return await LeiaRepository.existsByProblemId(problemId);
+  }
+
+  async findByProblemId(problemId) {
+    return await LeiaRepository.findByProblemId(problemId);
+  }
+
+  async existsByBehaviourId(behaviourId) {
+    return await LeiaRepository.existsByBehaviourId(behaviourId);
+  }
+
+  async findByBehaviourId(behaviourId) {
+    return await LeiaRepository.findByBehaviourId(behaviourId);
   }
 
   async findByName(name, visibility = 'all', context = {}) {
@@ -126,9 +151,6 @@ class LeiaService {
 
   async create(leiaData, context = {}, publish = true) {
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
-    if (context.role === 'admin') {
-      leiaData.isPublished = publish; // Admin can decide to publish or not when creating a new resource
-    }
 
     // Find the entities, save the IDs and convert them to JSON to simplify the object (less computing/problems in object recursion)
     const persona = await findEntity(leiaData.spec.persona, PersonaService, 'Persona not found').then((persona) => {
@@ -158,6 +180,22 @@ class LeiaService {
     leiaData.spec.problem = replacedEntities.problem;
 
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
+
+    if ((context.role === 'admin' || context.internal) && publish) {
+      leiaData.isPublished = true;
+      if (!persona.isPublished) {
+        await PersonaService.publish(persona.id, context); // Admin can publish unpublished entities when creating a leia
+        leiaData.spec.persona.isPublished = true;
+      }
+      if (!behaviour.isPublished) {
+        await BehaviourService.publish(behaviour.id, context);
+        leiaData.spec.behaviour.isPublished = true;
+      }
+      if (!problem.isPublished) {
+        await ProblemService.publish(problem.id, context);
+        leiaData.spec.problem.isPublished = true;
+      }
+    }
 
     return await LeiaRepository.create(leiaData);
   }
@@ -226,7 +264,101 @@ class LeiaService {
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
 
+    if ((context.role === 'admin' || context.internal) && publish) {
+      leiaData.isPublished = true;
+      if (!persona.isPublished) {
+        await PersonaService.publish(persona.id, context); // Admin can publish unpublished entities when creating a leia
+        leiaData.spec.persona.isPublished = true;
+      }
+      if (!behaviour.isPublished) {
+        await BehaviourService.publish(behaviour.id, context);
+        leiaData.spec.behaviour.isPublished = true;
+      }
+      if (!problem.isPublished) {
+        await ProblemService.publish(problem.id, context);
+        leiaData.spec.problem.isPublished = true;
+      }
+    }
+
     return await LeiaRepository.create(leiaData);
+  }
+
+  async publish(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can publish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can publish a leia');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (leia.isPublished) {
+      return leia; // If already published, do nothing
+    }
+
+    leia.isPublished = true;
+    return await leia.save();
+  }
+
+  async unpublish(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Only admin can unpublish
+    if (context.role !== 'admin' && !context.internal) {
+      const error = new Error('Unauthorized, only admin can unpublish a leia');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!leia.isPublished) {
+      return leia; // If already unpublished, do nothing
+    }
+
+    leia.isPublished = false;
+    return await leia.save();
+  }
+  
+  // DELETE METHODS
+
+  async deleteById(id, context = {}) {
+    const leia = await LeiaRepository.findById(id);
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if user owns the leia (only owner can delete) or is admin
+    if (context.role !== 'admin' && !context.internal && (!leia.user || !leia.user.equals(context.userId))) {
+      const error = new Error("Unauthorized");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Check if LEIA is being used in any experiment
+    const inUse = await ExperimentService.findByLeiaId(id);
+    if (inUse && inUse.length > 0) {
+      const error = new Error("LEIA is being used in an experiment");
+      error.statusCode = 400;
+      error.data = inUse.map((experiment) => ({ id: experiment._id, name: experiment.name }));
+      throw error;
+    }
+
+    const deletedLeia = await LeiaRepository.deleteById(id);
+    return deletedLeia;
   }
 }
 
