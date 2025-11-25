@@ -51,6 +51,24 @@ class RunnerService {
     );
     return response.data.messages;
   }
+  async processAgentRequest(message, context, threadId, problem, originalQuery) {
+    const response = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/agent/process`,
+      {
+        query: message,
+        context: context,
+        threadId: threadId,
+        problem: problem,
+        originalQuery: originalQuery
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        },
+      }
+    );
+    return response.data;
+  }
 }
 
 export default new RunnerService();
