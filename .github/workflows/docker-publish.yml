@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: leia-org/leia-manager
+  IMAGE_NAME: leia-org/leia-designer-backend
 
 jobs:
   build-and-push:
