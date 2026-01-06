@@ -51,6 +51,23 @@ class RunnerService {
     );
     return response.data.messages;
   }
+
+  async generateProblem(subject, additionalDetails, exampleProblem) {
+    const response = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/problems/generate`,
+      {
+        subject,
+        additionalDetails,
+        exampleProblem,
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        },
+      }
+    );
+    return response.data;
+  }
 }
 
 export default new RunnerService();
