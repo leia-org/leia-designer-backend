@@ -41,3 +41,23 @@ export const generateTranscription = async (req, res, next) => {
     next(err);
   }
 };
+
+export const generateProblem = async (req, res, next) => {
+  try {
+    const { subject, additionalDetails, exampleProblem } = req.body;
+    if (!subject) {
+      const error = new Error('Subject is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!exampleProblem) {
+      const error = new Error('Example problem is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    const generatedProblem = await RunnerService.generateProblem(subject, additionalDetails, exampleProblem);
+    res.json(generatedProblem);
+  } catch (err) {
+    next(err);
+  }
+};
