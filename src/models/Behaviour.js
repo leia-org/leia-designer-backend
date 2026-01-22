@@ -43,6 +43,9 @@ const BehaviourSchema = new Schema(
         default: [],
         enum: ['requirements-elicitation', 'game'],
       },
+      tooltip: {
+        type: String,
+      }
     },
     user: {
       type: Schema.Types.ObjectId,
@@ -51,7 +54,7 @@ const BehaviourSchema = new Schema(
     isPublished: {
       type: Boolean,
       default: false,
-    },
+    }
   },
   {
     virtuals: {

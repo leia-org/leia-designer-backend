@@ -48,6 +48,9 @@ const ProblemSchema = new Schema(
         type: String,
         enum: ['text', 'mermaid', 'yaml', 'markdown', 'html', 'json', 'xml'],
       },
+      evaluationPrompt: {
+        type: String,
+      },
       process: {
         type: [String],
         default: [],

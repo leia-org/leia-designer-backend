@@ -12,6 +12,7 @@ export const createBehaviourValidator = Joi.object({
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: Joi.array().items(Joi.string()),
+    tooltip: Joi.string().optional(),
   }).required(),
 });
 
@@ -27,5 +28,6 @@ export const updateBehaviourValidator = Joi.object({
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: Joi.array().items(Joi.string()),
+    tooltip: Joi.string().optional(),
   }).required(),
 });
