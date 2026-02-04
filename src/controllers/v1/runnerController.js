@@ -61,3 +61,24 @@ export const generateProblem = async (req, res, next) => {
     next(err);
   }
 };
+
+export const evaluate = async (req, res, next) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const { result } = req.body;
+    if (!sessionId) {
+      const error = new Error('Session ID is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!result) {
+      const error = new Error('Result is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    const evaluation = await RunnerService.getEvaluationAndScore(sessionId, result);
+    res.json(evaluation);
+  } catch (err) {
+    next(err);
+  }
+};
