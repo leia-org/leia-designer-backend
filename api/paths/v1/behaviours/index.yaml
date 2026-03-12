@@ -66,11 +66,12 @@ get:
       name: process
       schema:
         type: string
-        enum: [requirements-elicitation, game]
+        enum: [requirements-elicitation, game, other]
       description: |
         Filter behaviours by process type:
         - `requirements-elicitation`: Show only behaviours for requirements elicitation process
         - `game`: Show only behaviours for game process
+        - `other`: Show only behaviours for other process
 
         If not provided, behaviours from all processes will be returned
   responses:

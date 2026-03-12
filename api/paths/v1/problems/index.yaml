@@ -66,11 +66,12 @@ get:
       name: process
       schema:
         type: string
-        enum: [requirements-elicitation, game]
+        enum: [requirements-elicitation, game, other]
       description: |
         Filter problems by process type:
         - `requirements-elicitation`: Show only problems for requirements elicitation process
         - `game`: Show only problems for game process
+        - `other`: Show only problems for other process
 
         If not provided, problems from all processes will be returned
   responses:
