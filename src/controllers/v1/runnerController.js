@@ -45,17 +45,23 @@ export const generateTranscription = async (req, res, next) => {
 export const generateProblem = async (req, res, next) => {
   try {
     const { subject, additionalDetails, exampleProblem } = req.body;
-    if (!subject) {
+    const normalizedSubject = typeof subject === 'string' ? subject.trim() : '';
+
+    if (!normalizedSubject) {
       const error = new Error('Subject is required');
       error.statusCode = 400;
       throw error;
     }
-    if (!exampleProblem) {
+    if (!exampleProblem || typeof exampleProblem !== 'object') {
       const error = new Error('Example problem is required');
       error.statusCode = 400;
       throw error;
     }
-    const generatedProblem = await RunnerService.generateProblem(subject, additionalDetails, exampleProblem);
+    const generatedProblem = await RunnerService.generateProblem(
+      normalizedSubject,
+      additionalDetails,
+      exampleProblem
+    );
     res.json(generatedProblem);
   } catch (err) {
     next(err);
