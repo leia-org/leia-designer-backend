@@ -1,5 +1,17 @@
 import Joi from 'joi';
 
+const processValidator = Joi.array()
+  .items(Joi.string().valid('requirements-elicitation', 'game', 'other'))
+  .custom((value, helpers) => {
+    if (Array.isArray(value) && value.includes('other') && value.length > 1) {
+      return helpers.error('any.invalid');
+    }
+    return value;
+  }, 'Other process exclusivity validation')
+  .messages({
+    'any.invalid': "When 'other' is selected in process, it must be the only value.",
+  });
+  
 export const createProblemValidator = Joi.object({
   apiVersion: Joi.string().required().valid('v1'),
   metadata: Joi.object({
@@ -15,7 +27,7 @@ export const createProblemValidator = Joi.object({
     solution: Joi.string().optional(),
     initialSolution: Joi.string().optional(),
     solutionFormat: Joi.string().optional().valid('text', 'mermaid', 'yaml', 'markdown', 'html', 'json', 'xml'),
-    process: Joi.array().items(Joi.string()),
+    process: processValidator,
     evaluationPrompt: Joi.string().optional(),
     extends: Joi.object().optional(),
     overrides: Joi.object().optional(),
@@ -38,7 +50,7 @@ export const updateProblemValidator = Joi.object({
     solution: Joi.string().optional(),
     initialSolution: Joi.string().optional(),
     solutionFormat: Joi.string().optional().valid('text', 'mermaid', 'yaml', 'markdown', 'html', 'json', 'xml'),
-    process: Joi.array().items(Joi.string()),
+    process: processValidator,
     evaluationPrompt: Joi.string().optional(),
     extends: Joi.object().optional(),
     overrides: Joi.object().optional(),
