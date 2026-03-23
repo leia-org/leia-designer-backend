@@ -57,7 +57,7 @@ const ProblemSchema = new Schema(
       process: {
         type: [String],
         default: [],
-        enum: ['requirements-elicitation', 'game'],
+        enum: ['requirements-elicitation', 'game', 'other'],
       },
       extends: {
         type: Schema.Types.Mixed,
