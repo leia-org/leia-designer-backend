@@ -17,6 +17,42 @@ const UserSchema = new Schema(
       required: true,
       enum: ['admin', 'instructor', 'advanced'],
     },
+    apiKeys: [
+      {
+        modelName: {
+          type: String,
+          required: true,
+        },
+        baseUrl: {
+          type: String,
+          required: true,
+        },
+        keyValue: {
+          type: String,
+          required: true,
+        },
+        managementUrl: {
+          type: String,
+          required: true,
+        },
+        isActive: {
+          type: Boolean,
+          default: true,
+        },
+        isDefault: {
+          type: Boolean,
+          default: false,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        }
+      },
+    ]
   },
   {
     timestamps: true,
