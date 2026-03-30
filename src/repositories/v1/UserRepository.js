@@ -19,6 +19,17 @@ class UserRepository {
     return !!(await User.exists({ email }));
   }
 
+  async getApiKeys(userId) {
+    const user = await User.findById(userId);
+    return user ? user.apiKeys : null;
+  }
+
+  async getApiKeyById(userId, apiKeyId) {
+    const user = await User.findById(userId);
+    if (!user) return null;
+    return user.apiKeys.id(apiKeyId);
+  }
+
   // WRITE METHODS
 
   async create(userData) {
@@ -30,10 +41,40 @@ class UserRepository {
     return await User.findByIdAndUpdate(id, userData, { new: true });
   }
 
+  async addApiKey(userId, apiKeyData) {
+    return await User.findByIdAndUpdate(
+      userId,
+      { $push: { apiKeys: apiKeyData } },
+      { new: true }
+    );
+  }
+
+  async updateApiKey(userId, apiKeyId, apiKeyData) {
+    const user = await User.findById(userId);
+    if (!user) return null;
+
+    const apiKey = user.apiKeys.id(apiKeyId);
+    if (!apiKey) return null;
+    // eslint-disable-next-line no-unused-vars
+    const { _id, id, createdAt, updatedAt, ...safeData } = apiKeyData;
+    apiKey.set(safeData);
+    await user.save();
+    return apiKey;
+  }
+
   // DELETE METHODS
 
   async delete(id) {
     return await User.findByIdAndDelete(id);
+  }
+
+  async deleteApiKey(userId, apiKeyId) {
+    const user = await User.findById(userId);
+    if (!user) return null;
+
+    user.apiKeys.pull(apiKeyId);
+    await user.save();
+    return true;
   }
 }
 

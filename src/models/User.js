@@ -19,6 +19,10 @@ const UserSchema = new Schema(
     },
     apiKeys: [
       {
+        description: {
+          type: String,
+          required: true,
+        },
         modelName: {
           type: String,
           required: true,
@@ -33,7 +37,7 @@ const UserSchema = new Schema(
         },
         managementUrl: {
           type: String,
-          required: true,
+          required: false,
         },
         isActive: {
           type: Boolean,

@@ -1,5 +1,5 @@
 import UserService from '../../services/v1/UserService.js';
-import { createUserValidator, updateUserValidator, loginUserValidator } from '../../validators/v1/userValidator.js';
+import { createUserValidator, updateUserValidator, loginUserValidator, createApiKeyValidator, updateApiKeyValidator } from '../../validators/v1/userValidator.js';
 import { generateToken } from '../../utils/jwt.js';
 
 // No authentication required
@@ -144,3 +144,72 @@ export const changePassword = async (req, res, next) => {
     next(err);
   }
 };
+
+export const createApiKey = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    if (!userId) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 401;
+      throw error;
+    }
+    const value = await createApiKeyValidator.validateAsync(req.body, { abortEarly: false });
+
+    const savedApiKey = await UserService.createApiKey(userId, value);
+    res.status(201).json(savedApiKey);
+  }catch (err) {
+    next(err);
+  }
+}
+
+export const getApiKeys = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeys = await UserService.getApiKeys(userId);
+    res.json(apiKeys);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const deleteApiKey = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeyId = req.params.apiKeyId;
+    await UserService.deleteApiKey(userId, apiKeyId);
+    res.status(204).end();
+  }
+  catch (err) {    next(err);
+  }
+}
+
+export const updateApiKey = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeyId = req.params.apiKeyId;
+    const value = await updateApiKeyValidator.validateAsync(req.body, { abortEarly: false });
+
+    const updatedKey = await UserService.updateApiKey(userId, apiKeyId, value);
+    res.json(updatedKey);
+  }
+  catch (err) {
+    next(err);
+  }
+}
+
+export const getApiKeyById = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeyId = req.params.apiKeyId;
+    const apiKey = await UserService.getApiKeyById(userId, apiKeyId);
+    if (!apiKey) {
+      const error = new Error('API Key not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.json(apiKey);
+  }
+  catch (err) {
+    next(err);
+  }
+}

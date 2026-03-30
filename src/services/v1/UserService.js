@@ -75,6 +75,28 @@ class UserService {
     // Update password
     return await UserRepository.update(id, { password: newPassword });
   }
+
+
+  async createApiKey(userId, apiKeyData) {
+    return await UserRepository.addApiKey(userId, apiKeyData);
+  }
+
+  async deleteApiKey(userId, apiKeyId) {
+    return await UserRepository.deleteApiKey(userId, apiKeyId);
+  }
+
+  async getApiKeys(userId) {
+    return await UserRepository.getApiKeys(userId);
+  }
+
+  async getApiKeyById(userId, apiKeyId) {
+    return await UserRepository.getApiKeyById(userId, apiKeyId);
+  }
+  async updateApiKey(userId, apiKeyId, apiKeyData) {
+    return await UserRepository.updateApiKey(userId, apiKeyId, apiKeyData);
+  }
+
+
 }
 
 export default new UserService();
