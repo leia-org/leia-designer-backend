@@ -22,7 +22,7 @@ export const createApiKeyValidator = Joi.object({
   modelName: Joi.string().required(),
   baseUrl: Joi.string().uri().required(),
   keyValue: Joi.string().required(),
-  managementUrl: Joi.string().uri().optional(),
+  managementUrl: Joi.string().uri().allow(null, '').optional(),
   isActive: Joi.boolean().required(),
   isDefault: Joi.boolean().required(),
 });
@@ -32,7 +32,7 @@ export const updateApiKeyValidator = Joi.object({
   modelName: Joi.string().optional(),
   baseUrl: Joi.string().uri().optional(),
   keyValue: Joi.string().optional(),
-  managementUrl: Joi.string().uri().optional(),
+  managementUrl: Joi.string().uri().allow(null, '').optional(),
   isActive: Joi.boolean().optional(),
   isDefault: Joi.boolean().optional(),
 });

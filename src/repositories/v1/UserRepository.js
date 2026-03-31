@@ -69,13 +69,25 @@ class UserRepository {
   }
 
   async deleteApiKey(userId, apiKeyId) {
-    const user = await User.findById(userId);
-    if (!user) return null;
-
-    user.apiKeys.pull(apiKeyId);
-    await user.save();
-    return true;
-  }
+      const result = await User.updateOne(
+        {
+          _id: userId,
+          "apiKeys._id": apiKeyId
+        },
+        {
+          $pull: { apiKeys: { _id: apiKeyId } }
+        }
+      );
+      if (result.modifiedCount > 0) {
+          return [true, "API Key deleted successfully"];
+        }
+      const userExists = await User.exists({ _id: userId });
+      if (!userExists) {
+        return [false, "User not found"];
+      } else {
+        return [false, "API Key not found"];
+      }
+    }
 }
 
 export default new UserRepository();
