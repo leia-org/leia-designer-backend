@@ -148,11 +148,6 @@ export const changePassword = async (req, res, next) => {
 export const createApiKey = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
-    if (!userId) {
-      const error = new Error('Unauthorized');
-      error.statusCode = 401;
-      throw error;
-    }
     const value = await createApiKeyValidator.validateAsync(req.body, { abortEarly: false });
 
     const savedApiKey = await UserService.createApiKey(userId, value);
@@ -197,16 +192,31 @@ export const updateApiKey = async (req, res, next) => {
   }
 }
 
+export const manageDefaultKey = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeyId = req.params.apiKeyId;
+    const apiKey = await UserService.getApiKeyById(userId, apiKeyId);
+    let updatedKey = null;
+    if (apiKey.isDefault) {
+      updatedKey = await UserService.unMarkDefaultKey(userId, apiKeyId);
+      }else {
+      updatedKey = await UserService.markKeyAsDefault(userId, apiKeyId);
+     }
+     res.json(updatedKey);
+  }
+  catch (err) {
+    next(err);
+  }
+}
+
+
+
 export const getApiKeyById = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
     const apiKeyId = req.params.apiKeyId;
     const apiKey = await UserService.getApiKeyById(userId, apiKeyId);
-    if (!apiKey) {
-      const error = new Error('API Key not found');
-      error.statusCode = 404;
-      throw error;
-    }
     res.json(apiKey);
   }
   catch (err) {

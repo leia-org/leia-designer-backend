@@ -19,11 +19,6 @@ class UserRepository {
     return !!(await User.exists({ email }));
   }
 
-  async getApiKeys(userId) {
-    const user = await User.findById(userId);
-    return user ? user.apiKeys : null;
-  }
-
   async getApiKeyById(userId, apiKeyId) {
     const user = await User.findById(userId);
     if (!user) return null;
@@ -60,6 +55,39 @@ class UserRepository {
     apiKey.set(safeData);
     await user.save();
     return apiKey;
+  }
+
+  async markApiKeyAsDefault(userId, apiKeyId) {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, 'apiKeys._id': apiKeyId },
+      {
+        $set: {
+          'apiKeys.$[others].isDefault': false,
+          'apiKeys.$[target].isDefault': true,
+          isSystemApiKeyDefault: false
+        }
+      },
+      { new: true, arrayFilters: [{'others._id': { $ne: apiKeyId }},{ 'target._id': apiKeyId }] }
+    );
+    return updatedUser;
+  }
+
+  async unmarkApiKeyDefault(userId, apiKeyId) {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, 'apiKeys._id': apiKeyId },
+      { $set: { 'apiKeys.$[target].isDefault': false } },
+      { new: true, arrayFilters: [{ 'target._id': apiKeyId }] }
+    );
+    return updatedUser;
+  }
+
+  async setSystemApiKeyDefault(userId, isDefault = true) {
+    const update = isDefault
+      ? { $set: { 'apiKeys.$[].isDefault': false, isSystemApiKeyDefault: true } }
+      : { $set: { isSystemApiKeyDefault: false } };
+
+    const updatedUser = await User.findByIdAndUpdate(userId, update, { new: true });
+    return updatedUser;
   }
 
   // DELETE METHODS

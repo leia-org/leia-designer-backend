@@ -17,6 +17,16 @@ const UserSchema = new Schema(
       required: true,
       enum: ['admin', 'instructor', 'advanced'],
     },
+    useSystemApiKey: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isSystemApiKeyDefault: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
     apiKeys: [
       {
         description: {

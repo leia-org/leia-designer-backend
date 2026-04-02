@@ -13,7 +13,8 @@ import {
   getApiKeys,
   deleteApiKey,
   updateApiKey,
-  getApiKeyById
+  getApiKeyById,
+  manageDefaultKey
 } from '../../controllers/v1/userController.js';
 
 import { requireAdmin, requireJwtAuthentication } from '../../middlewares/auth.js';
@@ -34,6 +35,7 @@ router.get('/:id', requireAdmin, getUserById);
 // PUT
 router.put('/profile/update', requireJwtAuthentication, updateProfile);
 router.put('/profile/change-password', requireJwtAuthentication, changePassword);
+router.put('/apikeys/manage-default/:apiKeyId', requireJwtAuthentication, manageDefaultKey)
 router.put('/apikeys/:apiKeyId', requireJwtAuthentication, updateApiKey); // Custom authorization check in controller
 router.put('/:id', requireJwtAuthentication, updateUser); // Custom authorization check in controller
 
