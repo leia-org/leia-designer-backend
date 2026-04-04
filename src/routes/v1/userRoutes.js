@@ -17,30 +17,29 @@ import {
   manageDefaultKey
 } from '../../controllers/v1/userController.js';
 
-import { requireAdmin, requireJwtAuthentication } from '../../middlewares/auth.js';
-
+import { requireAdmin, requireAdvanced, requireJwtAuthentication } from '../../middlewares/auth.js';
 const router = express.Router();
 
 // POST
 router.post('/login', login); // No authentication or authorization required
 router.post('/', requireAdmin, createUser);
-router.post('/apikeys', requireJwtAuthentication, createApiKey); // Custom authorization check in controller
+router.post('/apikeys', requireAdvanced, createApiKey);
 
 // GET
 router.get('/', requireAdmin, getUsers);
 router.get('/email/:email', requireAdmin, getUserByEmail);
-router.get('/apikeys', requireJwtAuthentication, getApiKeys);
-router.get('/apikeys/:apiKeyId', requireJwtAuthentication, getApiKeyById);
+router.get('/apikeys', requireAdvanced, getApiKeys);
+router.get('/apikeys/:apiKeyId', requireAdvanced, getApiKeyById);
 router.get('/:id', requireAdmin, getUserById);
 // PUT
 router.put('/profile/update', requireJwtAuthentication, updateProfile);
 router.put('/profile/change-password', requireJwtAuthentication, changePassword);
-router.put('/apikeys/manage-default/:apiKeyId', requireJwtAuthentication, manageDefaultKey)
-router.put('/apikeys/:apiKeyId', requireJwtAuthentication, updateApiKey); // Custom authorization check in controller
-router.put('/:id', requireJwtAuthentication, updateUser); // Custom authorization check in controller
+router.put('/apikeys/manage-default/:apiKeyId', requireAdvanced, manageDefaultKey)
+router.put('/apikeys/:apiKeyId', requireAdvanced, updateApiKey);
+router.put('/:id', requireJwtAuthentication, updateUser);
 
 // DELETE
-router.delete('/apikeys/:apiKeyId', requireJwtAuthentication, deleteApiKey); // Custom authorization check in controller
+router.delete('/apikeys/:apiKeyId', requireAdvanced, deleteApiKey);
 router.delete('/:id', requireAdmin, deleteUser);
 
 export default router;
