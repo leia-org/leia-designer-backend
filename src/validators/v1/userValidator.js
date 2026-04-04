@@ -33,7 +33,7 @@ export const updateApiKeyValidator = Joi.object({
   description: Joi.string().optional(),
   modelName: Joi.string().optional(),
   baseUrl: Joi.string().uri().optional(),
-  keyValue: Joi.string().optional(),
+  keyValue: Joi.string().optional().allow(null, ''),
   managementUrl: Joi.string().uri().allow(null, '').optional(),
   isActive: Joi.boolean().optional(),
   });

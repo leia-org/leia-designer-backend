@@ -152,6 +152,8 @@ export const createApiKey = async (req, res, next) => {
 
     const savedApiKey = await UserService.createApiKey(userId, value);
     res.status(201).json(savedApiKey);
+
+    // aplicar hashing en el servicio
   }catch (err) {
     next(err);
   }
@@ -182,8 +184,10 @@ export const updateApiKey = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
     const apiKeyId = req.params.apiKeyId;
-    const value = await updateApiKeyValidator.validateAsync(req.body, { abortEarly: false });
-
+    const value = await updateApiKeyValidator.validateAsync(req.body, { abortEarly: true });
+    if (!value.keyValue || value.keyValue === '') {
+      delete value.keyValue;
+    }
     const updatedKey = await UserService.updateApiKey(userId, apiKeyId, value);
     res.json(updatedKey);
   }

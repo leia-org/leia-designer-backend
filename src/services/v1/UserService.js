@@ -1,4 +1,6 @@
 import UserRepository from '../../repositories/v1/UserRepository.js';
+import { encrypt, decrypt } from '../../utils/crypto.js';
+
 
 class UserService {
   async findAll() {
@@ -83,7 +85,7 @@ class UserService {
       error.statusCode = 401;
       throw error;
     }
-
+    apiKeyData.keyValue = encrypt(apiKeyData.keyValue);
     const editedUser = await UserRepository.addApiKey(userId, apiKeyData);
     if (!editedUser) {
       const error = new Error('User not found');
@@ -94,7 +96,7 @@ class UserService {
     if (apiKeyData.isDefault) {
       await this.markKeyAsDefault(userId, newApiKey._id);
     }
-    return newApiKey;
+    return this.getApiKeyById(userId, newApiKey._id);
   }
 
   async deleteApiKey(userId, apiKeyId) {
@@ -126,32 +128,18 @@ class UserService {
       error.statusCode = 404;
       throw error;
     }
+    const apiKeys = user.apiKeys.map(apiKey => {
+      const decrypted = this.#decryptApiKeyValue(apiKey.toObject());
+      return this.#maskApiKeyValue(decrypted);
+    });
+
     if (user.useSystemApiKey) {
       const systemApiKey = this.#getSystemApiKey(user);
       if (systemApiKey) {
-        return [systemApiKey, ...user.apiKeys];
+        return [systemApiKey, ...apiKeys];
       }
     }
-    return user.apiKeys;
-  }
-
-  #getSystemApiKey(user) {
-    const systemApiKey = {
-      _id: process.env.SYSTEM_API_KEY_ID,
-      id: process.env.SYSTEM_API_KEY_ID,
-      description: process.env.SYSTEM_API_KEY_DESCRIPTION || 'System API Key',
-      modelName: process.env.SYSTEM_API_KEY_MODEL_NAME,
-      keyValue: process.env.SYSTEM_API_KEY_VALUE,
-      isActive: true,
-      isDefault: user.isSystemApiKeyDefault,
-      baseUrl: process.env.SYSTEM_API_KEY_BASE_URL,
-      isSystemApiKey: true,
-    };
-
-    if (systemApiKey._id && systemApiKey.modelName && systemApiKey.keyValue && systemApiKey.baseUrl) {
-      return systemApiKey;
-    }
-    return null;
+    return apiKeys;
   }
 
   async getApiKeyById(userId, apiKeyId) {
@@ -181,8 +169,9 @@ class UserService {
         error.statusCode = 404;
         throw error;
       }
-      return apiKey;
-  }
+      const decryptedApiKey = this.#decryptApiKeyValue(apiKey.toObject());
+      return this.#maskApiKeyValue(decryptedApiKey);
+    }
   }
 
   async updateApiKey(userId, apiKeyId, apiKeyData) {
@@ -192,6 +181,9 @@ class UserService {
       throw error;
     }
 
+    if (apiKeyData.keyValue) {
+      apiKeyData.keyValue = encrypt(apiKeyData.keyValue);
+    }
     const updatedKey = await UserRepository.updateApiKey(userId, apiKeyId, apiKeyData);
     if (!updatedKey) {
       const error = new Error('API Key not found or does not belong to this user');
@@ -199,7 +191,7 @@ class UserService {
       throw error;
     }
 
-    return updatedKey;
+    return this.getApiKeyById(userId, apiKeyId);
   }
 
   async markKeyAsDefault(userId, apiKeyId) {
@@ -229,7 +221,7 @@ class UserService {
       throw error;
     }
 
-    return apiKey;
+    return this.getApiKeyById(userId, apiKeyId);
   }
 
   async unMarkDefaultKey(userId, apiKeyId) {
@@ -257,6 +249,62 @@ class UserService {
       throw error;
     }
 
+    return this.getApiKeyById(userId, apiKeyId);
+  }
+
+  #decryptApiKeyValue(apiKey) {
+    if (!apiKey || !apiKey.keyValue) {
+      console.error('Error: Se intentó descifrar una API Key inválida o sin valor.');
+      const error = new Error('Corrupted API Key data detected.');
+      error.statusCode = 500;
+      throw error;
+    }
+    try {
+      const decryptedValue = decrypt(apiKey.keyValue);
+      apiKey.keyValue = decryptedValue;
+      return apiKey;
+    } catch (err) {
+      console.error('Error decrypting API Key value:', err);
+      const error = new Error('Error decrypting API Key value');
+      error.statusCode = 500;
+      throw error;
+    }
+  }
+
+  #getSystemApiKey(user) {
+    const systemApiKey = {
+      _id: process.env.SYSTEM_API_KEY_ID,
+      id: process.env.SYSTEM_API_KEY_ID,
+      description: process.env.SYSTEM_API_KEY_DESCRIPTION || 'System API Key',
+      modelName: process.env.SYSTEM_API_KEY_MODEL_NAME,
+      keyValue: process.env.SYSTEM_API_KEY_VALUE,
+      isActive: true,
+      isDefault: user.isSystemApiKeyDefault,
+      baseUrl: process.env.SYSTEM_API_KEY_BASE_URL,
+      isSystemApiKey: true,
+    };
+
+    if (systemApiKey._id && systemApiKey.modelName && systemApiKey.keyValue && systemApiKey.baseUrl) {
+      return this.#maskApiKeyValue(systemApiKey);
+    }
+    return null;
+  }
+
+  #maskApiKeyValue(apiKey) {
+    if(!apiKey ) {
+      const error = new Error('FATAL: Se intentó enmascarar una API Key inválida o nula.');
+      error.statusCode = 500;
+      throw error;
+    }
+    const keyValue = apiKey?.keyValue;
+
+    if (!keyValue || keyValue.length <= 6) {
+      apiKey.keyValue = '••••••••••••••••';
+    } else {
+      const prefix = keyValue.slice(0, 2);
+      const suffix = keyValue.slice(-4);
+      apiKey.keyValue = `${prefix}••••••••••••${suffix}`;
+    }
     return apiKey;
   }
 }
