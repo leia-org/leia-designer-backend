@@ -129,7 +129,7 @@ class UserService {
       throw error;
     }
     const apiKeys = user.apiKeys.map(apiKey => {
-      const decrypted = this.#decryptApiKeyValue(apiKey.toObject());
+      const decrypted = this.#decryptApiKeyValue(apiKey.toObject({virtuals: true}));
       return this.#maskApiKeyValue(decrypted);
     });
 
@@ -169,7 +169,7 @@ class UserService {
         error.statusCode = 404;
         throw error;
       }
-      const decryptedApiKey = this.#decryptApiKeyValue(apiKey.toObject());
+      const decryptedApiKey = this.#decryptApiKeyValue(apiKey.toObject({virtuals: true}));
       return this.#maskApiKeyValue(decryptedApiKey);
     }
   }
