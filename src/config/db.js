@@ -1,12 +1,16 @@
 import mongoose from 'mongoose';
 import logger from '../utils/logger.js';
 import User from '../models/User.js';
+import Leia from '../models/Leia.js';
 
 const connectDB = async () => {
   try {
     logger.info('Connecting to MongoDB...');
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI, { autoIndex: true });
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
+
+    await Leia.syncIndexes();
+    logger.info('Leia indexes synchronized');
 
     const admin = await User.exists({ role: 'admin' });
     if (!admin) {
