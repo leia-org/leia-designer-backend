@@ -90,6 +90,19 @@ class UserRepository {
     return updatedUser;
   }
 
+  async clearSystemKeyFromAllUsers(systemApiKeyId) {
+    const result = await User.updateMany(
+      { defaultSystemApiKeyId: systemApiKeyId },
+      {
+        $set: {
+          defaultSystemApiKeyId: null,
+          isSystemApiKeyDefault: false
+        }
+      }
+    );
+    return result;
+  }
+
   // DELETE METHODS
 
   async delete(id) {

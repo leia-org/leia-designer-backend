@@ -1,4 +1,5 @@
 import SystemApiKeyRepository from '../../repositories/v1/SystemApiKeyRepository.js';
+import UserRepository from '../../repositories/v1/UserRepository.js';
 import { decryptApiKeyValue, maskApiKeyValue } from '../../utils/crypto.js';
 
 class SystemApiKeyService {
@@ -42,6 +43,7 @@ class SystemApiKeyService {
       error.statusCode = 404;
       throw error;
     }
+    await UserRepository.clearSystemKeyFromAllUsers(id);
     return true;
   }
 }
