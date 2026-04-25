@@ -99,7 +99,7 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Leia.find(query).populate('user');
+    return await Leia.find(query).populate('user').populate('metadata.label');
   }
 
   // WRITE METHODS

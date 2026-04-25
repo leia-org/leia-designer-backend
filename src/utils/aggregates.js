@@ -38,8 +38,22 @@ export function aggregateFindLatestVersions(match = {}) {
       },
     },
     {
+      $lookup: {
+        from: 'labels',
+        localField: 'metadata.label',
+        foreignField: '_id',
+        as: 'metadata.label',
+      },
+    },
+    {
       $unwind: {
         path: '$user',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: '$metadata.label',
         preserveNullAndEmptyArrays: true,
       },
     },
@@ -69,6 +83,7 @@ export function aggregateFindLatestVersions(match = {}) {
         'user._id': 0,
         'user.__v': 0,
         'user.password': 0,
+        'metadata.label.__v': 0,
       },
     }
   );
