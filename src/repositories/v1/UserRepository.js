@@ -56,7 +56,6 @@ class UserRepository {
     await user.save();
     return apiKey;
   }
-
   async markApiKeyAsDefault(userId, apiKeyId) {
     const updatedUser = await User.findOneAndUpdate(
       { _id: userId, 'apiKeys._id': apiKeyId },
@@ -64,7 +63,8 @@ class UserRepository {
         $set: {
           'apiKeys.$[others].isDefault': false,
           'apiKeys.$[target].isDefault': true,
-          isSystemApiKeyDefault: false
+          isSystemApiKeyDefault: false,
+          defaultSystemApiKeyId: null
         }
       },
       { new: true, arrayFilters: [{'others._id': { $ne: apiKeyId }},{ 'target._id': apiKeyId }] }
@@ -81,10 +81,10 @@ class UserRepository {
     return updatedUser;
   }
 
-  async setSystemApiKeyDefault(userId, isDefault = true) {
+  async setSystemApiKeyDefault(userId, apiKeyId, isDefault = true) {
     const update = isDefault
-      ? { $set: { 'apiKeys.$[].isDefault': false, isSystemApiKeyDefault: true } }
-      : { $set: { isSystemApiKeyDefault: false } };
+      ? { $set: { 'apiKeys.$[].isDefault': false, isSystemApiKeyDefault: true, defaultSystemApiKeyId: apiKeyId } }
+      : { $set: { isSystemApiKeyDefault: false, defaultSystemApiKeyId: null } };
 
     const updatedUser = await User.findByIdAndUpdate(userId, update, { new: true });
     return updatedUser;

@@ -1,5 +1,6 @@
 import UserRepository from '../../repositories/v1/UserRepository.js';
-import { encrypt, decrypt } from '../../utils/crypto.js';
+import SystemApiKeyService from './SystemApiKeyService.js';
+import { encrypt, decryptApiKeyValue, maskApiKeyValue } from '../../utils/crypto.js';
 
 
 class UserService {
@@ -129,49 +130,53 @@ class UserService {
       throw error;
     }
     const apiKeys = user.apiKeys.map(apiKey => {
-      const decrypted = this.#decryptApiKeyValue(apiKey.toObject({virtuals: true}));
-      return this.#maskApiKeyValue(decrypted);
+      const decrypted = decryptApiKeyValue(apiKey.toObject({virtuals: true}));
+      return maskApiKeyValue(decrypted);
     });
 
     if (user.useSystemApiKey) {
-      const systemApiKey = this.#getSystemApiKey(user);
-      if (systemApiKey) {
-        return [systemApiKey, ...apiKeys];
-      }
+      const systemKeysDocs = await SystemApiKeyService.findAll();
+      const systemApiKeys = systemKeysDocs.map(sysKey => {
+        sysKey.isDefault = user.defaultSystemApiKeyId && user.defaultSystemApiKeyId.toString() === sysKey._id.toString();
+        return sysKey;
+      });
+
+      return [...systemApiKeys, ...apiKeys];
     }
+
     return apiKeys;
   }
 
-  async getApiKeyById(userId, apiKeyId) {
+  async getApiKeyById(userId, apiKeyId, maskValue = true) {
     if (!userId) {
       const error = new Error('Unauthorized');
       error.statusCode = 401;
       throw error;
     }
-
     const user = await UserRepository.findById(userId);
     if (!user) {
       const error = new Error('User not found');
       error.statusCode = 404;
       throw error;
     }
-    if (apiKeyId === process.env.SYSTEM_API_KEY_ID) {
+    const systemKey = await SystemApiKeyService.findById(apiKeyId, maskValue);
+    if (systemKey) {
       if (!user.useSystemApiKey) {
-        const error = new Error('User does not have access to the system API key');
-        error.statusCode = 404;
+        const error = new Error('User does not have access to the system API keys');
+        error.statusCode = 403;
         throw error;
       }
-      return this.#getSystemApiKey(user);
-    } else {
-      const apiKey = user.apiKeys.id(apiKeyId);
-      if (!apiKey) {
-        const error = new Error('API Key not found');
-        error.statusCode = 404;
-        throw error;
-      }
-      const decryptedApiKey = this.#decryptApiKeyValue(apiKey.toObject({virtuals: true}));
-      return this.#maskApiKeyValue(decryptedApiKey);
+      systemKey.isDefault = user.defaultSystemApiKeyId && user.defaultSystemApiKeyId.toString() === systemKey._id.toString();
+      return systemKey;
     }
+    const apiKey = user.apiKeys.id(apiKeyId);
+    if (!apiKey) {
+      const error = new Error('API Key not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    const decryptedApiKey = decryptApiKeyValue(apiKey.toObject({virtuals: true}));
+    return maskValue ? maskApiKeyValue(decryptedApiKey) : decryptedApiKey;
   }
 
   async updateApiKey(userId, apiKeyId, apiKeyData) {
@@ -193,29 +198,21 @@ class UserService {
 
     return this.getApiKeyById(userId, apiKeyId);
   }
-
   async markKeyAsDefault(userId, apiKeyId) {
-    if (apiKeyId === process.env.SYSTEM_API_KEY_ID) {
-      // mark system api key as default atomically
-      const updatedUser = await UserRepository.setSystemApiKeyDefault(userId, true);
+    const systemKey = await SystemApiKeyService.findById(apiKeyId);
+
+    if (systemKey) {
+      const updatedUser = await UserRepository.setSystemApiKeyDefault(userId, apiKeyId, true);
       if (!updatedUser) {
         const error = new Error('User not found');
         error.statusCode = 404;
         throw error;
       }
-      return this.#getSystemApiKey(updatedUser);
+      return this.getApiKeyById(userId, apiKeyId);
     }
 
-    // atomically mark the embedded apiKey as default and clear others
     const updatedUser = await UserRepository.markApiKeyAsDefault(userId, apiKeyId);
     if (!updatedUser) {
-      const error = new Error('API Key not found or does not belong to this user');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    const apiKey = updatedUser.apiKeys.find(k => String(k._id) === String(apiKeyId));
-    if (!apiKey) {
       const error = new Error('API Key not found or does not belong to this user');
       error.statusCode = 404;
       throw error;
@@ -225,14 +222,16 @@ class UserService {
   }
 
   async unMarkDefaultKey(userId, apiKeyId) {
-    if (apiKeyId === process.env.SYSTEM_API_KEY_ID) {
-      const updatedUser = await UserRepository.setSystemApiKeyDefault(userId, false);
+    const systemKey = await SystemApiKeyService.findById(apiKeyId);
+
+    if (systemKey) {
+      const updatedUser = await UserRepository.setSystemApiKeyDefault(userId, apiKeyId, false);
       if (!updatedUser) {
         const error = new Error('User not found');
         error.statusCode = 404;
         throw error;
       }
-      return this.#getSystemApiKey(updatedUser);
+      return this.getApiKeyById(userId, apiKeyId);
     }
 
     const updatedUser = await UserRepository.unmarkApiKeyDefault(userId, apiKeyId);
@@ -242,71 +241,9 @@ class UserService {
       throw error;
     }
 
-    const apiKey = updatedUser.apiKeys.find(k => String(k._id) === String(apiKeyId));
-    if (!apiKey) {
-      const error = new Error('API Key not found or does not belong to this user');
-      error.statusCode = 404;
-      throw error;
-    }
-
     return this.getApiKeyById(userId, apiKeyId);
   }
 
-  #decryptApiKeyValue(apiKey) {
-    if (!apiKey || !apiKey.keyValue) {
-      console.error('Error: Se intentó descifrar una API Key inválida o sin valor.');
-      const error = new Error('Corrupted API Key data detected.');
-      error.statusCode = 500;
-      throw error;
-    }
-    try {
-      const decryptedValue = decrypt(apiKey.keyValue);
-      apiKey.keyValue = decryptedValue;
-      return apiKey;
-    } catch (err) {
-      console.error('Error decrypting API Key value:', err);
-      const error = new Error('Error decrypting API Key value');
-      error.statusCode = 500;
-      throw error;
-    }
-  }
-
-  #getSystemApiKey(user) {
-    const systemApiKey = {
-      _id: process.env.SYSTEM_API_KEY_ID,
-      id: process.env.SYSTEM_API_KEY_ID,
-      description: process.env.SYSTEM_API_KEY_DESCRIPTION || 'System API Key',
-      modelName: process.env.SYSTEM_API_KEY_MODEL_NAME,
-      keyValue: process.env.SYSTEM_API_KEY_VALUE,
-      isActive: true,
-      isDefault: user.isSystemApiKeyDefault,
-      baseUrl: process.env.SYSTEM_API_KEY_BASE_URL,
-      isSystemApiKey: true,
-    };
-
-    if (systemApiKey._id && systemApiKey.modelName && systemApiKey.keyValue && systemApiKey.baseUrl) {
-      return this.#maskApiKeyValue(systemApiKey);
-    }
-    return null;
-  }
-
-  #maskApiKeyValue(apiKey) {
-    if(!apiKey ) {
-      const error = new Error('FATAL: Se intentó enmascarar una API Key inválida o nula.');
-      error.statusCode = 500;
-      throw error;
-    }
-    const keyValue = apiKey?.keyValue;
-
-    if (!keyValue || keyValue.length <= 6) {
-      apiKey.keyValue = '••••••••••••••••';
-    } else {
-      const prefix = keyValue.slice(0, 2);
-      const suffix = keyValue.slice(-4);
-      apiKey.keyValue = `${prefix}••••••••••••${suffix}`;
-    }
-    return apiKey;
-  }
 }
 
 export default new UserService();

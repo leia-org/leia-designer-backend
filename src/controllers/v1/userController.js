@@ -152,8 +152,6 @@ export const createApiKey = async (req, res, next) => {
 
     const savedApiKey = await UserService.createApiKey(userId, value);
     res.status(201).json(savedApiKey);
-
-    // aplicar hashing en el servicio
   }catch (err) {
     next(err);
   }
@@ -214,8 +212,6 @@ export const manageDefaultKey = async (req, res, next) => {
   }
 }
 
-
-
 export const getApiKeyById = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
@@ -224,6 +220,27 @@ export const getApiKeyById = async (req, res, next) => {
     res.json(apiKey);
   }
   catch (err) {
+    next(err);
+  }
+}
+
+export const getApiKeyValueForLeiaRunner = async (req, res, next) => {
+  try {
+    const userId = req.auth?.payload?.id;
+    const apiKeyId = req.params.apiKeyId;
+    const token = req.headers['x-designer-intern-token'];
+
+    if (token !== process.env.DESIGNER_INTERN_TOKEN) {
+      const error = new Error('Unauthorized: Invalid intern token');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const apiKey = await UserService.getApiKeyById(userId, apiKeyId, false);
+
+    res.json({ keyValue: apiKey.keyValue, modelName: apiKey.modelName, baseUrl:apiKey.baseUrl });
+  }
+    catch (err) {
     next(err);
   }
 }

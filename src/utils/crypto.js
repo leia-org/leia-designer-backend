@@ -54,3 +54,40 @@ export const decrypt = (encryptedData) => {
 
   return decrypted;
 };
+
+export const decryptApiKeyValue = (apiKey) => {
+    if (!apiKey || !apiKey.keyValue) {
+      console.error('Error: Se intentó descifrar una API Key inválida o sin valor.');
+      const error = new Error('Corrupted API Key data detected.');
+      error.statusCode = 500;
+      throw error;
+    }
+    try {
+      const decryptedValue = decrypt(apiKey.keyValue);
+      apiKey.keyValue = decryptedValue;
+      return apiKey;
+    } catch (err) {
+      console.error('Error decrypting API Key value:', err);
+      const error = new Error('Error decrypting API Key value');
+      error.statusCode = 500;
+      throw error;
+    }
+  }
+
+  export const maskApiKeyValue = (apiKey) => {
+    if(!apiKey ) {
+      const error = new Error('FATAL: Se intentó enmascarar una API Key inválida o nula.');
+      error.statusCode = 500;
+      throw error;
+    }
+    const keyValue = apiKey?.keyValue;
+
+    if (!keyValue || keyValue.length <= 6) {
+      apiKey.keyValue = '••••••••••••••••';
+    } else {
+      const prefix = keyValue.slice(0, 2);
+      const suffix = keyValue.slice(-4);
+      apiKey.keyValue = `${prefix}••••••••••••${suffix}`;
+    }
+    return apiKey;
+  }

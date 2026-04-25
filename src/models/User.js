@@ -27,13 +27,17 @@ const UserSchema = new Schema(
       required: true,
       default: false
     },
+    defaultSystemApiKeyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SystemApiKey'
+    },
     apiKeys: [
       {
         description: {
           type: String,
           required: true,
         },
-        modelName: {
+        modelName: { // provider que serua el enum que dijo rada
           type: String,
           required: true,
         },
