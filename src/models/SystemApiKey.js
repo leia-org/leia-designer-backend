@@ -7,7 +7,7 @@ const SystemApiKeySchema = new Schema(
       type: String,
       required: true,
     },
-    modelName: {
+    provider: {
       type: String,
       required: true,
     },

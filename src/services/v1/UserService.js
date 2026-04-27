@@ -94,6 +94,7 @@ class UserService {
       throw error;
     }
     const newApiKey = editedUser.apiKeys[editedUser.apiKeys.length - 1];
+    console.log('New API Key created with ID:', newApiKey);
     if (apiKeyData.isDefault) {
       await this.markKeyAsDefault(userId, newApiKey._id);
     }

@@ -61,3 +61,12 @@ export const generateProblem = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAllModelsAndDetails = async (req, res, next) => {
+  try {
+    const models = await RunnerService.getAllModelsAndDetails();
+    res.json(models);
+  } catch (err) {
+    next(err);
+  }
+};

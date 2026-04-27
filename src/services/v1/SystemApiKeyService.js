@@ -19,9 +19,12 @@ class SystemApiKeyService {
     return maskValue ? maskApiKeyValue(decrypted) : decrypted;
   }
 
-  async create(data) {
+  async create(userId, data) {
     const newKey = await SystemApiKeyRepository.create(data);
     const decrypted = decryptApiKeyValue(newKey.toObject({ virtuals: true }));
+    if (data.isDefault) {
+      await UserRepository.setSystemApiKeyDefault(userId, newKey._id);
+    }
     return maskApiKeyValue(decrypted);
   }
 

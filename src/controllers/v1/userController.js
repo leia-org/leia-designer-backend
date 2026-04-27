@@ -1,6 +1,8 @@
 import UserService from '../../services/v1/UserService.js';
-import { createUserValidator, updateUserValidator, loginUserValidator, createApiKeyValidator, updateApiKeyValidator } from '../../validators/v1/userValidator.js';
+import { createUserValidator, updateUserValidator, loginUserValidator } from '../../validators/v1/userValidator.js';
+import { createApiKeyValidator, updateApiKeyValidator } from '../../validators/v1/apiKeyValidator.js';
 import { generateToken } from '../../utils/jwt.js';
+import ProviderService from '../../services/v1/ProviderService.js';
 
 // No authentication required
 export const login = async (req, res, next) => {
@@ -149,10 +151,17 @@ export const createApiKey = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
     const value = await createApiKeyValidator.validateAsync(req.body, { abortEarly: false });
-
+    await ProviderService.verifyApiKeyIntegrity(value.provider, value.keyValue);
     const savedApiKey = await UserService.createApiKey(userId, value);
     res.status(201).json(savedApiKey);
   }catch (err) {
+    if (err.message.startsWith('Invalid API Key') || err.message.includes('service is not available')) {
+      err.isJoi = true;
+      err.details = [{
+        path: ['keyValue'],
+        message: err.message,
+      }];
+    }
     next(err);
   }
 }
@@ -183,13 +192,22 @@ export const updateApiKey = async (req, res, next) => {
     const userId = req.auth?.payload?.id;
     const apiKeyId = req.params.apiKeyId;
     const value = await updateApiKeyValidator.validateAsync(req.body, { abortEarly: true });
-    if (!value.keyValue || value.keyValue === '') {
-      delete value.keyValue;
+    if (value.keyValue && value.keyValue !== '') {
+        await ProviderService.verifyApiKeyIntegrity(value.provider, value.keyValue);
+    } else {
+        delete value.keyValue;
     }
     const updatedKey = await UserService.updateApiKey(userId, apiKeyId, value);
     res.json(updatedKey);
   }
   catch (err) {
+    if (err.message.startsWith('Invalid API Key') || err.message.includes('service is not available')) {
+        err.isJoi = true;
+        err.details = [{
+          path: ['keyValue'],
+          message: err.message,
+        }];
+      }
     next(err);
   }
 }
@@ -238,7 +256,7 @@ export const getApiKeyValueForLeiaRunner = async (req, res, next) => {
 
     const apiKey = await UserService.getApiKeyById(userId, apiKeyId, false);
 
-    res.json({ keyValue: apiKey.keyValue, modelName: apiKey.modelName, baseUrl:apiKey.baseUrl });
+    res.json({ keyValue: apiKey.keyValue, provider: apiKey.provider, baseUrl:apiKey.baseUrl });
   }
     catch (err) {
     next(err);
