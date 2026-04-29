@@ -90,20 +90,7 @@ LeiaSchema.index(
   { unique: true }
 );
 
-LeiaSchema.index(
-  {
-    'metadata.name': 'text',
-    'spec.problem.spec.description': 'text',
-    'spec.behaviour.metadata.name': 'text',
-  },
-  {
-    weights: {
-      'metadata.name': 10,
-      'spec.problem.spec.description': 7,
-      'spec.behaviour.metadata.name': 5,
-    },
-  }
-);
+LeiaSchema.index({ 'metadata.name': 'text' });
 
 // Index for user-based queries (private resources)
 LeiaSchema.index({ user: 1, isPublished: 1 });
