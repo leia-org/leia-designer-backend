@@ -1,4 +1,5 @@
 import LabelService from '../../services/v1/LabelService.js';
+import { createLabelValidator, updateLabelValidator } from '../../validators/v1/labelValidator.js';
 
 export const getLabels = async (req, res, next) => {
   try {
@@ -27,9 +28,12 @@ export const getLabelById = async (req, res, next) => {
 
 export const createLabel = async (req, res, next) => {
   try {
-    const labelData = {
+    const role = req.auth?.payload?.role;
+    const labelData = await createLabelValidator.validateAsync({
       ...req.body,
-    };
+      user: req.auth?.payload?.id,
+      isGlobal: role === 'admin' ? req.body.isGlobal : false,
+    }, { abortEarly: false });
     const newLabel = await LabelService.create(labelData);
     res.status(201).json(newLabel);
   } catch (err) {
@@ -55,7 +59,12 @@ export const updateLabel = async (req, res, next) => {
       throw error;
     }
 
-    const updatedLabel = await LabelService.update(req.params.id, req.body);
+    const value = await updateLabelValidator.validateAsync(req.body, { abortEarly: false });
+    if (role !== 'admin') {
+      value.isGlobal = false;
+    }
+
+    const updatedLabel = await LabelService.update(req.params.id, value);
     res.json(updatedLabel);
   } catch (err) {
     next(err);
