@@ -132,7 +132,7 @@ class LeiaService {
     return leia;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}) {
+  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
@@ -143,7 +143,8 @@ class LeiaService {
       apiVersion,
       context.userId,
       visibility,
-      context.role === 'admin' || context.internal
+      context.role === 'admin' || context.internal,
+      labelId
     );
   }
 

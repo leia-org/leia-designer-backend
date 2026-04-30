@@ -21,6 +21,13 @@ export const validateBoolean = (value, defaultValue = false) => {
 };
 
 /**
+ * Validates MongoDB ObjectId query parameters.
+ * @param {string} id - The ObjectId query parameter to validate
+ * @returns {boolean} - True when id is a 24-character hex ObjectId
+ */
+export const isMongoIdQueryValid = (id) => typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id);
+
+/**
  * Validates and returns a sanitized process parameter
  * @param {string} process - The process parameter to validate
  * @returns {string|null} - Valid process value ('requirements-elicitation', 'game', 'other') or null if invalid/empty

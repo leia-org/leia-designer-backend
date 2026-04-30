@@ -1,4 +1,5 @@
 import Leia from '../../models/Leia.js';
+import mongoose from 'mongoose';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
 import { applyVisibilityFilters } from '../../utils/entity.js';
 
@@ -76,7 +77,7 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId) {
     const query = {};
 
     // Apply visibility filters
@@ -91,7 +92,9 @@ class LeiaRepository {
     if (apiVersion) {
       query['apiVersion'] = apiVersion;
     }
-
+    if (labelId) {
+      query['metadata.label'] = new mongoose.Types.ObjectId(labelId);
+    }
     if (version === 'latest') {
       // Pass the complete query to the aggregation
       return await Leia.aggregate(aggregateFindLatestVersions(query));
@@ -99,7 +102,7 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Leia.find(query).populate('user');
+    return await Leia.find(query).populate('user').populate('metadata.label');
   }
 
   // WRITE METHODS
