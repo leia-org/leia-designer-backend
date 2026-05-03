@@ -91,7 +91,16 @@ export function requireJwtAuthentication(req, res, next) {
   }
   return next();
 }
-
+// This middleware is used to check if the request is coming from an internal service with the correct intern token
+export function requireInternToken(req, res, next) {
+  const internToken = req.headers['x-designer-intern-token'];
+  if (internToken !== process.env.DESIGNER_INTERN_TOKEN) {
+    const error = new Error('Unauthorized: Invalid intern token');
+    error.statusCode = 401;
+    return next(error);
+  }
+  return next();
+}
 // This middleware is used to check if the user is logged in with API key
 export function requireApiKeyAuthentication(req, res, next) {
   if (req.auth?.method !== 'API_KEY') {

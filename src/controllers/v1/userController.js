@@ -2,6 +2,7 @@ import UserService from '../../services/v1/UserService.js';
 import { createUserValidator, updateUserValidator, loginUserValidator } from '../../validators/v1/userValidator.js';
 import { createApiKeyValidator, updateApiKeyValidator } from '../../validators/v1/apiKeyValidator.js';
 import { generateToken } from '../../utils/jwt.js';
+import SystemApiKeyService from '../../services/v1/SystemApiKeyService.js';
 import ProviderService from '../../services/v1/ProviderService.js';
 
 // No authentication required
@@ -181,6 +182,7 @@ export const deleteApiKey = async (req, res, next) => {
     const userId = req.auth?.payload?.id;
     const apiKeyId = req.params.apiKeyId;
     await UserService.deleteApiKey(userId, apiKeyId);
+    await SystemApiKeyService.sendRevocationRequestToRunner(apiKeyId);
     res.status(204).end();
   }
   catch (err) {    next(err);
@@ -198,6 +200,7 @@ export const updateApiKey = async (req, res, next) => {
         delete value.keyValue;
     }
     const updatedKey = await UserService.updateApiKey(userId, apiKeyId, value);
+    await SystemApiKeyService.sendRevocationRequestToRunner(updatedKey._id);
     res.json(updatedKey);
   }
   catch (err) {
@@ -244,19 +247,20 @@ export const getApiKeyById = async (req, res, next) => {
 
 export const getApiKeyValueForLeiaRunner = async (req, res, next) => {
   try {
-    const userId = req.auth?.payload?.id;
-    const apiKeyId = req.params.apiKeyId;
-    const token = req.headers['x-designer-intern-token'];
-
-    if (token !== process.env.DESIGNER_INTERN_TOKEN) {
-      const error = new Error('Unauthorized: Invalid intern token');
-      error.statusCode = 403;
+    const { provider, apiKeyId, apiKeyRequesterId } = req.body;
+    const apiKey = await UserService.getApiKeyById(apiKeyRequesterId, apiKeyId, false);
+    if (!apiKey) {
+      const error = new Error('API Key not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    if (apiKey.provider !== provider) {
+      const error = new Error('API Key provider mismatch');
+      error.statusCode = 400;
       throw error;
     }
 
-    const apiKey = await UserService.getApiKeyById(userId, apiKeyId, false);
-
-    res.json({ keyValue: apiKey.keyValue, provider: apiKey.provider, baseUrl:apiKey.baseUrl });
+    res.json({ keyValue: apiKey.keyValue });
   }
     catch (err) {
     next(err);

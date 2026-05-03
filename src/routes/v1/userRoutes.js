@@ -14,16 +14,18 @@ import {
   deleteApiKey,
   updateApiKey,
   getApiKeyById,
-  manageDefaultKey
+  manageDefaultKey,
+  getApiKeyValueForLeiaRunner
 } from '../../controllers/v1/userController.js';
 
-import { requireAdmin, requireAdvanced, requireJwtAuthentication } from '../../middlewares/auth.js';
+import { requireAdmin, requireAdvanced, requireInternToken, requireJwtAuthentication } from '../../middlewares/auth.js';
 const router = express.Router();
 
 // POST
 router.post('/login', login); // No authentication or authorization required
 router.post('/', requireAdmin, createUser);
 router.post('/apikeys', requireAdvanced, createApiKey);
+router.post('/apikeys/get-value', requireInternToken, getApiKeyValueForLeiaRunner);
 
 // GET
 router.get('/', requireAdmin, getUsers);

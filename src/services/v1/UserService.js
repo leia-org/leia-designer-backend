@@ -186,7 +186,11 @@ class UserService {
       error.statusCode = 401;
       throw error;
     }
-
+    if (apiKeyData.provider && !apiKeyData.keyValue) {
+      const error = new Error('API Key value is required when updating provider');
+      error.statusCode = 400;
+      throw error;
+    }
     if (apiKeyData.keyValue) {
       apiKeyData.keyValue = encrypt(apiKeyData.keyValue);
     }

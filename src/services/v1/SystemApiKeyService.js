@@ -1,6 +1,7 @@
 import SystemApiKeyRepository from '../../repositories/v1/SystemApiKeyRepository.js';
 import UserRepository from '../../repositories/v1/UserRepository.js';
 import { decryptApiKeyValue, maskApiKeyValue } from '../../utils/crypto.js';
+import axios from 'axios';
 
 class SystemApiKeyService {
   async findAll() {
@@ -29,6 +30,11 @@ class SystemApiKeyService {
   }
 
   async update(id, data) {
+    if (data.provider && !data.keyValue) {
+      const error = new Error('API Key value is required when updating provider');
+      error.statusCode = 400;
+      throw error;
+    }
     const updatedKey = await SystemApiKeyRepository.update(id, data);
     if (!updatedKey) {
       const error = new Error('System API Key not found');
@@ -48,6 +54,20 @@ class SystemApiKeyService {
     }
     await UserRepository.clearSystemKeyFromAllUsers(id);
     return true;
+  }
+
+  async sendRevocationRequestToRunner(apiKeyId) {
+    try {
+      const config = {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        }
+      };
+
+      await axios.post(`${process.env.RUNNER_URL}/api/v1/revoke`, { apiKeyId }, config);
+    } catch (err) {
+      console.error(`Failed to send revocation request for API Key ${apiKeyId}:`, err.message);
+    }
   }
 }
 

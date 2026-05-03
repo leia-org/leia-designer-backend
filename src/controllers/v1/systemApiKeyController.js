@@ -31,6 +31,7 @@ export const updateSystemApiKey = async (req, res, next) => {
         delete value.keyValue;
     }
     const updatedKey = await SystemApiKeyService.update(id, value);
+    await SystemApiKeyService.sendRevocationRequestToRunner(updatedKey._id);
     res.json(updatedKey);
   } catch (err) {
     if (err.message.startsWith('Invalid API Key') || err.message.includes('service is not available')) {
@@ -49,6 +50,7 @@ export const deleteSystemApiKey = async (req, res, next) => {
     const id = req.params.id;
 
     await SystemApiKeyService.delete(id);
+    await SystemApiKeyService.sendRevocationRequestToRunner(id);
     res.status(204).end();
   } catch (err) {
     next(err);
