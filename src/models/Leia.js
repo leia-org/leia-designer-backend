@@ -30,7 +30,10 @@ const LeiaSchema = new Schema(
           default: 0,
         },
       },
-      label: { type: mongoose.Schema.Types.ObjectId, ref: 'Label' },
+      labels: [{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Label'
+      }],
     },
     spec: {
       personaId: {

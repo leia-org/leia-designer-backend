@@ -30,6 +30,22 @@ export function aggregateFindLatestVersions(match = {}) {
       $replaceRoot: { newRoot: '$latest' },
     },
     {
+      $addFields: {
+        'metadata.labels': {
+          $setUnion: [
+            { $ifNull: ['$metadata.labels', []] },
+            {
+              $cond: [
+                { $ifNull: ['$metadata.label', false] },
+                ['$metadata.label'],
+                [],
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
       $lookup: {
         from: 'users',
         localField: 'user',
@@ -40,20 +56,14 @@ export function aggregateFindLatestVersions(match = {}) {
     {
       $lookup: {
         from: 'labels',
-        localField: 'metadata.label',
+        localField: 'metadata.labels',
         foreignField: '_id',
-        as: 'metadata.label',
+        as: 'metadata.labels',
       },
     },
     {
       $unwind: {
         path: '$user',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: '$metadata.label',
         preserveNullAndEmptyArrays: true,
       },
     },
@@ -83,7 +93,7 @@ export function aggregateFindLatestVersions(match = {}) {
         'user._id': 0,
         'user.__v': 0,
         'user.password': 0,
-        'metadata.label.__v': 0,
+        'metadata.labels.__v': 0,
       },
     }
   );
