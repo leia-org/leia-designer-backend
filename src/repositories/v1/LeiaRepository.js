@@ -13,6 +13,10 @@ class LeiaRepository {
   async findById(id) {
     return await Leia.findById(id);
   }
+  
+  async findByIdAndUpdate(id, updateData) {
+    return await Leia.findByIdAndUpdate(id, updateData, { new: true}).populate('metadata.labels');
+  }
 
   async findByIdPopulatedUser(id) {
     return await Leia.findById(id).populate('user');
@@ -93,7 +97,11 @@ class LeiaRepository {
       query['apiVersion'] = apiVersion;
     }
     if (labelId) {
-      query['metadata.label'] = new mongoose.Types.ObjectId(labelId);
+      const labelObjectId = new mongoose.Types.ObjectId(labelId);
+      query['$or'] = [
+        { 'metadata.labels': labelObjectId },
+        { 'metadata.label': labelObjectId },
+      ];
     }
     if (version === 'latest') {
       // Pass the complete query to the aggregation
@@ -102,7 +110,7 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Leia.find(query).populate('user').populate('metadata.label');
+    return await Leia.find(query).populate('user').populate('metadata.labels');
   }
 
   // WRITE METHODS

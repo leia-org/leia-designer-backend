@@ -158,3 +158,29 @@ export const deleteLeiaById = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateLeiaLabels = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const leia = await LeiaService.findById(req.params.id, context);
+    if (context.role !== 'admin' && leia.user.toString() !== context.userId) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 403;
+      throw error;
+    }
+    const labelsIds = req.body.labelsIds;
+    const updatedLeia = await LeiaService.updateById(req.params.id, labelsIds);
+    
+    if (isNotFound(updatedLeia)) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.status(200).json(updatedLeia);
+  } catch (err) {
+    next(err);
+  }
+};
