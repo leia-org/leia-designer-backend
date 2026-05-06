@@ -15,7 +15,7 @@ const ExperimentSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      alias: 'userId'
     },
   },
   {
@@ -31,9 +31,5 @@ const ExperimentSchema = new Schema(
   }
 );
 
-// Auto-populate user field in find queries
-ExperimentSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function () {
-  this.populate('user');
-});
 
 export default mongoose.model('Experiment', ExperimentSchema);

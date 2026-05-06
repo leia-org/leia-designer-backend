@@ -2,6 +2,7 @@ import PersonaRepository from '../../repositories/v1/PersonaRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
+import { getUserProfileFromAuthService } from '../../utils/authClient.js'
 
 class PersonaService {
   // READ METHODS
@@ -28,13 +29,21 @@ class PersonaService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const persona = await PersonaRepository.findByIdPopulatedUser(id);
+    const persona = await PersonaRepository.findById(id);
 
     if (!canAccess(persona, context)) {
       throw createUnauthorizedError('Persona');
     }
+    const personaObj = persona.toJSON ? persona.toJSON() : persona;
+    if (personaObj.user) {
+      const userProfile = await getUserProfileFromAuthService(personaObj.user);
+      if (userProfile) {
+        personaObj.user = userProfile;
+      }
+    }
 
-    return persona;
+    return personaObj;
+
   }
 
   async existsByName(name) {
@@ -109,7 +118,19 @@ class PersonaService {
       version = getVersionObjectFromString(version);
     }
 
-    return await PersonaRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
+    const personas = await PersonaRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
+    const populatedPersonas = await Promise.all(personas.map(async (persona) => {
+      const personaObj = persona.toJSON ? persona.toJSON() : persona;
+      if (personaObj.user) {
+        const userProfile = await getUserProfileFromAuthService(personaObj.user);
+        if (userProfile) {
+          personaObj.user = userProfile;
+        }
+      }
+      return personaObj;
+    }));
+
+    return populatedPersonas;
   }
 
   // WRITE METHODS
@@ -209,7 +230,7 @@ class PersonaService {
     persona.isPublished = false;
     return await persona.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {

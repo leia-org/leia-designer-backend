@@ -2,6 +2,7 @@ import ProblemRepository from '../../repositories/v1/ProblemRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
+import { getUserProfileFromAuthService } from '../../utils/authClient.js';
 
 class ProblemService {
   // READ METHODS
@@ -28,13 +29,20 @@ class ProblemService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const problem = await ProblemRepository.findByIdPopulatedUser(id);
+    const problem = await ProblemRepository.findById(id);
 
     if (!canAccess(problem, context)) {
       throw createUnauthorizedError('Problem');
     }
 
-    return problem;
+    const problemObj = problem.toJSON ? problem.toJSON() : problem;
+    if (problemObj.user) {
+      const userProfile = await getUserProfileFromAuthService(problemObj.user);
+      if (userProfile) {
+        problemObj.user = userProfile;
+      }
+    }
+    return problemObj;
   }
 
   async existsByName(name) {
@@ -108,8 +116,20 @@ class ProblemService {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
+    const problems= await ProblemRepository.findByQuery(text, version, apiVersion, process, context.userId, visibility, context.role === 'admin' || context.internal);
 
-    return await ProblemRepository.findByQuery(text, version, apiVersion, process, context.userId, visibility, context.role === 'admin' || context.internal);
+    const populatedProblems = await Promise.all(problems.map(async (problem) => {
+      const problemObj = problem.toJSON ? problem.toJSON() : problem;
+      if (problemObj.user) {
+        const userProfile = await getUserProfileFromAuthService(problemObj.user);
+        if (userProfile) {
+          problemObj.user = userProfile;
+        }
+      }
+      return problemObj;
+    }));
+
+    return populatedProblems;
   }
 
   // WRITE METHODS
@@ -209,7 +229,7 @@ class ProblemService {
     problem.isPublished = false;
     return await problem.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {
