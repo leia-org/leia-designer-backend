@@ -2,6 +2,7 @@ import Leia from '../../models/Leia.js';
 import mongoose from 'mongoose';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
 import { applyVisibilityFilters } from '../../utils/entity.js';
+import { regexQuery } from '../../utils/search.js';
 
 class LeiaRepository {
   // READ METHODS
@@ -91,7 +92,7 @@ class LeiaRepository {
 
     // Add text and apiVersion filters to query
     if (text) {
-      query['$text'] = { $search: text };
+      Object.assign(query, regexQuery(text, 'metadata.name'));
     }
     if (apiVersion) {
       query['apiVersion'] = apiVersion;
