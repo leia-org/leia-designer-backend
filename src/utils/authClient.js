@@ -7,7 +7,7 @@ export const getUserProfileFromAuthService = async (userId) => {
   try {
     const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/v1/users/${userId}`, {
       headers: {
-        'x-services-intern-token': process.env.INTERN_TOKEN
+        'x-intern-token': process.env.INTERN_TOKEN
       }
     });
     return response.data;
