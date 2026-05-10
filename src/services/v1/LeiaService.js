@@ -6,7 +6,7 @@ import ProblemService from './ProblemService.js';
 import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
-import { getUserProfileFromAuthService } from '../../utils/authClient.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class LeiaService {
   // READ METHODS
@@ -38,16 +38,7 @@ class LeiaService {
     if (!canAccess(leia, context)) {
       throw createUnauthorizedError('Leia');
     }
-
-    const leiaObj = leia.toJSON ? leia.toJSON() : leia;
-    if (leiaObj.user) {
-      const userProfile = await getUserProfileFromAuthService(leiaObj.user);
-      if (userProfile) {
-        leiaObj.user = userProfile;
-      }
-    }
-
-    return leiaObj;
+    return await populateUserInEntity(leia);
   }
 
   async existsByName(name) {
@@ -154,17 +145,7 @@ class LeiaService {
       visibility,
       context.role === 'admin' || context.internal
     );
-    const populatedLeias = await Promise.all(leias.map(async (leia) => {
-      const leiaObj = leia.toJSON ? leia.toJSON() : leia;
-      if (leiaObj.user) {
-        const userProfile = await getUserProfileFromAuthService(leiaObj.user);
-        if (userProfile) {
-          leiaObj.user = userProfile;
-        }
-      }
-      return leiaObj;
-    }));
-    return populatedLeias;
+    return await populateUserInEntity(leias);
   }
 
   // WRITE METHODS

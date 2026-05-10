@@ -2,7 +2,7 @@ import PersonaRepository from '../../repositories/v1/PersonaRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
-import { getUserProfileFromAuthService } from '../../utils/authClient.js'
+import { populateUserInEntity } from '../../utils/authClient.js'
 
 class PersonaService {
   // READ METHODS
@@ -34,16 +34,7 @@ class PersonaService {
     if (!canAccess(persona, context)) {
       throw createUnauthorizedError('Persona');
     }
-    const personaObj = persona.toJSON ? persona.toJSON() : persona;
-    if (personaObj.user) {
-      const userProfile = await getUserProfileFromAuthService(personaObj.user);
-      if (userProfile) {
-        personaObj.user = userProfile;
-      }
-    }
-
-    return personaObj;
-
+    return await populateUserInEntity(persona);
   }
 
   async existsByName(name) {
@@ -119,22 +110,10 @@ class PersonaService {
     }
 
     const personas = await PersonaRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
-    const populatedPersonas = await Promise.all(personas.map(async (persona) => {
-      const personaObj = persona.toJSON ? persona.toJSON() : persona;
-      if (personaObj.user) {
-        const userProfile = await getUserProfileFromAuthService(personaObj.user);
-        if (userProfile) {
-          personaObj.user = userProfile;
-        }
-      }
-      return personaObj;
-    }));
-
-    return populatedPersonas;
+    return await populateUserInEntity(personas);
   }
 
   // WRITE METHODS
-
   async create(personaData, context = {}, publish = true) {
     delete personaData.metadata.version; // Remove to set the version to 1.0.0
     if (context.role === 'admin') {

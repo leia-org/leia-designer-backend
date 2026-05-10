@@ -2,7 +2,7 @@ import BehaviourRepository from '../../repositories/v1/BehaviourRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
-import { getUserProfileFromAuthService } from '../../utils/authClient.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class BehaviourService {
   // READ METHODS
@@ -34,16 +34,7 @@ class BehaviourService {
     if (!canAccess(behaviour, context)) {
       throw createUnauthorizedError('Behaviour');
     }
-
-    const behaviourObj = behaviour.toJSON ? behaviour.toJSON() : behaviour;
-    if (behaviourObj.user) {
-      const userProfile = await getUserProfileFromAuthService(behaviourObj.user);
-      if (userProfile) {
-        behaviourObj.user = userProfile;
-      }
-    }
-
-    return behaviourObj;
+    return await populateUserInEntity(behaviour);
   }
 
   async existsByName(name) {
@@ -127,17 +118,7 @@ class BehaviourService {
       visibility,
       context.role === 'admin' || context.internal
     );
-    const populatedBehaviours = await Promise.all(behaviours.map(async (behaviour) => {
-      const behaviourObj = behaviour.toJSON ? behaviour.toJSON() : behaviour;
-      if (behaviourObj.user) {
-        const userProfile = await getUserProfileFromAuthService(behaviourObj.user);
-        if (userProfile) {
-          behaviourObj.user = userProfile;
-        }
-      }
-      return behaviourObj;
-    }));
-    return populatedBehaviours;
+   return await populateUserInEntity(behaviours);
   }
 
   // WRITE METHODS

@@ -17,3 +17,21 @@ export const getUserProfileFromAuthService = async (userId) => {
   }
 };
 
+export const populateUserInEntity = async (entity) => {
+  if (!entity) return null;
+  
+  if (Array.isArray(entity)) {
+    return await Promise.all(entity.map(e => populateUserInEntity(e)));
+  }
+
+  const entityObj = entity.toJSON ? entity.toJSON() : entity;
+  
+  if (entityObj.user && typeof entityObj.user !== 'object') {
+    const userProfile = await getUserProfileFromAuthService(entityObj.user);
+    if (userProfile) {
+      entityObj.user = userProfile;
+    }
+  }
+  
+  return entityObj;
+};

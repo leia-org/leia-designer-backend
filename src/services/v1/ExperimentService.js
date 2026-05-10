@@ -1,38 +1,22 @@
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
-import { getUserProfileFromAuthService } from '../../utils/authClient.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 class ExperimentService {
 
-  async _populateUser(experiment) {
-    if (!experiment) return null;
-    const expObj = experiment.toJSON ? experiment.toJSON() : experiment;
-    if (expObj.user) {
-      const userProfile = await getUserProfileFromAuthService(expObj.user);
-      if (userProfile) {
-        expObj.user = userProfile;
-      }
-    }
-    return expObj;
-  }
-
-  async _populateUsers(experiments) {
-    if (!experiments || experiments.length === 0) return [];
-    return await Promise.all(experiments.map(exp => this._populateUser(exp)));
-  }
   // READ METHODS
 
   async findAll() {
     const experiments = await ExperimentRepository.findAll();
-    return await this._populateUsers(experiments);
+    return await populateUserInEntity(experiments);
   }
 
   async findById(id) {
     const experiment = await ExperimentRepository.findById(id);
-    return await this._populateUser(experiment);
+    return await populateUserInEntity(experiment);
   }
 
   async findByIdPopulated(id) {
     const experiment = await ExperimentRepository.findByIdPopulated(id);
-    return await this._populateUser(experiment);
+    return await populateUserInEntity(experiment);
   }
 
   async existsByLeiaId(leiaId) {
@@ -41,12 +25,12 @@ class ExperimentService {
 
   async findByLeiaId(leiaId) {
     const experiment = await ExperimentRepository.findByLeiaId(leiaId);
-    return await this._populateUser(experiment);
+    return await populateUserInEntity(experiment);
   }
 
   async findByUserId(userId, visibility = 'all', populated = false) {
     const experiments = await ExperimentRepository.findByUserId(userId, visibility, populated);
-    return await this._populateUsers(experiments);
+    return await populateUserInEntity(experiments);
   }
 
   async checkEditable(experimentId, userId) {
