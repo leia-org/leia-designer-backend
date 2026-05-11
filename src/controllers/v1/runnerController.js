@@ -45,20 +45,71 @@ export const generateTranscription = async (req, res, next) => {
 export const generateProblem = async (req, res, next) => {
   try {
     const { subject, additionalDetails, exampleProblem } = req.body;
-    if (!subject) {
+    const normalizedSubject = typeof subject === 'string' ? subject.trim() : '';
+
+    if (!normalizedSubject) {
       const error = new Error('Subject is required');
       error.statusCode = 400;
       throw error;
     }
-    if (!exampleProblem) {
+    if (!exampleProblem || typeof exampleProblem !== 'object') {
       const error = new Error('Example problem is required');
       error.statusCode = 400;
       throw error;
     }
-    const generatedProblem = await RunnerService.generateProblem(subject, additionalDetails, exampleProblem);
+    const generatedProblem = await RunnerService.generateProblem(
+      normalizedSubject,
+      additionalDetails,
+      exampleProblem
+    );
     res.json(generatedProblem);
   } catch (err) {
     next(err);
   }
 };
 
+export const generateBehaviour = async (req, res, next) => {
+  try {
+    const { subject, additionalDetails, exampleBehaviour } = req.body;
+    const normalizedSubject = typeof subject === 'string' ? subject.trim() : '';
+    if (!normalizedSubject) {
+      const error = new Error('Subject is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!exampleBehaviour || typeof exampleBehaviour !== 'object') {
+      const error = new Error('Example behaviour is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    const generatedBehaviour = await RunnerService.generateBehaviour(
+      normalizedSubject,
+      additionalDetails,
+      exampleBehaviour
+    );
+    res.json(generatedBehaviour);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const evaluate = async (req, res, next) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const { result } = req.body;
+    if (!sessionId) {
+      const error = new Error('Session ID is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!result) {
+      const error = new Error('Result is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    const evaluation = await RunnerService.getEvaluationAndScore(sessionId, result);
+    res.json(evaluation);
+  } catch (err) {
+    next(err);
+  }
+};

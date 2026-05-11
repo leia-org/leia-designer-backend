@@ -34,7 +34,7 @@ class ExperimentService {
   }
 
   async checkEditable(experimentId, userId) {
-    const experiment = await ExperimentRepository.findById(experimentId);
+    const experiment = await this.findById(experimentId);
     if (!experiment) {
       const error = new Error('Experiment not found');
       error.statusCode = 404;
@@ -62,7 +62,14 @@ class ExperimentService {
     return await ExperimentRepository.update(id, { name });
   }
 
+  //fix to add check for leia before publishing modeled after checkEditable
   async publish(id) {
+    const experiment = await this.findByIdPopulated(id);
+    if (!experiment.leiaConfigs || experiment.leiaConfigs.length === 0) {
+      const error = new Error('Experiment must have an associated LEIA before publishing');
+      error.statusCode = 400;
+      throw error;
+    }
     return await ExperimentRepository.update(id, { isPublished: true });
   }
 

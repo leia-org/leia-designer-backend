@@ -68,6 +68,40 @@ class RunnerService {
     );
     return response.data;
   }
+
+  async generateBehaviour(subject, additionalDetails, exampleBehaviour) {
+    const response = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/behaviours/generate`,
+      {
+        subject,
+        additionalDetails,
+        exampleBehaviour,
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async getEvaluationAndScore(sessionId, result) {
+    const response = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/evaluation`,
+      {
+        sessionId,
+        result,
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.RUNNER_KEY,
+        },
+      }
+    );
+    const { evaluation, score } = response.data;
+    return { evaluation, score };
+  }
 }
 
 export default new RunnerService();

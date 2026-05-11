@@ -31,6 +31,30 @@ export function aggregateFindLatestVersions(match = {}) {
     },
     {
       $addFields: {
+        'metadata.labels': {
+          $setUnion: [
+            { $ifNull: ['$metadata.labels', []] },
+            {
+              $cond: [
+                { $ifNull: ['$metadata.label', false] },
+                ['$metadata.label'],
+                [],
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'labels',
+        localField: 'metadata.labels',
+        foreignField: '_id',
+        as: 'metadata.labels',
+      },
+    },
+    {
+      $addFields: {
         'metadata.version': {
           $concat: [
             { $toString: '$metadata.version.major' },
@@ -52,6 +76,7 @@ export function aggregateFindLatestVersions(match = {}) {
       $project: {
         _id: 0,
         __v: 0,
+        'metadata.labels.__v': 0,
       },
     }
   );

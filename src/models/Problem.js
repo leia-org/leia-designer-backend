@@ -44,6 +44,9 @@ const ProblemSchema = new Schema(
       solution: {
         type: String,
       },
+      initialSolution: {
+        type: String,
+      },
       solutionFormat: {
         type: String,
         enum: ['text', 'mermaid', 'yaml', 'markdown', 'html', 'json', 'xml'],
@@ -54,7 +57,7 @@ const ProblemSchema = new Schema(
       process: {
         type: [String],
         default: [],
-        enum: ['requirements-elicitation', 'game'],
+        enum: ['requirements-elicitation', 'game', 'other'],
       },
       extends: {
         type: Schema.Types.Mixed,

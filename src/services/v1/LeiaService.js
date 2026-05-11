@@ -132,7 +132,7 @@ class LeiaService {
     return leia;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}) {
+  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
@@ -143,7 +143,8 @@ class LeiaService {
       apiVersion,
       context.userId,
       visibility,
-      context.role === 'admin' || context.internal
+      context.role === 'admin' || context.internal,
+      labelId
     );
     return await populateUserInEntity(leias);
   }
@@ -361,6 +362,16 @@ class LeiaService {
     const deletedLeia = await LeiaRepository.deleteById(id);
     return deletedLeia;
   }
-}
 
+  async updateById(id, updateData) {
+    const leia = await LeiaRepository.findById(id);
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    const updatedLeia = await LeiaRepository.findByIdAndUpdate(id, { $set: { 'metadata.labels': updateData } });
+    return updatedLeia;
+}
+}
 export default new LeiaService();

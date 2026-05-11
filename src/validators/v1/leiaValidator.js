@@ -15,6 +15,7 @@ export const createLeiaValidator = Joi.object({
     version: Joi.string()
       .optional()
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
+    labels: Joi.array().items(Joi.string().hex().length(24)).optional(),
   }).required(),
   spec: Joi.object({
     persona: Joi.alternatives().try(mongoId, nameVersion).required(),
@@ -30,6 +31,7 @@ export const updateLeiaValidator = Joi.object({
     version: Joi.string()
       .required()
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
+    labels: Joi.array().items(Joi.string().hex().length(24)).optional(),
   }).required(),
   spec: Joi.object({
     persona: Joi.alternatives().try(mongoId, nameVersion).required(),

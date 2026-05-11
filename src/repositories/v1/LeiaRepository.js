@@ -1,6 +1,8 @@
 import Leia from '../../models/Leia.js';
+import mongoose from 'mongoose';
 import { aggregateFindLatestVersions } from '../../utils/aggregates.js';
 import { applyVisibilityFilters } from '../../utils/entity.js';
+import { regexQuery } from '../../utils/search.js';
 
 class LeiaRepository {
   // READ METHODS
@@ -11,6 +13,10 @@ class LeiaRepository {
 
   async findById(id) {
     return await Leia.findById(id);
+  }
+  
+  async findByIdAndUpdate(id, updateData) {
+    return await Leia.findByIdAndUpdate(id, updateData, { new: true}).populate('metadata.labels');
   }
 
   async existsByName(name) {
@@ -72,7 +78,7 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId) {
     const query = {};
 
     // Apply visibility filters
@@ -82,12 +88,18 @@ class LeiaRepository {
 
     // Add text and apiVersion filters to query
     if (text) {
-      query['$text'] = { $search: text };
+      Object.assign(query, regexQuery(text, 'metadata.name'));
     }
     if (apiVersion) {
       query['apiVersion'] = apiVersion;
     }
-
+    if (labelId) {
+      const labelObjectId = new mongoose.Types.ObjectId(labelId);
+      query['$or'] = [
+        { 'metadata.labels': labelObjectId },
+        { 'metadata.label': labelObjectId },
+      ];
+    }
     if (version === 'latest') {
       // Pass the complete query to the aggregation
       return await Leia.aggregate(aggregateFindLatestVersions(query));
@@ -95,7 +107,7 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Leia.find(query);
+    return await Leia.find(query).populate('metadata.labels');
   }
 
   // WRITE METHODS
