@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 export const createExperimentValidator = Joi.object({
   name: Joi.string().required(),
+  isMultiLeia: Joi.boolean().optional(),
 });
 
 export const updateExperimentNameValidator = Joi.object({

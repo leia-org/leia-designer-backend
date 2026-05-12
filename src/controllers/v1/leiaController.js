@@ -108,7 +108,7 @@ export const getLeiaByNameAndVersion = async (req, res, next) => {
 
 export const getLeiasByQuery = async (req, res, next) => {
   try {
-    const { text, version, apiVersion, labelId } = req.query;
+    const { text, version, apiVersion, labelId, problemId } = req.query;
 
     if (version && !isVersionQueryValid(version)) {
       const error = new Error('Invalid version format');
@@ -127,13 +127,17 @@ export const getLeiasByQuery = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
-
+    if (problemId && !isMongoIdQueryValid(problemId)) {
+      const error = new Error('Invalid problemId format');
+      error.statusCode = 400;
+      throw error;
+    }
     const context = {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
 
-    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context, labelId);
+    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context, labelId, problemId);
 
     res.json(result);
   } catch (err) {

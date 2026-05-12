@@ -1,5 +1,5 @@
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
-
+import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
 class ExperimentService {
   // READ METHODS
 
@@ -45,7 +45,35 @@ class ExperimentService {
       throw error;
     }
   }
-
+  async checkLeiaCompability(experimentId, leiaId) {
+    const experiment = await ExperimentRepository.findByIdPopulated(experimentId);
+    if (experiment.isMultiLeia) {
+    const leiaNew = await LeiaRepository.findById(leiaId);
+    if (!experiment) {
+      const error = new Error('Activity not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    for (const leiaConfig of experiment.leias) {
+      const leiaOld = await LeiaRepository.findById(leiaConfig.leia);
+      if (!leiaOld) {
+        const error = new Error('Previous LEIA not found in experiment');
+        error.statusCode = 404;
+        throw error;
+      }
+      if (leiaOld.spec.problemId.toString() !== leiaNew.spec.problemId.toString()) {
+        const error = new Error('Selected LEIA is not compatible with this activity');
+        error.statusCode = 400;
+        throw error;
+      }
+      if (leiaOld.id.toString() === leiaNew.id.toString()) {
+        const error = new Error('Selected LEIA is already in this activity');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+  }
+  }
   // WRITE METHODS
 
   async create(experimentData) {
@@ -59,7 +87,7 @@ class ExperimentService {
   //fix to add check for leia before publishing modeled after checkEditable
   async publish(id) {
     const experiment = await ExperimentRepository.findByIdPopulated(id);
-    if (!experiment.leiaConfigs || experiment.leiaConfigs.length === 0) {
+    if (!experiment.leias || experiment.leias.length === 0) {
       const error = new Error('Experiment must have an associated LEIA before publishing');
       error.statusCode = 400;
       throw error;

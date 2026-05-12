@@ -75,6 +75,7 @@ export const addExperimentLeia = async (req, res, next) => {
     const userId = req.auth?.payload?.id;
     const experimentId = req.params.id;
     await ExperimentService.checkEditable(experimentId, userId);
+    await ExperimentService.checkLeiaCompability(experimentId, value.leia);
 
     const updatedExperiment = await ExperimentService.addLeia(experimentId, value);
     res.json(updatedExperiment);

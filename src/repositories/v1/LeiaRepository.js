@@ -82,7 +82,7 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId, problemId) {
     const query = {};
 
     // Apply visibility filters
@@ -103,6 +103,10 @@ class LeiaRepository {
         { 'metadata.labels': labelObjectId },
         { 'metadata.label': labelObjectId },
       ];
+    }
+    if (problemId) {
+      const problemObjectId = new mongoose.Types.ObjectId(problemId);
+      query['spec.problemId'] = problemObjectId;
     }
     if (version === 'latest') {
       // Pass the complete query to the aggregation
