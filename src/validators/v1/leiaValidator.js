@@ -53,4 +53,8 @@ export const runnerLeiaValidator = Joi.object({
     }).required().unknown(true),
     problem: Joi.object().required(),
   }).required(),
+  runnerConfiguration: Joi.object({
+    modelName: Joi.string().required(),
+    apiKeyId: mongoId.required(),
+  }).optional(),
 });

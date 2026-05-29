@@ -6,7 +6,7 @@ import { validateVisibility, validateBoolean } from '../../validators/queryValid
 
 export const createPersona = async (req, res, next) => {
   try {
-    const value = await createPersonaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await createPersonaValidator.validateAsync(req.body, { abortEarly: false, stripUnknown: true });
     value.user = req.auth?.payload?.id;
     const context = {
       userId: req.auth?.payload?.id,
@@ -23,7 +23,7 @@ export const createPersona = async (req, res, next) => {
 
 export const createNewPersonaVersion = async (req, res, next) => {
   try {
-    const value = await updatePersonaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await updatePersonaValidator.validateAsync(req.body, { abortEarly: false, stripUnknown: true });
     value.user = req.auth?.payload?.id;
 
     const context = {

@@ -13,10 +13,6 @@ class BehaviourRepository {
     return await Behaviour.findById(id);
   }
 
-  async findByIdPopulatedUser(id) {
-    return await Behaviour.findById(id).populate('user');
-  }
-
   async existsByName(name) {
     return !!(await Behaviour.exists({ 'metadata.name': name }));
   }
@@ -75,7 +71,7 @@ class BehaviourRepository {
       query['metadata.version'] = version;
     }
 
-    return await Behaviour.find(query).populate('user');
+    return await Behaviour.find(query);
   }
 
   // WRITE METHODS

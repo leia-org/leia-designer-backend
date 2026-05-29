@@ -4,7 +4,41 @@ import { runnerLeiaValidator } from "../../validators/v1/leiaValidator.js";
 export const initializeRunner = async (req, res, next) => {
   try {
     const value = await runnerLeiaValidator.validateAsync(req.body, { abortEarly: false });
-    const sessionId = await RunnerService.initializeRunner(value);
+    if (!value.runnerConfiguration) {
+      const error = new Error('runnerConfiguration is required for testing');
+      error.statusCode = 400;
+      throw error;
+    }
+    const runnerConfiguration = value.runnerConfiguration
+      ? { ...value.runnerConfiguration }
+      : null;
+
+    if (runnerConfiguration?.apiKeyId) {
+      const requesterId = req.auth?.payload?.id;
+      if (!requesterId) {
+        const error = new Error('User ID is required for API key usage');
+        error.statusCode = 400;
+        throw error;
+      }
+      runnerConfiguration.apiKeyRequesterId = requesterId;
+    }
+
+    if (runnerConfiguration?.modelName) {
+      const providerDriver = await RunnerService.resolveProviderDriver(
+        runnerConfiguration.modelName
+      );
+      if (!providerDriver) {
+        const error = new Error('Invalid model name');
+        error.statusCode = 400;
+        throw error;
+      }
+      runnerConfiguration.provider = providerDriver;
+    }
+
+    const sessionId = await RunnerService.initializeRunner(
+      { spec: value.spec },
+      runnerConfiguration
+    );
     res.json({ sessionId });
   } catch (err) {
     next(err);

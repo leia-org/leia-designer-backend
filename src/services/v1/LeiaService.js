@@ -6,6 +6,7 @@ import ProblemService from './ProblemService.js';
 import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class LeiaService {
   // READ METHODS
@@ -32,13 +33,12 @@ class LeiaService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const leia = await LeiaRepository.findByIdPopulatedUser(id);
+    const leia = await LeiaRepository.findById(id);
 
     if (!canAccess(leia, context)) {
       throw createUnauthorizedError('Leia');
     }
-
-    return leia;
+    return await populateUserInEntity(leia);
   }
 
   async existsByName(name) {
@@ -137,7 +137,7 @@ class LeiaService {
       version = getVersionObjectFromString(version);
     }
 
-    return await LeiaRepository.findByQuery(
+    const leias = await LeiaRepository.findByQuery(
       text,
       version,
       apiVersion,
@@ -146,6 +146,7 @@ class LeiaService {
       context.role === 'admin' || context.internal,
       labelId
     );
+    return await populateUserInEntity(leias);
   }
 
   // WRITE METHODS
@@ -331,7 +332,7 @@ class LeiaService {
     leia.isPublished = false;
     return await leia.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {

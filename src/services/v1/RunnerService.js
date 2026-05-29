@@ -1,17 +1,22 @@
 import axios from 'axios';
 import { v4 } from 'uuid';
+import ProviderService from './ProviderService.js';
 
 class RunnerService {
   async initializeRunner(leia, runnerConfiguration = null) {
     const sessionId = v4();
+    const normalizedRunnerConfiguration =
+      runnerConfiguration && Object.keys(runnerConfiguration).length > 0
+        ? runnerConfiguration
+        : {
+            provider: 'default',
+          };
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1/leias`,
       {
         sessionId,
         leia: leia,
-        runnerConfiguration: runnerConfiguration ? runnerConfiguration : {
-          provider: 'default',
-        }
+        runnerConfiguration: normalizedRunnerConfiguration,
       },
       {
         headers: {
@@ -20,6 +25,15 @@ class RunnerService {
       }
     );
     return response.data.sessionId;
+  }
+
+  async resolveProviderDriver(modelName) {
+    const data = await ProviderService.getAllModelsAndDetails();
+    const provider = Object.entries(data.apiKeyProviders || {})
+      .find(([, models]) => models.includes(modelName))?.[0];
+
+    if (!provider) return null;
+    return data.providerProviderModuleMap?.[provider] || null;
   }
 
   async sendMessage(sessionId, message) {

@@ -2,6 +2,7 @@ import PersonaRepository from '../../repositories/v1/PersonaRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
+import { populateUserInEntity } from '../../utils/authClient.js'
 
 class PersonaService {
   // READ METHODS
@@ -28,13 +29,12 @@ class PersonaService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const persona = await PersonaRepository.findByIdPopulatedUser(id);
+    const persona = await PersonaRepository.findById(id);
 
     if (!canAccess(persona, context)) {
       throw createUnauthorizedError('Persona');
     }
-
-    return persona;
+    return await populateUserInEntity(persona);
   }
 
   async existsByName(name) {
@@ -109,11 +109,11 @@ class PersonaService {
       version = getVersionObjectFromString(version);
     }
 
-    return await PersonaRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
+    const personas = await PersonaRepository.findByQuery(text, version, apiVersion, context.userId, visibility, context.role === 'admin' || context.internal);
+    return await populateUserInEntity(personas);
   }
 
   // WRITE METHODS
-
   async create(personaData, context = {}, publish = true) {
     delete personaData.metadata.version; // Remove to set the version to 1.0.0
     if (context.role === 'admin') {
@@ -209,7 +209,7 @@ class PersonaService {
     persona.isPublished = false;
     return await persona.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {
