@@ -3,6 +3,7 @@ import {
   createExperimentValidator,
   updateExperimentNameValidator,
   leiaConfigValidator,
+  createAddPublishExperimentFromLeiaValidator
 } from '../../validators/v1/experimentValidator.js';
 import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
 
@@ -132,6 +133,35 @@ export const deleteExperimentById = async (req, res, next) => {
 
     const deletedExperiment = await ExperimentService.deleteById(experimentId);
     res.json(deletedExperiment);
+  } catch (err) {
+    next(err);
+  }
+};
+export const createAddPublishExperimentFromLeia = async (req, res, next) => {
+  try {
+    const value = await createAddPublishExperimentFromLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const userId = req.auth?.payload?.id;
+    const newExperiment = await ExperimentService.create({
+      name: value.leiaName,
+      user: userId,
+    });
+
+    await ExperimentService.checkEditable(newExperiment.id, userId);
+    const updatedExperiment = await ExperimentService.addLeia(newExperiment.id, { leia: value.leiaId });
+
+    await ExperimentService.checkEditable(updatedExperiment.id, userId);
+    const publishedExperiment = await ExperimentService.publish(updatedExperiment.id);
+
+    res.status(201).json(publishedExperiment);
+  } catch (err) {
+    next(err);
+  }
+};
+export const checkExperimentNameExists = async (req, res, next) => {
+  try {
+    const experimentName = req.params.name;
+    const exists = await ExperimentService.checkNameExists(experimentName);
+    res.json({ exists });
   } catch (err) {
     next(err);
   }
