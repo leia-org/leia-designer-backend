@@ -16,7 +16,7 @@ export const createReplication = async (req, res, next) => {
       req.body,
       {
         headers: {
-          Authorization: `Bearer ${workbenchAdminSecret}`,
+          Authorization: `${req.headers.authorization}`,
         },
       }
     );
@@ -41,7 +41,7 @@ export const replicationNameExists = async (req, res, next) => {
       `${workbenchBackendUrl.replace(/\/$/, '')}/api/v1/replications/exists/${encodeURIComponent(req.params.name)}`,
       {
         headers: {
-          Authorization: `Bearer ${workbenchAdminSecret}`,
+          Authorization: `${req.headers.authorization}`,
         },
       }
     );
