@@ -30,10 +30,10 @@ router.put('/:id/leias/:leiaId', requireJwtAuthentication, updateExperimentLeia)
 
 // GET
 router.get('/', requireAuthentication, getAllExperiments);
+router.get('/exists/:name', requireAuthentication, checkExperimentNameExists);
 router.get('/:id', requireAuthentication, getExperimentById);
 router.get('/user/me', requireJwtAuthentication, getAllExperimentsByUser);
 router.get('/user/:userId', requireAdmin, getAllExperimentsByUser);
-router.get('/:name/exists', requireAuthentication, checkExperimentNameExists);
 
 // DELETE
 router.delete('/:id/leias/:leiaId', requireJwtAuthentication, deleteExperimentLeia);

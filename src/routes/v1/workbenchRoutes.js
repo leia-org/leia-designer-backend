@@ -5,5 +5,5 @@ import { requireJwtAuthentication } from '../../middlewares/auth.js';
 const router = express.Router();
 
 router.post('/replications', requireJwtAuthentication, createReplication);
-router.get('/replications/:name/exists', requireJwtAuthentication, replicationNameExists);
+router.get('/replications/exists/:name', requireJwtAuthentication, replicationNameExists);
 export default router;

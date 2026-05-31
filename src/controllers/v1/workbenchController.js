@@ -38,7 +38,7 @@ export const replicationNameExists = async (req, res, next) => {
     }
 
     const response = await axios.get(
-      `${workbenchBackendUrl.replace(/\/$/, '')}/api/v1/replications/${encodeURIComponent(req.params.name)}/exists`,
+      `${workbenchBackendUrl.replace(/\/$/, '')}/api/v1/replications/exists/${encodeURIComponent(req.params.name)}`,
       {
         headers: {
           Authorization: `Bearer ${workbenchAdminSecret}`,
