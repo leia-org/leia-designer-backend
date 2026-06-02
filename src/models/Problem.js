@@ -68,6 +68,17 @@ const ProblemSchema = new Schema(
       constrainedTo: {
         type: Schema.Types.Mixed,
       },
+      // Activity widgets the workbench mounts for this problem. Each entry is
+      // { widgetType, slot, params, tools:[{ name, enabled, usage }] }. The
+      // tool *schemas* live in the workbench widget catalog; here we only
+      // reference them by name and add per-activity usage guidance.
+      //
+      // Note: the interaction MODE (Luke audio vs OpenAI text) is chosen in the
+      // workbench, not here — the problem only declares the widgets/tools.
+      widgets: {
+        type: [Schema.Types.Mixed],
+        default: undefined,
+      },
     },
     user: {
       type: Schema.Types.ObjectId,

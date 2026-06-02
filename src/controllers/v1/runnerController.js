@@ -13,20 +13,22 @@ export const initializeRunner = async (req, res, next) => {
 
 export const sendMessage = async (req, res, next) => {
   try {
-    const message = req.body.message;
+    const { message, tools, toolResults } = req.body;
     const sessionId = req.params.sessionId;
     if (!sessionId) {
       const error = new Error('Session ID is required');
       error.statusCode = 400;
       throw error;
     }
-    if (!message) {
+    const hasToolResults = Array.isArray(toolResults) && toolResults.length > 0;
+    if (!message && !hasToolResults) {
       const error = new Error('Message is required');
       error.statusCode = 400;
       throw error;
     }
-    const response = await RunnerService.sendMessage(sessionId, message);
-    res.json({ message: response });
+    const response = await RunnerService.sendMessage(sessionId, message, { tools, toolResults });
+    // Forward the full runner shape: { message } or { toolCalls }.
+    res.json(response);
   } catch (err) {
     next(err);
   }

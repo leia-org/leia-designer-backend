@@ -1,15 +1,4 @@
 services:
-  mongodb-catalog:
-    restart: unless-stopped
-    image: mongo:latest
-    container_name: mongodb-catalog
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
-    ports:
-      - '${MONGO_PORT}:27017'
-    volumes:
-      - mongo-catalog:/data/db
   catalog-backend:
     restart: unless-stopped
     build:
@@ -17,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: catalog-backend
     environment:
-      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-catalog:27017/catalog?authSource=admin
+      - MONGO_URI=${MONGO_URI}
       - FRONTEND_URL=${FRONTEND_URL}
       - NODE_ENV=${NODE_ENV}
       - PORT=80
@@ -27,10 +16,5 @@ services:
       - API_KEY=${API_KEY}
       - RUNNER_URL=${RUNNER_URL}
       - RUNNER_KEY=${RUNNER_KEY}
-    depends_on:
-      - mongodb-catalog
     ports:
       - '${PORT}:80'
-
-volumes:
-  mongo-catalog:

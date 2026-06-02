@@ -11,7 +11,27 @@ const processValidator = Joi.array()
   .messages({
     'any.invalid': "When 'other' is selected in process, it must be the only value.",
   });
-  
+
+// A widget the workbench mounts for this problem. Tool *schemas* are not
+// authored here — only a reference (name) plus per-activity usage guidance,
+// so the instructor cannot break a tool's contract from the problem editor.
+const widgetToolValidator = Joi.object({
+  name: Joi.string().required(),
+  enabled: Joi.boolean().optional(),
+  usage: Joi.string().allow('').optional(),
+});
+
+const widgetsValidator = Joi.array()
+  .items(
+    Joi.object({
+      widgetType: Joi.string().required(),
+      slot: Joi.string().valid('left', 'right', 'main').optional(),
+      params: Joi.object().optional(),
+      tools: Joi.array().items(widgetToolValidator).optional(),
+    })
+  )
+  .optional();
+
 export const createProblemValidator = Joi.object({
   apiVersion: Joi.string().required().valid('v1'),
   metadata: Joi.object({
@@ -32,6 +52,7 @@ export const createProblemValidator = Joi.object({
     extends: Joi.object().optional(),
     overrides: Joi.object().optional(),
     constrainedTo: Joi.object().optional(),
+    widgets: widgetsValidator,
   }).required(),
 });
 
@@ -55,5 +76,6 @@ export const updateProblemValidator = Joi.object({
     extends: Joi.object().optional(),
     overrides: Joi.object().optional(),
     constrainedTo: Joi.object().optional(),
+    widgets: widgetsValidator,
   }).required(),
 });
