@@ -19,10 +19,6 @@ class LeiaRepository {
     return await Leia.findByIdAndUpdate(id, updateData, { new: true}).populate('metadata.labels');
   }
 
-  async findByIdPopulatedUser(id) {
-    return await Leia.findById(id).populate('user');
-  }
-
   async existsByName(name) {
     return !!(await Leia.exists({ 'metadata.name': name }));
   }
@@ -111,7 +107,7 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
 
-    return await Leia.find(query).populate('user').populate('metadata.labels');
+    return await Leia.find(query).populate('metadata.labels');
   }
 
   // WRITE METHODS

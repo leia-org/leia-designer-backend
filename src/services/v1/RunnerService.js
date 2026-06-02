@@ -1,25 +1,27 @@
 import axios from 'axios';
 import { v4 } from 'uuid';
+import ProviderService from './ProviderService.js';
 
 class RunnerService {
   async initializeRunner(leia, runnerConfiguration = null) {
     const sessionId = v4();
-    // When the activity declares widgets/tools, the designer "try" must run
-    // text mode through the openai-responses provider so the runner enables
-    // function tools (its gate requires that provider). Otherwise keep the
-    // default provider.
+    // When the activity declares widgets/tools, the designer "try" runs text
+    // mode through the openai-responses provider so the runner enables function
+    // tools (its gate requires that provider). A provided runnerConfiguration
+    // (BYOK model/apikey selection) always wins.
     const hasWidgets =
       Array.isArray(leia?.spec?.problem?.spec?.widgets) &&
       leia.spec.problem.spec.widgets.length > 0;
-    const effectiveConfiguration = runnerConfiguration
-      ? runnerConfiguration
-      : { provider: hasWidgets ? 'openai-responses' : 'default' };
+    const normalizedRunnerConfiguration =
+      runnerConfiguration && Object.keys(runnerConfiguration).length > 0
+        ? runnerConfiguration
+        : { provider: hasWidgets ? 'openai-responses' : 'default' };
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1/leias`,
       {
         sessionId,
         leia: leia,
-        runnerConfiguration: effectiveConfiguration,
+        runnerConfiguration: normalizedRunnerConfiguration,
       },
       {
         headers: {
@@ -28,6 +30,15 @@ class RunnerService {
       }
     );
     return response.data.sessionId;
+  }
+
+  async resolveProviderDriver(modelName) {
+    const data = await ProviderService.getAllModelsAndDetails();
+    const provider = Object.entries(data.apiKeyProviders || {})
+      .find(([, models]) => models.includes(modelName))?.[0];
+
+    if (!provider) return null;
+    return data.providerProviderModuleMap?.[provider] || null;
   }
 
   async sendMessage(sessionId, message, options = {}) {
