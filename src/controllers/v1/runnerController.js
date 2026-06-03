@@ -149,3 +149,52 @@ export const evaluate = async (req, res, next) => {
     next(err);
   }
 };
+
+// --- Problem-chat (design-time assistant) ---
+
+export const openProblemChat = async (req, res, next) => {
+  try {
+    const { modelName, apiKeyId } = req.body || {};
+    const requesterId = req.auth?.payload?.id;
+    if (!modelName || !apiKeyId) {
+      const error = new Error('modelName and apiKeyId are required');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!requesterId) {
+      const error = new Error('User ID is required for API key usage');
+      error.statusCode = 400;
+      throw error;
+    }
+    const result = await RunnerService.openProblemChat({ modelName, apiKeyId, apiKeyRequesterId: requesterId });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const uploadProblemChatFile = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    if (!req.file) {
+      const error = new Error('A PDF file is required (multipart field "file")');
+      error.statusCode = 400;
+      throw error;
+    }
+    const result = await RunnerService.uploadProblemChatFile(chatId, req.file.buffer, req.file.originalname);
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const sendProblemChatMessage = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    const { message, tools, toolResults } = req.body;
+    const result = await RunnerService.sendProblemChatMessage(chatId, { message, tools, toolResults });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
