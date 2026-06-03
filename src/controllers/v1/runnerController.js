@@ -191,8 +191,8 @@ export const uploadProblemChatFile = async (req, res, next) => {
 export const sendProblemChatMessage = async (req, res, next) => {
   try {
     const { chatId } = req.params;
-    const { message, tools, toolResults } = req.body;
-    const result = await RunnerService.sendProblemChatMessage(chatId, { message, tools, toolResults });
+    const { message, tools, toolResults, fileIds } = req.body;
+    const result = await RunnerService.sendProblemChatMessage(chatId, { message, tools, toolResults, fileIds });
     res.json(result);
   } catch (err) {
     next(err);
