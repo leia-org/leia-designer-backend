@@ -144,15 +144,11 @@ export const createAddPublishExperimentFromLeia = async (req, res, next) => {
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
+      leias: [{ leia: value.leiaId }],
+      isPublished: true
     });
 
-    await ExperimentService.checkEditable(newExperiment.id, userId);
-    const updatedExperiment = await ExperimentService.addLeia(newExperiment.id, { leia: value.leiaId });
-
-    await ExperimentService.checkEditable(updatedExperiment.id, userId);
-    const publishedExperiment = await ExperimentService.publish(updatedExperiment.id);
-
-    res.status(201).json(publishedExperiment);
+    res.status(201).json(newExperiment);
   } catch (err) {
     next(err);
   }

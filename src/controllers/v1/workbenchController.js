@@ -3,9 +3,8 @@ import axios from 'axios';
 export const createReplication = async (req, res, next) => {
   try {
     const workbenchBackendUrl = process.env.WORKBENCH_BACKEND_URL;
-    const workbenchAdminSecret = process.env.WORKBENCH_ADMIN_SECRET;
 
-    if (!workbenchBackendUrl || !workbenchAdminSecret) {
+    if (!workbenchBackendUrl ) {
       const error = new Error('Workbench backend configuration is missing');
       error.statusCode = 500;
       throw error;
@@ -29,9 +28,8 @@ export const createReplication = async (req, res, next) => {
 export const replicationNameExists = async (req, res, next) => {
   try {
     const workbenchBackendUrl = process.env.WORKBENCH_BACKEND_URL;
-    const workbenchAdminSecret = process.env.WORKBENCH_ADMIN_SECRET;
 
-    if (!workbenchBackendUrl || !workbenchAdminSecret) {
+    if (!workbenchBackendUrl ) {
       const error = new Error('Workbench backend configuration is missing');
       error.statusCode = 500;
       throw error;
