@@ -44,3 +44,30 @@ properties:
         type: object
       constrainedTo:
         type: object
+      widgets:
+        type: array
+        description: >-
+          Activity widgets the workbench mounts for this problem. Tool schemas
+          are not authored here; tools are referenced by name with per-activity
+          usage guidance.
+        items:
+          type: object
+          properties:
+            widgetType:
+              type: string
+            slot:
+              type: string
+              enum: [left, right, main]
+            params:
+              type: object
+            tools:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  enabled:
+                    type: boolean
+                  usage:
+                    type: string

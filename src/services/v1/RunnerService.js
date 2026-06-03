@@ -5,12 +5,17 @@ import ProviderService from './ProviderService.js';
 class RunnerService {
   async initializeRunner(leia, runnerConfiguration = null) {
     const sessionId = v4();
+    // When the activity declares widgets/tools, the designer "try" runs text
+    // mode through the openai-responses provider so the runner enables function
+    // tools (its gate requires that provider). A provided runnerConfiguration
+    // (BYOK model/apikey selection) always wins.
+    const hasWidgets =
+      Array.isArray(leia?.spec?.problem?.spec?.widgets) &&
+      leia.spec.problem.spec.widgets.length > 0;
     const normalizedRunnerConfiguration =
       runnerConfiguration && Object.keys(runnerConfiguration).length > 0
         ? runnerConfiguration
-        : {
-            provider: 'default',
-          };
+        : { provider: hasWidgets ? 'openai-responses' : 'default' };
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1/leias`,
       {
@@ -36,19 +41,24 @@ class RunnerService {
     return data.providerProviderModuleMap?.[provider] || null;
   }
 
-  async sendMessage(sessionId, message) {
+  async sendMessage(sessionId, message, options = {}) {
+    const body = {};
+    if (typeof message === 'string' && message.length > 0) body.message = message;
+    if (Array.isArray(options.tools) && options.tools.length > 0) body.tools = options.tools;
+    if (Array.isArray(options.toolResults) && options.toolResults.length > 0) body.toolResults = options.toolResults;
+
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1/leias/${sessionId}/messages`,
-      {
-        message,
-      },
+      body,
       {
         headers: {
           Authorization: 'Bearer ' + process.env.RUNNER_KEY,
         },
       }
     );
-    return response.data.message;
+    // Forward the full runner response so the caller can branch on
+    // toolCalls vs. final text.
+    return response.data;
   }
 
   async generateTranscription(leia) {
