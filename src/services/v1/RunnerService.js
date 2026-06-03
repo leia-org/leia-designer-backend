@@ -1,8 +1,43 @@
 import axios from 'axios';
 import { v4 } from 'uuid';
+import FormData from 'form-data';
 import ProviderService from './ProviderService.js';
 
 class RunnerService {
+  // --- Problem-chat: design-time assistant (attach PDFs, chat, FE tools) ---
+  async openProblemChat(runnerConfiguration) {
+    const { data } = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/problems/chat/session`,
+      { runnerConfiguration },
+      { headers: { Authorization: 'Bearer ' + process.env.RUNNER_KEY } }
+    );
+    return data;
+  }
+
+  async uploadProblemChatFile(chatId, buffer, filename) {
+    const form = new FormData();
+    form.append('file', buffer, { filename: filename || 'document.pdf', contentType: 'application/pdf' });
+    const { data } = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/problems/chat/${chatId}/files`,
+      form,
+      {
+        headers: { ...form.getHeaders(), Authorization: 'Bearer ' + process.env.RUNNER_KEY },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      }
+    );
+    return data;
+  }
+
+  async sendProblemChatMessage(chatId, body) {
+    const { data } = await axios.post(
+      `${process.env.RUNNER_URL}/api/v1/problems/chat/${chatId}/messages`,
+      body,
+      { headers: { Authorization: 'Bearer ' + process.env.RUNNER_KEY } }
+    );
+    return data;
+  }
+
   async initializeRunner(leia, runnerConfiguration = null) {
     const sessionId = v4();
     // When the activity declares widgets/tools, the designer "try" runs text
