@@ -47,24 +47,10 @@ export function aggregateFindLatestVersions(match = {}) {
     },
     {
       $lookup: {
-        from: 'users',
-        localField: 'user',
-        foreignField: '_id',
-        as: 'user',
-      },
-    },
-    {
-      $lookup: {
         from: 'labels',
         localField: 'metadata.labels',
         foreignField: '_id',
         as: 'metadata.labels',
-      },
-    },
-    {
-      $unwind: {
-        path: '$user',
-        preserveNullAndEmptyArrays: true,
       },
     },
     {
@@ -78,21 +64,18 @@ export function aggregateFindLatestVersions(match = {}) {
             { $toString: '$metadata.version.patch' },
           ],
         },
-        'user.id': '$user._id',
       },
     },
     {
       $addFields: {
         id: '$_id',
+        userId: '$user',
       },
     },
     {
       $project: {
         _id: 0,
         __v: 0,
-        'user._id': 0,
-        'user.__v': 0,
-        'user.password': 0,
         'metadata.labels.__v': 0,
       },
     }

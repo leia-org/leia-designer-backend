@@ -18,4 +18,5 @@ router.post('/transcriptions/generate', requireJwtAuthentication, generateTransc
 router.post('/problems/generate', requireJwtAuthentication, generateProblem);
 router.post('/behaviours/generate', requireJwtAuthentication, generateBehaviour);
 
+
 export default router;

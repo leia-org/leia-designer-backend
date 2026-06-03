@@ -71,7 +71,7 @@ const ProblemSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      alias: 'userId'
     },
     isPublished: {
       type: Boolean,

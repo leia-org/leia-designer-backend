@@ -10,10 +10,10 @@ import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
 import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
 import labelRoutesV1 from './routes/v1/labelRoutes.js';
-import userRoutesV1 from './routes/v1/userRoutes.js';
 import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import workbenchRoutesV1 from './routes/v1/workbenchRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
+import providerRoutesV1 from './routes/v1/providerRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
@@ -23,7 +23,7 @@ const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
-
+allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -57,7 +57,6 @@ SwaggerParser.bundle('./api/openapi.yaml')
   });
 
 // Routes v1 authentication and authorization checks in routers
-app.use('/api/v1/users', userRoutesV1);
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);
@@ -66,6 +65,7 @@ app.use('/api/v1/labels', labelRoutesV1);
 app.use('/api/v1/experiments', experimentRoutesV1);
 app.use('/api/v1/workbench', workbenchRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
+app.use('/api/v1/provider', providerRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
