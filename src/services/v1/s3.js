@@ -2,6 +2,7 @@ import {
   CreateBucketCommand,
   DeleteObjectCommand,
   HeadBucketCommand,
+  PutBucketPolicyCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -88,6 +89,20 @@ function keyFromAvatarPath(path) {
   return null;
 }
 
+function publicReadPolicy(bucket) {
+  return JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: '*',
+        Action: ['s3:GetObject'],
+        Resource: [`arn:aws:s3:::${bucket}/images/*`],
+      },
+    ],
+  });
+}
+
 class S3Service {
   constructor() {
     this.client = getS3Client();
@@ -109,6 +124,15 @@ class S3Service {
         throw error;
       }
       await this.client.send(new CreateBucketCommand({ Bucket: bucket }));
+    }
+
+    if (getBooleanEnv('S3_PUBLIC_READ')) {
+      await this.client.send(
+        new PutBucketPolicyCommand({
+          Bucket: bucket,
+          Policy: publicReadPolicy(bucket),
+        })
+      );
     }
 
     this.bucketReady = true;
