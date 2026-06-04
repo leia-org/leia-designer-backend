@@ -55,15 +55,6 @@ function avatarKey(entityType, entityId) {
   return `images/${entityType}/${entityId}/avatar/original.webp`;
 }
 
-function publicUrlForKey(key) {
-  const bucket = requiredEnv('S3_BUCKET');
-  const baseUrl = (process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT || '').replace(/\/+$/g, '');
-  if (!baseUrl) {
-    return `s3://${bucket}/${key}`;
-  }
-  return `${baseUrl}/${bucket}/${key}`;
-}
-
 function decodeImageDataUrl(dataUrl) {
   if (typeof dataUrl !== 'string') {
     const error = new Error('Avatar image must be a data URL');
@@ -84,29 +75,17 @@ function decodeImageDataUrl(dataUrl) {
   };
 }
 
-function keyFromPublicUrl(url) {
-  if (typeof url !== 'string' || !url) {
+function keyFromAvatarPath(path) {
+  if (typeof path !== 'string' || !path) {
     return null;
   }
 
-  const bucket = process.env.S3_BUCKET;
-  if (!bucket) {
-    return null;
+  const value = trimSlashes(path);
+  if (value.startsWith('images/')) {
+    return value;
   }
 
-  if (url.startsWith('s3://')) {
-    const prefix = `s3://${bucket}/`;
-    return url.startsWith(prefix) ? url.slice(prefix.length) : null;
-  }
-
-  try {
-    const parsed = new URL(url);
-    const path = trimSlashes(decodeURIComponent(parsed.pathname));
-    const bucketPrefix = `${bucket}/`;
-    return path.startsWith(bucketPrefix) ? path.slice(bucketPrefix.length) : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 class S3Service {
@@ -149,11 +128,11 @@ class S3Service {
     );
   }
 
-  async saveAvatar({ entityType, entityId, imageDataUrl, previousAvatarUrl }) {
+  async saveAvatar({ entityType, entityId, imageDataUrl, previousAvatar }) {
     await this.ensureBucket();
 
     const key = avatarKey(entityType, entityId);
-    const previousKey = keyFromPublicUrl(previousAvatarUrl);
+    const previousKey = keyFromAvatarPath(previousAvatar);
     const { contentType, buffer } = decodeImageDataUrl(imageDataUrl);
 
     if (previousKey === key) {
@@ -177,12 +156,11 @@ class S3Service {
     return {
       key,
       previousKey,
-      url: publicUrlForKey(key),
       contentType,
       sizeBytes: buffer.length,
     };
   }
 }
 
-export { avatarKey, keyFromPublicUrl };
+export { avatarKey, keyFromAvatarPath };
 export default new S3Service();

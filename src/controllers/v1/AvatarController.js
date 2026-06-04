@@ -64,10 +64,10 @@ async function generateAvatarForEntity(req, res, next, config) {
       entityType: config.entityType,
       entityId: entity._id.toString(),
       imageDataUrl: generationResult.avatar,
-      previousAvatarUrl: entity.spec?.avatar,
+      previousAvatar: entity.spec?.avatar,
     });
 
-    entity.set('spec.avatar', storedAvatar.url);
+    entity.set('spec.avatar', storedAvatar.key);
     const updatedEntity = await entity.save();
 
     if (storedAvatar.previousKey && storedAvatar.previousKey !== storedAvatar.key) {
@@ -75,7 +75,7 @@ async function generateAvatarForEntity(req, res, next, config) {
     }
 
     res.status(200).json({
-      avatar: storedAvatar.url,
+      avatar: storedAvatar.key,
       key: storedAvatar.key,
       sizeBytes: storedAvatar.sizeBytes,
       entity: updatedEntity,
