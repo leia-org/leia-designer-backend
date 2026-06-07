@@ -51,7 +51,9 @@ class ExperimentService {
       throw error;
     }
   }
-
+  async checkNameExists(name) {
+    return await ExperimentRepository.existsByName(name);
+  }
   // WRITE METHODS
 
   async create(experimentData) {

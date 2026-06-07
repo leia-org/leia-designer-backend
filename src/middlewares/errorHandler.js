@@ -28,8 +28,11 @@ export default function errorHandler(err, req, res, next) {
     errorResponse = { message: 'Validation Error', validationErrors: errors };
   } else if (err.code === 11000) {
     statusCode = 409;
+    const duplicateName = err.keyValue?.name;
     errorResponse = {
-      message: 'Duplicate key error',
+      message: duplicateName
+        ? `An item with the name "${duplicateName}" already exists`
+        : 'An item with that name already exists',
       duplicateFields: err.keyValue,
     };
   } else if (err.name === 'CastError') {

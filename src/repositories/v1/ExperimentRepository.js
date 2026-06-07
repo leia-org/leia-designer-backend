@@ -33,6 +33,9 @@ class ExperimentRepository {
     return populated ? await Experiment.find(query).populate('leias.leia') : await Experiment.find(query);
   }
 
+  async existsByName(name) {
+  return await Experiment.exists({ name });
+  }
   // WRITE METHODS
 
   async create(experimentData) {
@@ -88,6 +91,7 @@ class ExperimentRepository {
   async deleteById(id) {
     return await Experiment.findByIdAndDelete(id);
   }
+
 }
 
 export default new ExperimentRepository();
