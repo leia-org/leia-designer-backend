@@ -33,10 +33,35 @@ function canModify(entity, context) {
 }
 
 function toGeneratorPayload(entity) {
-  if (typeof entity?.toJSON === 'function') {
-    return entity.toJSON();
+  const payload = typeof entity?.toJSON === 'function' ? entity.toJSON() : entity;
+  const spec = payload?.spec || {};
+  const metadata = payload?.metadata || {};
+
+  if (payload?.kind === 'Persona' || spec.fullName || spec.personality) {
+    return {
+      name: spec.fullName || metadata.name,
+      description: spec.description,
+      personality: Array.isArray(spec.personality) ? spec.personality.join(', ') : spec.personality,
+    };
   }
-  return entity;
+
+  if (payload?.kind === 'Problem' || spec.personaBackground || spec.solution) {
+    return {
+      name: metadata.name,
+      description: spec.description,
+    };
+  }
+
+  const personaSpec = payload?.spec?.persona?.spec || {};
+  const personaMetadata = payload?.spec?.persona?.metadata || {};
+  const problemSpec = payload?.spec?.problem?.spec || {};
+
+  return {
+    leiaName: metadata.name,
+    personaName: personaSpec.fullName || personaMetadata.name,
+    personaDescription: personaSpec.description,
+    problemDescription: problemSpec.description,
+  };
 }
 
 async function generateAvatarForEntity(req, res, next, config) {
