@@ -2,6 +2,7 @@ import ProblemRepository from '../../repositories/v1/ProblemRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class ProblemService {
   // READ METHODS
@@ -28,13 +29,12 @@ class ProblemService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const problem = await ProblemRepository.findByIdPopulatedUser(id);
+    const problem = await ProblemRepository.findById(id);
 
     if (!canAccess(problem, context)) {
       throw createUnauthorizedError('Problem');
     }
-
-    return problem;
+    return await populateUserInEntity(problem);
   }
 
   async existsByName(name) {
@@ -108,12 +108,12 @@ class ProblemService {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
+    const problems= await ProblemRepository.findByQuery(text, version, apiVersion, process, context.userId, visibility, context.role === 'admin' || context.internal);
 
-    return await ProblemRepository.findByQuery(text, version, apiVersion, process, context.userId, visibility, context.role === 'admin' || context.internal);
+    return await populateUserInEntity(problems);
   }
-
+  
   // WRITE METHODS
-
   async create(problemData, context = {}, publish = true) {
     delete problemData.metadata.version; // Remove to set the version to 1.0.0
     if (context.role === 'admin') {
@@ -209,7 +209,7 @@ class ProblemService {
     problem.isPublished = false;
     return await problem.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {

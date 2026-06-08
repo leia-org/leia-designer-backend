@@ -9,17 +9,36 @@ import personaRoutesV1 from './routes/v1/personaRoutes.js';
 import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
 import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
-import userRoutesV1 from './routes/v1/userRoutes.js';
+import labelRoutesV1 from './routes/v1/labelRoutes.js';
 import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
+import workbenchRoutesV1 from './routes/v1/workbenchRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
+import providerRoutesV1 from './routes/v1/providerRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
 const app = express();
 
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   })
@@ -38,13 +57,15 @@ SwaggerParser.bundle('./api/openapi.yaml')
   });
 
 // Routes v1 authentication and authorization checks in routers
-app.use('/api/v1/users', userRoutesV1);
 app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);
 app.use('/api/v1/leias', leiaRoutesV1);
+app.use('/api/v1/labels', labelRoutesV1);
 app.use('/api/v1/experiments', experimentRoutesV1);
+app.use('/api/v1/workbench', workbenchRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
+app.use('/api/v1/provider', providerRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);

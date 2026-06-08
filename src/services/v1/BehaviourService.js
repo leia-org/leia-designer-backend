@@ -2,6 +2,7 @@ import BehaviourRepository from '../../repositories/v1/BehaviourRepository.js';
 import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/versioning.js';
 import { canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import LeiaService from './LeiaService.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class BehaviourService {
   // READ METHODS
@@ -28,13 +29,12 @@ class BehaviourService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const behaviour = await BehaviourRepository.findByIdPopulatedUser(id);
+    const behaviour = await BehaviourRepository.findById(id);
 
     if (!canAccess(behaviour, context)) {
       throw createUnauthorizedError('Behaviour');
     }
-
-    return behaviour;
+    return await populateUserInEntity(behaviour);
   }
 
   async existsByName(name) {
@@ -109,7 +109,7 @@ class BehaviourService {
       version = getVersionObjectFromString(version);
     }
 
-    return await BehaviourRepository.findByQuery(
+    const behaviours = await BehaviourRepository.findByQuery(
       text,
       version,
       apiVersion,
@@ -118,6 +118,7 @@ class BehaviourService {
       visibility,
       context.role === 'admin' || context.internal
     );
+   return await populateUserInEntity(behaviours);
   }
 
   // WRITE METHODS
@@ -225,7 +226,7 @@ class BehaviourService {
     behaviour.isPublished = false;
     return await behaviour.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {

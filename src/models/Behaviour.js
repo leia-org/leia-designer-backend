@@ -41,7 +41,7 @@ const BehaviourSchema = new Schema(
       process: {
         type: [String],
         default: [],
-        enum: ['requirements-elicitation', 'game'],
+        enum: ['requirements-elicitation', 'game', 'other'],
       },
       tooltip: {
         type: String,
@@ -49,7 +49,7 @@ const BehaviourSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      alias: 'userId',
     },
     isPublished: {
       type: Boolean,

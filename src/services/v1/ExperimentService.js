@@ -1,18 +1,22 @@
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
-
+import { populateUserInEntity } from '../../utils/authClient.js';
 class ExperimentService {
+
   // READ METHODS
 
   async findAll() {
-    return await ExperimentRepository.findAll();
+    const experiments = await ExperimentRepository.findAll();
+    return await populateUserInEntity(experiments);
   }
 
   async findById(id) {
-    return await ExperimentRepository.findById(id);
+    const experiment = await ExperimentRepository.findById(id);
+    return await populateUserInEntity(experiment);
   }
 
   async findByIdPopulated(id) {
-    return await ExperimentRepository.findByIdPopulated(id);
+    const experiment = await ExperimentRepository.findByIdPopulated(id);
+    return await populateUserInEntity(experiment);
   }
 
   async existsByLeiaId(leiaId) {
@@ -20,15 +24,17 @@ class ExperimentService {
   }
 
   async findByLeiaId(leiaId) {
-    return await ExperimentRepository.findByLeiaId(leiaId);
+    const experiment = await ExperimentRepository.findByLeiaId(leiaId);
+    return await populateUserInEntity(experiment);
   }
 
   async findByUserId(userId, visibility = 'all', populated = false) {
-    return await ExperimentRepository.findByUserId(userId, visibility, populated);
+    const experiments = await ExperimentRepository.findByUserId(userId, visibility, populated);
+    return await populateUserInEntity(experiments);
   }
 
   async checkEditable(experimentId, userId) {
-    const experiment = await ExperimentRepository.findById(experimentId);
+    const experiment = await this.findById(experimentId);
     if (!experiment) {
       const error = new Error('Experiment not found');
       error.statusCode = 404;
@@ -45,7 +51,9 @@ class ExperimentService {
       throw error;
     }
   }
-
+  async checkNameExists(name) {
+    return await ExperimentRepository.existsByName(name);
+  }
   // WRITE METHODS
 
   async create(experimentData) {
@@ -56,7 +64,14 @@ class ExperimentService {
     return await ExperimentRepository.update(id, { name });
   }
 
+  //fix to add check for leia before publishing modeled after checkEditable
   async publish(id) {
+    const experiment = await this.findByIdPopulated(id);
+    if (!experiment.leias || experiment.leias.length === 0) {
+      const error = new Error('Experiment must have an associated LEIA before publishing');
+      error.statusCode = 400;
+      throw error;
+    }
     return await ExperimentRepository.update(id, { isPublished: true });
   }
 

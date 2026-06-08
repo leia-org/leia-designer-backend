@@ -7,7 +7,8 @@ import {
   getLeiasByQuery,
   getLeiaByNameAndVersion,
   getLeiasByName,
-  deleteLeiaById
+  deleteLeiaById,
+  updateLeiaLabels
 } from '../../controllers/v1/leiaController.js';
 import { requireJwtAuthentication, requireAuthentication } from '../../middlewares/auth.js';
 
@@ -16,6 +17,9 @@ const router = express.Router();
 // POST
 router.post('/version', requireJwtAuthentication, createNewLeiaVersion);
 router.post('/', requireJwtAuthentication, createLeia);
+
+// PATCH
+router.patch('/:id/labels', requireJwtAuthentication, updateLeiaLabels);
 
 // GET
 router.get('/exists/:name', requireAuthentication, existsLeiaByName);
