@@ -6,7 +6,7 @@ import { validateVisibility, validateBoolean, validateProcess } from '../../vali
 
 export const createProblem = async (req, res, next) => {
   try {
-    const value = await createProblemValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await createProblemValidator.validateAsync(req.body, { abortEarly: false, stripUnknown: true });
     value.user = req.auth?.payload?.id;
     const context = {
       userId: req.auth?.payload?.id,
@@ -23,7 +23,7 @@ export const createProblem = async (req, res, next) => {
 
 export const createNewProblemVersion = async (req, res, next) => {
   try {
-    const value = await updateProblemValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await updateProblemValidator.validateAsync(req.body, { abortEarly: false, stripUnknown: true });
     value.user = req.auth?.payload?.id;
 
     const context = {

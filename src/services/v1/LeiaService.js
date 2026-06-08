@@ -6,6 +6,7 @@ import ProblemService from './ProblemService.js';
 import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
+import { populateUserInEntity } from '../../utils/authClient.js';
 
 class LeiaService {
   // READ METHODS
@@ -32,13 +33,12 @@ class LeiaService {
   }
 
   async findByIdPopulatedUser(id, context = {}) {
-    const leia = await LeiaRepository.findByIdPopulatedUser(id);
+    const leia = await LeiaRepository.findById(id);
 
     if (!canAccess(leia, context)) {
       throw createUnauthorizedError('Leia');
     }
-
-    return leia;
+    return await populateUserInEntity(leia);
   }
 
   async existsByName(name) {
@@ -132,19 +132,21 @@ class LeiaService {
     return leia;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}) {
+  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
 
-    return await LeiaRepository.findByQuery(
+    const leias = await LeiaRepository.findByQuery(
       text,
       version,
       apiVersion,
       context.userId,
       visibility,
-      context.role === 'admin' || context.internal
+      context.role === 'admin' || context.internal,
+      labelId
     );
+    return await populateUserInEntity(leias);
   }
 
   // WRITE METHODS
@@ -330,7 +332,7 @@ class LeiaService {
     leia.isPublished = false;
     return await leia.save();
   }
-  
+
   // DELETE METHODS
 
   async deleteById(id, context = {}) {
@@ -360,6 +362,16 @@ class LeiaService {
     const deletedLeia = await LeiaRepository.deleteById(id);
     return deletedLeia;
   }
-}
 
+  async updateById(id, updateData) {
+    const leia = await LeiaRepository.findById(id);
+    if (!leia) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    const updatedLeia = await LeiaRepository.findByIdAndUpdate(id, { $set: { 'metadata.labels': updateData } });
+    return updatedLeia;
+}
+}
 export default new LeiaService();

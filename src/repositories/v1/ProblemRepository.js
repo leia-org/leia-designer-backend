@@ -12,11 +12,6 @@ class ProblemRepository {
   async findById(id) {
     return await Problem.findById(id);
   }
-
-  async findByIdPopulatedUser(id) {
-    return await Problem.findById(id).populate('user');
-  }
-
   async existsByName(name) {
     return !!(await Problem.exists({ 'metadata.name': name }));
   }
@@ -78,7 +73,7 @@ class ProblemRepository {
       query['metadata.version'] = version;
     }
 
-    return await Problem.find(query).populate('user');
+    return await Problem.find(query);
   }
 
   // WRITE METHODS

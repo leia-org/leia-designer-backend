@@ -30,6 +30,10 @@ const LeiaSchema = new Schema(
           default: 0,
         },
       },
+      labels: [{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Label'
+      }],
     },
     spec: {
       personaId: {
@@ -53,10 +57,11 @@ const LeiaSchema = new Schema(
       problem: {
         type: Object,
       },
+
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      alias: 'userId'
     },
     isPublished: {
       type: Boolean,

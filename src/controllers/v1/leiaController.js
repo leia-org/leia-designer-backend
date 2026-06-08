@@ -2,7 +2,7 @@ import LeiaService from '../../services/v1/LeiaService.js';
 import { createLeiaValidator, updateLeiaValidator } from '../../validators/v1/leiaValidator.js';
 import { isNotFound } from '../../utils/helper.js';
 import { isVersionQueryValid, isApiVersionValid } from '../../validators/versionValidator.js';
-import { validateVisibility, validateBoolean } from '../../validators/queryValidator.js';
+import { validateVisibility, validateBoolean, isMongoIdQueryValid } from '../../validators/queryValidator.js';
 
 export const createLeia = async (req, res, next) => {
   try {
@@ -108,7 +108,7 @@ export const getLeiaByNameAndVersion = async (req, res, next) => {
 
 export const getLeiasByQuery = async (req, res, next) => {
   try {
-    const { text, version, apiVersion } = req.query;
+    const { text, version, apiVersion, labelId } = req.query;
 
     if (version && !isVersionQueryValid(version)) {
       const error = new Error('Invalid version format');
@@ -122,12 +122,18 @@ export const getLeiasByQuery = async (req, res, next) => {
       throw error;
     }
 
+    if (labelId && !isMongoIdQueryValid(labelId)) {
+      const error = new Error('Invalid labelId format');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const context = {
       userId: req.auth?.payload?.id,
       role: req.auth?.payload?.role
     };
 
-    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context);
+    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context, labelId);
 
     res.json(result);
   } catch (err) {
@@ -148,6 +154,32 @@ export const deleteLeiaById = async (req, res, next) => {
       throw error;
     }
     res.json(deletedLeia);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateLeiaLabels = async (req, res, next) => {
+  try {
+    const context = {
+      userId: req.auth?.payload?.id,
+      role: req.auth?.payload?.role
+    };
+    const leia = await LeiaService.findById(req.params.id, context);
+    if (context.role !== 'admin' && leia.user.toString() !== context.userId) {
+      const error = new Error('Unauthorized');
+      error.statusCode = 403;
+      throw error;
+    }
+    const labelsIds = req.body.labelsIds;
+    const updatedLeia = await LeiaService.updateById(req.params.id, labelsIds);
+    
+    if (isNotFound(updatedLeia)) {
+      const error = new Error('Leia not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    res.status(200).json(updatedLeia);
   } catch (err) {
     next(err);
   }

@@ -59,7 +59,7 @@ const PersonaSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      alias: 'userId'
     },
     isPublished: {
       type: Boolean,
