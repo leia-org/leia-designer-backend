@@ -72,6 +72,7 @@ export const runnerLeiaValidator = Joi.object({
       }).required().unknown(true)
     }).required().unknown(true),
     problem: Joi.object().required(),
+    supervisorConfig,
   }).required(),
   runnerConfiguration: Joi.object({
     modelName: Joi.string().required(),
