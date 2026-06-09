@@ -1,4 +1,4 @@
-import AvatarGeneration from '../../services/v1/AvatarGeneration.js';
+import ImageGeneration from '../../services/v1/ImageGeneration.js';
 import S3Service from '../../services/v1/s3.js';
 import LeiaService from '../../services/v1/LeiaService.js';
 import PersonaService from '../../services/v1/PersonaService.js';
@@ -9,19 +9,19 @@ const ENTITY_CONFIG = {
     label: 'Persona',
     entityType: 'personas',
     service: PersonaService,
-    generate: (entity) => AvatarGeneration.generatePersonaAvatar(entity),
+    generate: (entity) => ImageGeneration.generatePersonaAvatar(entity),
   },
   problems: {
     label: 'Problem',
     entityType: 'problems',
     service: ProblemService,
-    generate: (entity) => AvatarGeneration.generateProblemAvatar(entity),
+    generate: (entity) => ImageGeneration.generateProblemAvatar(entity),
   },
   leias: {
     label: 'Leia',
     entityType: 'leias',
     service: LeiaService,
-    generate: (entity) => AvatarGeneration.generateLeiaAvatar(entity),
+    generate: (entity) => ImageGeneration.generateLeiaAvatar(entity),
   },
 };
 
@@ -121,3 +121,22 @@ export const generateProblemAvatar = async (req, res, next) => {
 export const generateLeiaAvatar = async (req, res, next) => {
   await generateAvatarForEntity(req, res, next, ENTITY_CONFIG.leias);
 };
+
+export const generateInfographic = async (req, res, next) => {
+  try {
+    const { behaviour } = req.body;
+    if (!behaviour) {
+      const error = new Error('Behaviour is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    const generationResult = await ImageGeneration.generateInfographic(behaviour);
+    res.status(200).json({
+      infographic: generationResult.infographic,
+      sizeBytes: generationResult.sizeBytes,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

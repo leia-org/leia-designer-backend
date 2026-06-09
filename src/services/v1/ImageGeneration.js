@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-class AvatarGeneration {
+class ImageGeneration {
   async post(path, body) {
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1${path}`,
@@ -21,6 +21,9 @@ class AvatarGeneration {
   async generateLeiaAvatar(leia) {
     return await this.post('/avatars/leias/generate', { leia });
   }
-}
 
-export default new AvatarGeneration();
+  async generateInfographic(behaviour) {
+    return await this.post('/infographics/generate', { behaviour });
+  }
+}
+export default new ImageGeneration();
