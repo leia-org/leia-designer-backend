@@ -124,13 +124,13 @@ export const generateLeiaAvatar = async (req, res, next) => {
 
 export const generateInfographic = async (req, res, next) => {
   try {
-    const { behaviour } = req.body;
+    const { behaviour, solution } = req.body;
     if (!behaviour) {
       const error = new Error('Behaviour is required');
       error.statusCode = 400;
       throw error;
     }
-    const generationResult = await ImageGeneration.generateInfographic(behaviour);
+    const generationResult = await ImageGeneration.generateInfographic(behaviour, solution);
     res.status(200).json({
       infographic: generationResult.infographic,
       sizeBytes: generationResult.sizeBytes,

@@ -22,8 +22,8 @@ class ImageGeneration {
     return await this.post('/avatars/leias/generate', { leia });
   }
 
-  async generateInfographic(behaviour) {
-    return await this.post('/infographics/generate', { behaviour });
+  async generateInfographic(behaviour, solution) {
+    return await this.post('/infographics/generate', { behaviour, solution });
   }
 }
 export default new ImageGeneration();
