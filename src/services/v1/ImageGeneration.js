@@ -22,7 +22,7 @@ class ImageGeneration {
     return await this.post('/avatars/leias/generate', { leia });
   }
 
-  async generateInfographic(behaviour, solution) {
+  async generateInfographic(behaviour, solution = false) {
     return await this.post('/infographics/generate', { behaviour, solution });
   }
 }

@@ -25,6 +25,23 @@ const ENTITY_CONFIG = {
   },
 };
 
+const INFOGRAPHIC_CONFIG = {
+  infographic: {
+    label: 'Infographic',
+    variant: 'infographic',
+    specPath: 'spec.infographic',
+    responseField: 'infographic',
+    includeSolution: false,
+  },
+  infographicSolution: {
+    label: 'Infographic solution',
+    variant: 'infographicSolution',
+    specPath: 'spec.infographicSolution',
+    responseField: 'infographicSolution',
+    includeSolution: true,
+  },
+};
+
 function canModify(entity, context) {
   if (context.role === 'admin' || context.internal) {
     return true;
@@ -64,50 +81,97 @@ function toGeneratorPayload(entity) {
   };
 }
 
-async function generateAvatarForEntity(req, res, next, config) {
+async function loadMutableEntity(req, config) {
+  const context = {
+    userId: req.auth?.payload?.id,
+    role: req.auth?.payload?.role,
+  };
+
+  const entity = await config.service.findById(req.params.id, context);
+  if (!entity) {
+    const error = new Error(`${config.label} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!canModify(entity, context)) {
+    const error = new Error('Unauthorized');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return entity;
+}
+
+async function generateStoredImageForEntity(req, res, next, config) {
   try {
-    const context = {
-      userId: req.auth?.payload?.id,
-      role: req.auth?.payload?.role,
-    };
+    const entity = await loadMutableEntity(req, config);
+    const generationResult = await config.generate(entity);
+    const storedImage = await config.store(entity, generationResult);
 
-    const entity = await config.service.findById(req.params.id, context);
-    if (!entity) {
-      const error = new Error(`${config.label} not found`);
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (!canModify(entity, context)) {
-      const error = new Error('Unauthorized');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    const generationResult = await config.generate(toGeneratorPayload(entity));
-    const storedAvatar = await S3Service.saveAvatar({
-      entityType: config.entityType,
-      entityId: entity._id.toString(),
-      imageDataUrl: generationResult.avatar,
-      previousAvatar: entity.spec?.avatar,
-    });
-
-    entity.set('spec.avatar', storedAvatar.key);
+    entity.set(config.specPath, storedImage.key);
     const updatedEntity = await entity.save();
 
-    if (storedAvatar.previousKey && storedAvatar.previousKey !== storedAvatar.key) {
-      await S3Service.deleteObject(storedAvatar.previousKey);
+    if (storedImage.previousKey && storedImage.previousKey !== storedImage.key) {
+      await S3Service.deleteObject(storedImage.previousKey);
     }
 
     res.status(200).json({
-      avatar: storedAvatar.key,
-      key: storedAvatar.key,
-      sizeBytes: storedAvatar.sizeBytes,
+      [config.responseField]: storedImage.key,
+      key: storedImage.key,
+      contentType: storedImage.contentType,
+      sizeBytes: storedImage.sizeBytes,
       entity: updatedEntity,
     });
   } catch (err) {
     next(err);
   }
+}
+
+async function generateAvatarForEntity(req, res, next, config) {
+  await generateStoredImageForEntity(req, res, next, {
+    ...config,
+    specPath: 'spec.avatar',
+    responseField: 'avatar',
+    generate: (entity) => config.generate(toGeneratorPayload(entity)),
+    store: (entity, generationResult) =>
+      S3Service.saveAvatar({
+        entityType: config.entityType,
+        entityId: entity._id.toString(),
+        imageDataUrl: generationResult.avatar,
+        previousAvatar: entity.spec?.avatar,
+      }),
+  });
+}
+
+function getLeiaInfographicBehaviour(leia) {
+  const behaviour = leia.spec?.behaviour;
+  if (!behaviour) {
+    const error = new Error('Leia behaviour is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return behaviour;
+}
+
+async function generateInfographicForLeia(req, res, next, config) {
+  await generateStoredImageForEntity(req, res, next, {
+    ...config,
+    service: LeiaService,
+    generate: (leia) => {
+      const behaviour = getLeiaInfographicBehaviour(leia);
+      return ImageGeneration.generateInfographic(behaviour, config.includeSolution);
+    },
+    store: (leia, generationResult) =>
+      S3Service.saveLeiaInfographic({
+        leiaId: leia._id.toString(),
+        variant: config.variant,
+        image: generationResult.infographic,
+        contentType: generationResult.contentType,
+        previousImage: leia.get(config.specPath),
+      }),
+  });
 }
 
 export const generatePersonaAvatar = async (req, res, next) => {
@@ -122,21 +186,11 @@ export const generateLeiaAvatar = async (req, res, next) => {
   await generateAvatarForEntity(req, res, next, ENTITY_CONFIG.leias);
 };
 
-export const generateInfographic = async (req, res, next) => {
-  try {
-    const { behaviour, solution } = req.body;
-    if (!behaviour) {
-      const error = new Error('Behaviour is required');
-      error.statusCode = 400;
-      throw error;
-    }
-    const generationResult = await ImageGeneration.generateInfographic(behaviour, solution);
-    res.status(200).json({
-      infographic: generationResult.infographic,
-      sizeBytes: generationResult.sizeBytes,
-    });
-  } catch (err) {
-    next(err);
-  }
+export const generateLeiaInfographic = async (req, res, next) => {
+  await generateInfographicForLeia(req, res, next, INFOGRAPHIC_CONFIG.infographic);
+};
+
+export const generateLeiaInfographicSolution = async (req, res, next) => {
+  await generateInfographicForLeia(req, res, next, INFOGRAPHIC_CONFIG.infographicSolution);
 };
 

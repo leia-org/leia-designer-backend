@@ -9,6 +9,17 @@ import {
 
 const DEFAULT_REGION = 'us-east-1';
 const AVATAR_CACHE_CONTROL = 'public, max-age=300';
+const IMAGE_CACHE_CONTROL = 'public, max-age=300';
+const INFOGRAPHIC_VARIANTS = {
+  infographic: {
+    folder: 'infographic',
+    fileName: 'original',
+  },
+  infographicSolution: {
+    folder: 'infographic',
+    fileName: 'solution',
+  },
+};
 
 function getBooleanEnv(name, defaultValue = false) {
   const value = process.env[name];
@@ -56,6 +67,30 @@ function avatarKey(entityType, entityId) {
   return `images/${entityType}/${entityId}/avatar/original.webp`;
 }
 
+function extensionFromContentType(contentType) {
+  switch (contentType) {
+    case 'image/jpeg':
+      return 'jpg';
+    case 'image/png':
+      return 'png';
+    case 'image/webp':
+      return 'webp';
+    default:
+      return 'png';
+  }
+}
+
+function leiaInfographicKey(leiaId, variant, contentType = 'image/png') {
+  const config = INFOGRAPHIC_VARIANTS[variant];
+  if (!config) {
+    const error = new Error(`Unsupported infographic variant: ${variant}`);
+    error.statusCode = 500;
+    throw error;
+  }
+
+  return `leias/${leiaId}/${config.folder}/${config.fileName}.${extensionFromContentType(contentType)}`;
+}
+
 function decodeImageDataUrl(dataUrl) {
   if (typeof dataUrl !== 'string') {
     const error = new Error('Avatar image must be a data URL');
@@ -76,18 +111,20 @@ function decodeImageDataUrl(dataUrl) {
   };
 }
 
-function keyFromAvatarPath(path) {
+function keyFromStoredImagePath(path) {
   if (typeof path !== 'string' || !path) {
     return null;
   }
 
   const value = trimSlashes(path);
-  if (value.startsWith('images/')) {
+  if (value.startsWith('images/') || value.startsWith('leias/')) {
     return value;
   }
 
   return null;
 }
+
+const keyFromAvatarPath = keyFromStoredImagePath;
 
 function publicReadPolicy(bucket) {
   return JSON.stringify({
@@ -97,10 +134,36 @@ function publicReadPolicy(bucket) {
         Effect: 'Allow',
         Principal: '*',
         Action: ['s3:GetObject'],
-        Resource: [`arn:aws:s3:::${bucket}/images/*`],
+        Resource: [`arn:aws:s3:::${bucket}/images/*`, `arn:aws:s3:::${bucket}/leias/*`],
       },
     ],
   });
+}
+
+function bufferFromImageValue(image) {
+  if (Buffer.isBuffer(image)) {
+    return image;
+  }
+
+  if (Array.isArray(image)) {
+    return Buffer.from(image);
+  }
+
+  if (image?.type === 'Buffer' && Array.isArray(image.data)) {
+    return Buffer.from(image.data);
+  }
+
+  const error = new Error('Image generator must return binary image data');
+  error.statusCode = 502;
+  throw error;
+}
+
+function normalizeContentType(contentType) {
+  if (typeof contentType === 'string' && contentType.startsWith('image/')) {
+    return contentType;
+  }
+
+  return 'image/png';
 }
 
 class S3Service {
@@ -156,7 +219,7 @@ class S3Service {
     await this.ensureBucket();
 
     const key = avatarKey(entityType, entityId);
-    const previousKey = keyFromAvatarPath(previousAvatar);
+    const previousKey = keyFromStoredImagePath(previousAvatar);
     const { contentType, buffer } = decodeImageDataUrl(imageDataUrl);
 
     if (previousKey === key) {
@@ -184,7 +247,41 @@ class S3Service {
       sizeBytes: buffer.length,
     };
   }
+
+  async saveLeiaInfographic({ leiaId, variant, image, contentType, previousImage }) {
+    await this.ensureBucket();
+
+    const normalizedContentType = normalizeContentType(contentType);
+    const key = leiaInfographicKey(leiaId, variant, normalizedContentType);
+    const previousKey = keyFromStoredImagePath(previousImage);
+    const buffer = bufferFromImageValue(image);
+
+    if (previousKey === key) {
+      await this.deleteObject(previousKey);
+    }
+
+    const putParams = {
+      Bucket: requiredEnv('S3_BUCKET'),
+      Key: key,
+      Body: buffer,
+      ContentType: normalizedContentType,
+      CacheControl: IMAGE_CACHE_CONTROL,
+    };
+
+    if (getBooleanEnv('S3_PUBLIC_READ')) {
+      putParams.ACL = 'public-read';
+    }
+
+    await this.client.send(new PutObjectCommand(putParams));
+
+    return {
+      key,
+      previousKey,
+      contentType: normalizedContentType,
+      sizeBytes: buffer.length,
+    };
+  }
 }
 
-export { avatarKey, keyFromAvatarPath };
+export { avatarKey, keyFromAvatarPath, keyFromStoredImagePath, leiaInfographicKey };
 export default new S3Service();
