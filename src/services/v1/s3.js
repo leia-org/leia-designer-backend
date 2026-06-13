@@ -88,7 +88,7 @@ function leiaInfographicKey(leiaId, variant, contentType = 'image/png') {
     throw error;
   }
 
-  return `leias/${leiaId}/${config.folder}/${config.fileName}.${extensionFromContentType(contentType)}`;
+  return `images/leias/${leiaId}/${config.folder}/${config.fileName}.${extensionFromContentType(contentType)}`;
 }
 
 function decodeImageDataUrl(dataUrl) {
@@ -117,7 +117,7 @@ function keyFromStoredImagePath(path) {
   }
 
   const value = trimSlashes(path);
-  if (value.startsWith('images/') || value.startsWith('leias/')) {
+  if (value.startsWith('images/')) {
     return value;
   }
 
@@ -134,7 +134,7 @@ function publicReadPolicy(bucket) {
         Effect: 'Allow',
         Principal: '*',
         Action: ['s3:GetObject'],
-        Resource: [`arn:aws:s3:::${bucket}/images/*`, `arn:aws:s3:::${bucket}/leias/*`],
+        Resource: [`arn:aws:s3:::${bucket}/images/*`],
       },
     ],
   });
