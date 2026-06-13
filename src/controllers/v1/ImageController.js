@@ -144,24 +144,12 @@ async function generateAvatarForEntity(req, res, next, config) {
   });
 }
 
-function getLeiaInfographicBehaviour(leia) {
-  const behaviour = leia.spec?.behaviour;
-  if (!behaviour) {
-    const error = new Error('Leia behaviour is required');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return behaviour;
-}
-
 async function generateInfographicForLeia(req, res, next, config) {
   await generateStoredImageForEntity(req, res, next, {
     ...config,
     service: LeiaService,
     generate: (leia) => {
-      const behaviour = getLeiaInfographicBehaviour(leia);
-      return ImageGeneration.generateInfographic(behaviour, config.includeSolution);
+      return ImageGeneration.generateInfographic(leia, config.includeSolution);
     },
     store: (leia, generationResult) =>
       S3Service.saveLeiaInfographic({
