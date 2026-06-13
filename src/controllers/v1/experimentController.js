@@ -1,9 +1,10 @@
 import ExperimentService from '../../services/v1/ExperimentService.js';
+import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
   updateExperimentNameValidator,
   leiaConfigValidator,
-  createAddPublishExperimentFromLeiaValidator
+  createExperimentReplicationValidator
 } from '../../validators/v1/experimentValidator.js';
 import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
 
@@ -137,27 +138,26 @@ export const deleteExperimentById = async (req, res, next) => {
     next(err);
   }
 };
-export const createAddPublishExperimentFromLeia = async (req, res, next) => {
+export const createExperimentReplication = async (req, res, next) => {
   try {
-    const value = await createAddPublishExperimentFromLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await createExperimentReplicationValidator.validateAsync(req.body, { abortEarly: false });
     const userId = req.auth?.payload?.id;
+    const existsActivity = await ExperimentService.checkNameExists(value.leiaName);
+    if (existsActivity) {
+      return res.status(409).json({ error: 'Activity name already exists' });
+    }
+    const existsReplication = await WorkbenchService.replicationNameExists(value.leiaName, req.headers.authorization);
+    if (existsReplication) {
+      return res.status(409).json({ error: 'Replication name already exists' });
+    }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
       isPublished: true
     });
-
-    res.status(201).json(newExperiment);
-  } catch (err) {
-    next(err);
-  }
-};
-export const checkExperimentNameExists = async (req, res, next) => {
-  try {
-    const experimentName = req.params.name;
-    const exists = await ExperimentService.checkNameExists(experimentName);
-    res.json({ exists });
+    const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
+    res.status(201).json({ experiment: newExperiment, replication: newReplication });
   } catch (err) {
     next(err);
   }
