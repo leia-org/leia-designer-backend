@@ -10,20 +10,20 @@ class ImageGeneration {
     return response.data;
   }
 
-  async generatePersonaAvatar(persona) {
-    return await this.post('/avatars/personas/generate', { persona });
+  async generatePersonaAvatar(persona, apiKeyConfig) {
+    return await this.post('/avatars/personas/generate', { persona, ...apiKeyConfig });
   }
 
-  async generateProblemAvatar(problem) {
-    return await this.post('/avatars/problems/generate', { problem });
+  async generateProblemAvatar(problem, apiKeyConfig) {
+    return await this.post('/avatars/problems/generate', { problem, ...apiKeyConfig });
   }
 
-  async generateLeiaAvatar(leia) {
-    return await this.post('/avatars/leias/generate', { leia });
+  async generateLeiaAvatar(leia, apiKeyConfig) {
+    return await this.post('/avatars/leias/generate', { leia, ...apiKeyConfig });
   }
 
-  async generateInfographic(leia, solution = false) {
-    return await this.post('/infographics/generate', { leia, solution });
+  async generateInfographic(leia, solution = false, apiKeyConfig) {
+    return await this.post('/infographics/generate', { leia, solution, ...apiKeyConfig });
   }
 }
 export default new ImageGeneration();

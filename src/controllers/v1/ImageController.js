@@ -3,25 +3,26 @@ import S3Service from '../../services/v1/s3.js';
 import LeiaService from '../../services/v1/LeiaService.js';
 import PersonaService from '../../services/v1/PersonaService.js';
 import ProblemService from '../../services/v1/ProblemService.js';
+import axios from 'axios';
 
 const ENTITY_CONFIG = {
   personas: {
     label: 'Persona',
     entityType: 'personas',
     service: PersonaService,
-    generate: (entity) => ImageGeneration.generatePersonaAvatar(entity),
+    generate: (entity, apiKeyConfig) => ImageGeneration.generatePersonaAvatar(entity, apiKeyConfig),
   },
   problems: {
     label: 'Problem',
     entityType: 'problems',
     service: ProblemService,
-    generate: (entity) => ImageGeneration.generateProblemAvatar(entity),
+    generate: (entity, apiKeyConfig) => ImageGeneration.generateProblemAvatar(entity, apiKeyConfig),
   },
   leias: {
     label: 'Leia',
     entityType: 'leias',
     service: LeiaService,
-    generate: (entity) => ImageGeneration.generateLeiaAvatar(entity),
+    generate: (entity, apiKeyConfig) => ImageGeneration.generateLeiaAvatar(entity, apiKeyConfig),
   },
 };
 
@@ -47,6 +48,44 @@ function canModify(entity, context) {
     return true;
   }
   return !!entity?.user && entity.user.equals(context.userId);
+}
+
+function getGeminiApiKeyConfig(req) {
+  const apiKeyId = typeof req.body?.apiKeyId === 'string' ? req.body.apiKeyId.trim() : '';
+  const apiKeyRequesterId = req.auth?.payload?.id;
+
+  if (!apiKeyId) {
+    const error = new Error('apiKeyId is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!apiKeyRequesterId) {
+    const error = new Error('User ID is required for API key usage');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { apiKeyId, apiKeyRequesterId };
+}
+
+async function validateGeminiApiKey({ apiKeyId, apiKeyRequesterId }) {
+  try {
+    await axios.post(
+      `${process.env.AUTH_SERVICE_URL}/api/v1/apikeys/validate-provider`,
+      { provider: 'gemini', apiKeyId, apiKeyRequesterId },
+      { headers: { 'x-intern-token': process.env.INTERN_TOKEN } }
+    );
+  } catch (err) {
+    const status = err.response?.status;
+    const error = new Error(
+      status === 400
+        ? 'API key must be a Gemini key'
+        : err.response?.data?.message || err.message || 'Failed to validate Gemini API key'
+    );
+    error.statusCode = status === 404 ? 404 : status === 403 ? 403 : 400;
+    throw error;
+  }
 }
 
 function toGeneratorPayload(entity) {
@@ -105,8 +144,10 @@ async function loadMutableEntity(req, config) {
 
 async function generateStoredImageForEntity(req, res, next, config) {
   try {
+    const apiKeyConfig = getGeminiApiKeyConfig(req);
     const entity = await loadMutableEntity(req, config);
-    const generationResult = await config.generate(entity);
+    await validateGeminiApiKey(apiKeyConfig);
+    const generationResult = await config.generate(entity, apiKeyConfig);
     const storedImage = await config.store(entity, generationResult);
 
     entity.set(config.specPath, storedImage.key);
@@ -133,7 +174,7 @@ async function generateAvatarForEntity(req, res, next, config) {
     ...config,
     specPath: 'spec.avatar',
     responseField: 'avatar',
-    generate: (entity) => config.generate(toGeneratorPayload(entity)),
+    generate: (entity, apiKeyConfig) => config.generate(toGeneratorPayload(entity), apiKeyConfig),
     store: (entity, generationResult) =>
       S3Service.saveAvatar({
         entityType: config.entityType,
@@ -148,8 +189,8 @@ async function generateInfographicForLeia(req, res, next, config) {
   await generateStoredImageForEntity(req, res, next, {
     ...config,
     service: LeiaService,
-    generate: (leia) => {
-      return ImageGeneration.generateInfographic(leia, config.includeSolution);
+    generate: (leia, apiKeyConfig) => {
+      return ImageGeneration.generateInfographic(leia, config.includeSolution, apiKeyConfig);
     },
     store: (leia, generationResult) =>
       S3Service.saveLeiaInfographic({
@@ -181,4 +222,3 @@ export const generateLeiaInfographic = async (req, res, next) => {
 export const generateLeiaInfographicSolution = async (req, res, next) => {
   await generateInfographicForLeia(req, res, next, INFOGRAPHIC_CONFIG.infographicSolution);
 };
-
