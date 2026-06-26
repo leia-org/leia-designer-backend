@@ -1,0 +1,69 @@
+get:
+  tags:
+    - Labels v1
+  summary: Retrieve a Label by ID
+  operationId: getLabelById
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: ID of the Label to retrieve
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Label retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/label/label.yaml'
+    '404':
+      description: Label not found
+
+put:
+  tags:
+    - Labels v1
+  summary: Update a Label by ID
+  operationId: updateLabelById
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: ID of the Label to update
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/label/updateLabel.yaml'
+  responses:
+    '200':
+      description: Label updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/label/label.yaml'
+    '400':
+      description: Invalid Label data
+    '404':
+      description: Label not found
+
+delete:
+  tags:
+    - Labels v1
+  summary: Delete a Label by ID
+  operationId: deleteLabelById
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: ID of the Label to delete
+      schema:
+        type: string
+  responses:
+    '204':
+      description: Label deleted successfully
+    '404':
+      description: Label not found

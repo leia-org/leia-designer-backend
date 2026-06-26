@@ -34,6 +34,8 @@ tags:
     description: Main User API and v1 endpoints
   - name: Experiments v1
     description: Main Experiment API and v1 endpoints
+  - name : Labels v1
+    description: Main Label API and v1 endpoints
 paths:
   # Persona v1 paths
   /v1/personas:
@@ -114,3 +116,11 @@ paths:
     $ref: './paths/v1/experiments/_id-leias-_leiaId.yaml'
   /v1/experiments/{id}/publish:
     $ref: './paths/v1/experiments/_id-publish.yaml'
+
+  # Label v1 paths
+  /v1/labels:
+    $ref: './paths/v1/labels/index.yaml'
+  /v1/labels/{id}:
+    $ref: './paths/v1/labels/_id.yaml'
+  /v1/labels/{sourceLabelId}/merge-into/{targetLabelId}:
+    $ref: './paths/v1/labels/merge-_labels.yaml'

@@ -1,0 +1,23 @@
+type: object
+required:
+  - name
+  - color
+  - secundaryColor
+  - user
+  - isGlobal
+properties:
+  name:
+    type: string
+    description: The name of the Label
+  color:
+    type: string
+    description: The primary color of the Label
+  secundaryColor:
+    type: string
+    description: The secondary color of the Label
+  user:
+    type: string
+    description: The user associated with the Label
+  isGlobal:
+    type: boolean
+    description: Indicates if the Label is global or not
