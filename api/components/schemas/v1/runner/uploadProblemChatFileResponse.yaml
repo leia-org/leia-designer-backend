@@ -1,0 +1,8 @@
+type: object
+properties:
+  fileId:
+    type: string
+  fileName:
+    type: string
+  bytes:
+    type: integer

@@ -4,8 +4,7 @@ post:
   summary: Merge one Label into another
   description: >
     Merges the source Label into the target Label. All entities associated with
-    the source Label will be reassigned to the target Label. The source Label may
-    be deleted or disabled depending on the backend implementation.
+    the source Label will be reassigned to the target Label.
   operationId: mergeLabelIntoAnotherLabel
   parameters:
     - name: sourceLabelId

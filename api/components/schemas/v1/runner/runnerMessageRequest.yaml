@@ -1,0 +1,48 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "I need help understanding the theater ticket system."
+
+  tools:
+    type: array
+    items:
+      type: object
+      required:
+        - name
+        - description
+        - parameters
+      properties:
+        name:
+          type: string
+          example: "generate_mermaid_diagram"
+        description:
+          type: string
+          example: "Generates a Mermaid class diagram from the gathered requirements."
+        parameters:
+          type: object
+          additionalProperties: true
+          example:
+            format: "classDiagram"
+            includeRelations: true
+
+  toolResults:
+    type: array
+    items:
+      type: object
+      required:
+        - callId
+        - output
+      properties:
+        callId:
+          type: string
+          example: "call_123"
+        output:
+          description: Result returned by the tool. Can be any JSON value.
+          nullable: true
+
+anyOf:
+  - required:
+      - message
+  - required:
+      - toolResults

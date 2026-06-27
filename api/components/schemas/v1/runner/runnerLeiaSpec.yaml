@@ -1,0 +1,19 @@
+type: object
+required:
+  - persona
+  - behaviour
+  - problem
+properties:
+  personaId:
+    $ref: '../../mongoId.yaml'
+  behaviourId:
+    $ref: '../../mongoId.yaml'
+  problemId:
+    $ref: '../../mongoId.yaml'
+  persona:
+    type: object
+    additionalProperties: true
+  behaviour:
+    $ref: '../behaviour/behaviour.yaml'
+  problem:
+    $ref: '../problem/problem.yaml'

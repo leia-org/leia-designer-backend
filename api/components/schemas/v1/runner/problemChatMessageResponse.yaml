@@ -1,0 +1,28 @@
+type: object
+properties:
+  toolCalls:
+    type: array
+    items:
+      type: object
+      required:
+        - callId
+        - name
+        - arguments
+      properties:
+        callId:
+          type: string
+          example: call_ydlGpZIrlWLtJY6fN32Kq92z
+
+        name:
+          type: string
+          example: apply_behaviour
+
+        arguments:
+          type: string
+          description: JSON string with the arguments for the tool call.
+          example: '{"name":"string","description":"string","role":"string","process":["requirements-elicitation","other"],"tooltip":"string"}'
+
+  responseId:
+    type: string
+    example: resp_08dc481ccd3e849e006a400615c7b0819289288b92d3b8df33
+

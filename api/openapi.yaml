@@ -36,6 +36,10 @@ tags:
     description: Main Experiment API and v1 endpoints
   - name : Labels v1
     description: Main Label API and v1 endpoints
+  - name: Runner v1
+    description: Main Runner API and v1 endpoints
+  - name: Provider v1
+    description: Main Provider API and v1 endpoints
 paths:
   # Persona v1 paths
   /v1/personas:
@@ -124,3 +128,27 @@ paths:
     $ref: './paths/v1/labels/_id.yaml'
   /v1/labels/{sourceLabelId}/merge-into/{targetLabelId}:
     $ref: './paths/v1/labels/merge-_labels.yaml'
+
+  # Runner v1 paths
+  /v1/runner/initialize:
+    $ref: './paths/v1/runner/initialize.yaml'
+  /v1/runner/{sessionId}/messages:
+    $ref: './paths/v1/runner/_sessionId-messages.yaml'
+  /v1/runner/{sessionId}/evaluate:
+    $ref: './paths/v1/runner/_sessionId-evaluate.yaml'
+  /v1/runner/transcriptions/generate:
+    $ref: './paths/v1/runner/transcriptions-generate.yaml'
+  /v1/runner/problems/generate:
+    $ref: './paths/v1/runner/problems-generate.yaml'
+  /v1/runner/behaviours/generate:
+    $ref: './paths/v1/runner/behaviours-generate.yaml'
+  /v1/runner/problem-chat/session:
+    $ref: './paths/v1/runner/problem-chat-session.yaml'
+  /v1/runner/problem-chat/{chatId}/files:
+    $ref: './paths/v1/runner/problem-chat-_chatId-files.yaml'
+  /v1/runner/problem-chat/{chatId}/messages:
+    $ref: './paths/v1/runner/problem-chat-_chatId-messages.yaml'
+
+  # Provider v1 paths
+  /v1/provider:
+    $ref: './paths/v1/provider/index.yaml'

@@ -37,7 +37,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: '../../../components/schemas/v1/label/updateLabel.yaml'
+          $ref: '../../../components/schemas/v1/label/newUpdateLabel.yaml'
   responses:
     '200':
       description: Label updated successfully

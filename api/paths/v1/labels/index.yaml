@@ -8,7 +8,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../../../components/schemas/v1/label/newLabel.yaml'
+          $ref: '../../../components/schemas/v1/label/newUpdateLabel.yaml'
   responses:
     '201':
       description: Label created successfully
