@@ -1,19 +1,13 @@
 type: object
 properties:
-  id:
-    type: string
-    description: Unique identifier for the Persona
-  apiVersion:
-    type: string
-    description: The API version of the Persona
   metadata:
     type: object
     properties:
-      name:
-        type: string
       version:
         type: string
         description: Version number in the format x.x.x
+      name:
+        type: string
   spec:
     type: object
     properties:
@@ -33,16 +27,22 @@ properties:
         type: string
       possesiveAdjective:
         type: string
+  apiVersion:
+    type: string
+    description: The API version of the Persona
+  user:
+    type: string
+    description: ID of the user who owns this persona
   isPublished:
     type: boolean
     description: Whether the persona is public (true) or private (false)
     default: false
-  user:
-    type: string
-    description: ID of the user who owns this persona
   createdAt:
     type: string
     format: date-time
   updatedAt:
     type: string
     format: date-time
+  id:
+    type: string
+    description: Unique identifier for the Persona
