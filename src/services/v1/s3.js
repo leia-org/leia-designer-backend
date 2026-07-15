@@ -222,10 +222,6 @@ class S3Service {
     const previousKey = keyFromStoredImagePath(previousAvatar);
     const { contentType, buffer } = decodeImageDataUrl(imageDataUrl);
 
-    if (previousKey === key) {
-      await this.deleteObject(previousKey);
-    }
-
     const putParams = {
       Bucket: requiredEnv('S3_BUCKET'),
       Key: key,
@@ -255,10 +251,6 @@ class S3Service {
     const key = leiaInfographicKey(leiaId, variant, normalizedContentType);
     const previousKey = keyFromStoredImagePath(previousImage);
     const buffer = bufferFromImageValue(image);
-
-    if (previousKey === key) {
-      await this.deleteObject(previousKey);
-    }
 
     const putParams = {
       Bucket: requiredEnv('S3_BUCKET'),
