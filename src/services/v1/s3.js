@@ -7,7 +7,6 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 
-const DEFAULT_REGION = 'us-east-1';
 const AVATAR_CACHE_CONTROL = 'public, max-age=300';
 const IMAGE_CACHE_CONTROL = 'public, max-age=300';
 const INFOGRAPHIC_VARIANTS = {
@@ -45,7 +44,7 @@ function trimSlashes(value) {
 
 function getS3Client() {
   const config = {
-    region: process.env.S3_REGION || DEFAULT_REGION,
+    region: process.env.S3_REGION || "auto",
     forcePathStyle: getBooleanEnv('S3_FORCE_PATH_STYLE', true),
   };
 
