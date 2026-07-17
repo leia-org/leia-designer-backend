@@ -57,6 +57,15 @@ const LeiaSchema = new Schema(
       problem: {
         type: Object,
       },
+      avatar: {
+        type: String,
+      },
+      infographic: {
+        type: String,
+      },
+      infographicSolution: {
+        type: String,
+      },
 
     },
     user: {

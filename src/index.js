@@ -14,6 +14,7 @@ import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import workbenchRoutesV1 from './routes/v1/workbenchRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
 import providerRoutesV1 from './routes/v1/providerRoutes.js';
+import imageRoutesV1 from './routes/v1/imageRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
@@ -66,6 +67,7 @@ app.use('/api/v1/experiments', experimentRoutesV1);
 app.use('/api/v1/workbench', workbenchRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
 app.use('/api/v1/provider', providerRoutesV1);
+app.use('/api/v1/images', imageRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
