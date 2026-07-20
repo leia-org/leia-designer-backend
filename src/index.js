@@ -19,12 +19,13 @@ import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
 const app = express();
-
+const PORT = process.env.PORT || 3000;
 const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
+allowedOrigins.push(`http://localhost:${PORT}`);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -72,7 +73,6 @@ app.use('/api/v1/images', imageRoutesV1);
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {

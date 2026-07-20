@@ -25,8 +25,9 @@ export const populateUserInEntity = async (entity) => {
   }
 
   const entityObj = entity.toJSON ? entity.toJSON() : entity;
+  delete entityObj.userId;
   
-  if (entityObj.user && typeof entityObj.user !== 'object') {
+  if (entityObj.user) {
     const userProfile = await getUserProfileFromAuthService(entityObj.user);
     if (userProfile) {
       entityObj.user = userProfile;
