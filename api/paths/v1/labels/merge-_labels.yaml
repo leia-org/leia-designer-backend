@@ -1,0 +1,33 @@
+post:
+  tags:
+    - Labels v1
+  summary: Merge one Label into another
+  description: >
+    Merges the source Label into the target Label. All entities associated with
+    the source Label will be reassigned to the target Label.
+  operationId: mergeLabelIntoAnotherLabel
+  parameters:
+    - name: sourceLabelId
+      in: path
+      required: true
+      description: ID of the Label that will be merged into the target Label
+      schema:
+        type: string
+
+    - name: targetLabelId
+      in: path
+      required: true
+      description: ID of the Label that will remain after the merge
+      schema:
+        type: string
+
+  responses:
+    '200':
+      description: Labels merged successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/label/label.yaml'
+
+    '403':
+      description: 'Unauthorized: Only admins can merge labels'

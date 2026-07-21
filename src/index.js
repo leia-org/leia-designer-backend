@@ -14,16 +14,18 @@ import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import workbenchRoutesV1 from './routes/v1/workbenchRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
 import providerRoutesV1 from './routes/v1/providerRoutes.js';
+import imageRoutesV1 from './routes/v1/imageRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
 const app = express();
-
+const PORT = process.env.PORT || 3000;
 const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
+allowedOrigins.push(`http://localhost:${PORT}`);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -66,11 +68,11 @@ app.use('/api/v1/experiments', experimentRoutesV1);
 app.use('/api/v1/workbench', workbenchRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
 app.use('/api/v1/provider', providerRoutesV1);
+app.use('/api/v1/images', imageRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {

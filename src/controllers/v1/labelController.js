@@ -85,3 +85,19 @@ export const deleteLabel = async (req, res, next) => {
     next(err);
   }
 };
+
+export const mergeLabels = async (req, res, next) => {
+  try {
+    const { sourceLabelId, targetLabelId } = req.params;
+    const role = req.auth?.payload?.role;
+    if (role !== 'admin') {
+      const error = new Error('Unauthorized: Only admins can merge labels');
+      error.statusCode = 403;
+      throw error;
+    }
+    const mergedLabel = await LabelService.merge(sourceLabelId, targetLabelId);
+    res.json(mergedLabel);
+  } catch (err) {
+    next(err);
+  }
+};

@@ -121,6 +121,21 @@ class LeiaRepository {
   async deleteById(id) {
     return await Leia.findByIdAndDelete(id);
   }
+
+  // Replace all occurrences of sourceLabelId with targetLabelId in Leias
+  async replaceLabels(sourceLabelId, targetLabelId) {
+    const sourceLabelObjectId = new mongoose.Types.ObjectId(sourceLabelId);
+    const targetLabelObjectId = new mongoose.Types.ObjectId(targetLabelId);
+
+    await Leia.updateMany(
+      { 'metadata.labels': sourceLabelObjectId },
+      { $addToSet: { 'metadata.labels': targetLabelObjectId } }
+    );
+    await Leia.updateMany(
+      { 'metadata.label': targetLabelObjectId },
+      { $pull: { 'metadata.labels': sourceLabelObjectId } }
+    );
+  }
 }
 
 export default new LeiaRepository();

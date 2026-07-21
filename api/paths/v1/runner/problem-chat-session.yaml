@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Runner v1
+  summary: Open a problem-chat assistant session
+  operationId: openProblemChat
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/problemChatSessionRequest.yaml'
+  responses:
+    '201':
+      description: Problem-chat session opened successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/problemChatSessionResponse.yaml'
+    '400':
+      description: modelName, apiKeyId, or authenticated user ID is missing

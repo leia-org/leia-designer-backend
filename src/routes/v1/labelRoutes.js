@@ -5,13 +5,14 @@ import {
   getLabelById,
   updateLabel,
   deleteLabel,
+  mergeLabels
 } from "../../controllers/v1/labelController.js";
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from "../../middlewares/auth.js";
 const router = express.Router();
 
     //POST
 router.post("/", requireJwtAuthentication, createLabel);
-
+router.post("/:sourceLabelId/merge-into/:targetLabelId", requireJwtAuthentication, mergeLabels);
     //GET
 router.get("/", requireAuthentication, getLabels);
 router.get("/:id", requireAuthentication, getLabelById);
