@@ -16,7 +16,7 @@ export const leiaConfigValidator = Joi.object({
   }).optional(),
 });
 
-export const createAddPublishExperimentFromLeiaValidator = Joi.object({
+export const createExperimentReplicationValidator = Joi.object({
   leiaId: Joi.string().hex().length(24).required(),
   leiaName: Joi.string().required(),
 });

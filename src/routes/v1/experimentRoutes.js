@@ -10,8 +10,8 @@ import {
   publishExperiment,
   getAllExperimentsByUser,
   deleteExperimentById,
-  createAddPublishExperimentFromLeia,
-  checkExperimentNameExists
+  createExperimentReplication,
+  
 } from '../../controllers/v1/experimentController.js';
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 
@@ -20,7 +20,8 @@ const router = express.Router();
 // POST
 router.post('/', requireJwtAuthentication, createExperiment);
 router.post('/:id/leias', requireJwtAuthentication, addExperimentLeia);
-router.post('/leia', requireJwtAuthentication, createAddPublishExperimentFromLeia);
+router.post('/leia', requireJwtAuthentication, createExperimentReplication);
+
 // PATCH
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
 router.patch('/:id/publish', requireJwtAuthentication, publishExperiment);
