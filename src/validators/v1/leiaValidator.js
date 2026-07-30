@@ -72,6 +72,10 @@ export const runnerLeiaValidator = Joi.object({
       }).required().unknown(true)
     }).required().unknown(true),
     problem: Joi.object().required(),
+    supervisorConfig,
+    avatar: Joi.string().allow('', null).optional(),
+    infographic: Joi.string().allow('', null).optional(),
+    infographicSolution: Joi.string().allow('', null).optional(),
   }).required(),
   runnerConfiguration: Joi.object({
     modelName: Joi.string().required(),

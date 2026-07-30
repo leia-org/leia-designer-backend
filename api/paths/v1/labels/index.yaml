@@ -1,0 +1,32 @@
+post:
+  tags:
+    - Labels v1
+  summary: Create a new Label
+  operationId: createLabel
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/label/newUpdateLabel.yaml'
+  responses:
+    '201':
+      description: Label created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/label/label.yaml'
+get:
+  tags:
+    - Labels v1
+  summary: Retrieve all Labels
+  operationId: getAllLabels
+  responses:
+    '200':
+      description: A list of Labels
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/label/label.yaml'

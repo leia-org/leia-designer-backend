@@ -1,5 +1,5 @@
 import LabelRepository from '../../repositories/v1/LabelRepository.js';
-
+import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
 class LabelService {
     // READ METHODS
 
@@ -28,6 +28,11 @@ class LabelService {
 
     async delete(id) {
         return await LabelRepository.delete(id);
+    }
+
+    async merge(sourceLabelId, targetLabelId) {
+        await LeiaRepository.replaceLabels(sourceLabelId, targetLabelId);
+        return await LabelRepository.delete(sourceLabelId);
     }
 }
     export default new LabelService();

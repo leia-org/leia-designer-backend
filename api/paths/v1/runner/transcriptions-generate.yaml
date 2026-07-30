@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Runner v1
+  summary: Generate a transcription for a LEIA specification
+  operationId: generateRunnerTranscription
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/generateTranscriptionRequest.yaml'
+  responses:
+    '200':
+      description: Generated transcription messages
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/generateTranscriptionResponse.yaml'
+    '400':
+      description: Invalid request body

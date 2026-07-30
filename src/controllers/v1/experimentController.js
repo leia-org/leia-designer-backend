@@ -28,7 +28,13 @@ export const getExperimentById = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-    res.json(experiment);
+    if (experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
+      res.json(experiment);
+    } else {
+      const error = new Error('Unauthorized: You do not have permission to access this experiment');
+      error.statusCode = 403;
+      throw error;
+    }
   } catch (err) {
     next(err);
   }

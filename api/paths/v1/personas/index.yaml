@@ -68,8 +68,6 @@ get:
       content:
         application/json:
           schema:
-            oneOf:
-              - $ref: '../../../components/schemas/v1/persona/persona.yaml'
-              - type: array
-                items:
-                  $ref: '../../../components/schemas/v1/persona/persona.yaml'
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/persona/persona.yaml'
