@@ -60,6 +60,23 @@ export function checkConstraints(leia) {
   }
 }
 
+/**
+ * A LEIA has a single activity process. The problem is the source of truth,
+ * and its process tags are copied to the embedded behaviour before the LEIA
+ * is created or versioned.
+ */
+export function synchronizeProcessTypes(leia) {
+  if (!leia.problem?.spec || !leia.behaviour?.spec) return leia;
+
+  const process = Array.isArray(leia.problem.spec.process)
+    ? [...leia.problem.spec.process]
+    : [];
+
+  leia.problem.spec.process = [...process];
+  leia.behaviour.spec.process = [...process];
+  return leia;
+}
+
 export function resolveExtensions(leia) {
   const extensions = leia.problem?.spec?.extends;
   if (!extensions) return leia;
