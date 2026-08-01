@@ -12,6 +12,12 @@ export const getUserProfileFromAuthService = async (userId) => {
     });
     return response.data;
   } catch (error) {
+    // Designer resources can outlive their Auth user. Keep the stored owner ID
+    // in that case so the resource remains readable and ownership checks work.
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+
     console.error(`Error fetching user ${userId} from Auth Service:`, error.message);
     return null;
   }
