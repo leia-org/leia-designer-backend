@@ -11,7 +11,7 @@ import {
   getAllExperimentsByUser,
   deleteExperimentById,
   createExperimentReplication,
-  
+  checkExperimentNameExists,
 } from '../../controllers/v1/experimentController.js';
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 

@@ -49,6 +49,15 @@ export const getAllExperiments = async (req, res, next) => {
   }
 };
 
+export const checkExperimentNameExists = async (req, res, next) => {
+  try {
+    const exists = await ExperimentService.checkNameExists(req.params.name);
+    res.json({ exists });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getAllExperimentsByUser = async (req, res, next) => {
   try {
     const visibility = validateVisibility(req.query.visibility);
