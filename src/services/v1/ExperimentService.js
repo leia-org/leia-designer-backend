@@ -152,7 +152,7 @@ class ExperimentService {
       mode: orchestration.mode,
       maxInternalTurns:
         orchestration.mode === 'multi'
-          ? Math.min(orchestration.maxInternalTurns || 2, leias.length)
+          ? Math.min(orchestration.maxInternalTurns || 2, 8)
           : 2,
       openingLeiaId: orchestration.mode === 'multi' ? openingLeiaId : null,
       problemLeiaId: orchestration.mode === 'multi' ? problemLeiaId : null,
@@ -231,10 +231,7 @@ class ExperimentService {
         : { ...experiment.orchestration };
     return await ExperimentRepository.updateOrchestration(experimentId, {
       ...orchestration,
-      maxInternalTurns: Math.min(
-        orchestration.maxInternalTurns || 2,
-        updatedExperiment.leias.length
-      ),
+      maxInternalTurns: Math.min(orchestration.maxInternalTurns || 2, 8),
       openingLeiaId: removedOpeningLeia
         ? updatedExperiment.leias[0].id
         : orchestration.openingLeiaId,

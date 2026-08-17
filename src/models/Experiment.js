@@ -17,8 +17,8 @@ const ExperimentSchema = new Schema(
       },
       maxInternalTurns: {
         type: Number,
-        min: 2,
-        max: 5,
+        min: 1,
+        max: 8,
         default: 2,
       },
       openingLeiaId: {

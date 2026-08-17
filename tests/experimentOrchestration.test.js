@@ -26,4 +26,24 @@ describe('experiment orchestration validation', () => {
       })
     ).rejects.toThrow();
   });
+
+  test('allows one to eight routed LEIA messages independently of actor count', async () => {
+    const one = await updateExperimentOrchestrationValidator.validateAsync({
+      mode: 'multi',
+      maxInternalTurns: 1,
+      openingLeiaId: '507f1f77bcf86cd799439011',
+      problemLeiaId: '507f1f77bcf86cd799439012',
+      sharedTask: '',
+    });
+    const eight = await updateExperimentOrchestrationValidator.validateAsync({
+      mode: 'multi',
+      maxInternalTurns: 8,
+      openingLeiaId: '507f1f77bcf86cd799439011',
+      problemLeiaId: '507f1f77bcf86cd799439012',
+      sharedTask: '',
+    });
+
+    expect(one.maxInternalTurns).toBe(1);
+    expect(eight.maxInternalTurns).toBe(8);
+  });
 });

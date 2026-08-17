@@ -50,6 +50,25 @@ describe('MultiLEIA shared problem', () => {
     expect(result.problemLeiaId).toBe('problem');
   });
 
+  test('does not cap the routed-message limit to the number of LEIAs', async () => {
+    const leias = [
+      entry('opening', ['requirements-elicitation'], ['requirements-elicitation']),
+      entry('problem', ['requirements-elicitation'], ['requirements-elicitation']),
+    ];
+    ExperimentRepository.findByIdPopulated.mockResolvedValue({ leias });
+    ExperimentRepository.updateOrchestration.mockImplementation(async (_id, value) => value);
+
+    const result = await ExperimentService.updateOrchestration('experiment', {
+      mode: 'multi',
+      maxInternalTurns: 6,
+      openingLeiaId: 'opening',
+      problemLeiaId: 'problem',
+      sharedTask: '',
+    });
+
+    expect(result.maxInternalTurns).toBe(6);
+  });
+
   test('rejects a behaviour whose process differs from the shared problem', async () => {
     ExperimentRepository.findByIdPopulated.mockResolvedValue({
       leias: [
