@@ -47,6 +47,14 @@ class ExperimentRepository {
     return await Experiment.findByIdAndUpdate(id, experimentData, { new: true }).populate('leias.leia');
   }
 
+  async updateOrchestration(id, orchestration) {
+    return await Experiment.findByIdAndUpdate(
+      id,
+      { $set: { orchestration } },
+      { new: true }
+    ).populate('leias.leia');
+  }
+
   async regenerateCode(id) {
     const experiment = await Experiment.findById(id).populate('leias.leia');
     if (!experiment) {
@@ -73,7 +81,7 @@ class ExperimentRepository {
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
     return await Experiment.findOneAndUpdate(
       { _id: experimentId, 'leias._id': leiaConfigId },
-      { $set: { 'leias.$': leiaConfig } },
+      { $set: { 'leias.$': { ...leiaConfig, _id: leiaConfigId } } },
       { new: true }
     ).populate('leias.leia');
   }

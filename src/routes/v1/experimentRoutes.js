@@ -12,6 +12,7 @@ import {
   deleteExperimentById,
   createExperimentReplication,
   checkExperimentNameExists,
+  updateExperimentOrchestration,
 } from '../../controllers/v1/experimentController.js';
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 
@@ -25,6 +26,7 @@ router.post('/leia', requireJwtAuthentication, createExperimentReplication);
 // PATCH
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
 router.patch('/:id/publish', requireJwtAuthentication, publishExperiment);
+router.patch('/:id/orchestration', requireJwtAuthentication, updateExperimentOrchestration);
 
 // PUT
 router.put('/:id/leias/:leiaId', requireJwtAuthentication, updateExperimentLeia);

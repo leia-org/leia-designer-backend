@@ -103,6 +103,8 @@ paths:
     $ref: './paths/v1/experiments/_id.yaml'
   /v1/experiments/{id}/name:
     $ref: './paths/v1/experiments/_id-name.yaml'
+  /v1/experiments/{id}/orchestration:
+    $ref: './paths/v1/experiments/_id-orchestration.yaml'
   /v1/experiments/{id}/leias:
     $ref: './paths/v1/experiments/_id-leias.yaml'
   /v1/experiments/{id}/leias/{leiaId}:

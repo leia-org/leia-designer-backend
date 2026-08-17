@@ -9,6 +9,31 @@ const ExperimentSchema = new Schema(
       unique: true,
     },
     leias: [LeiaConfigSchema],
+    orchestration: {
+      mode: {
+        type: String,
+        enum: ['single', 'multi'],
+        default: 'single',
+      },
+      maxInternalTurns: {
+        type: Number,
+        min: 2,
+        max: 5,
+        default: 2,
+      },
+      openingLeiaId: {
+        type: Schema.Types.ObjectId,
+        default: null,
+      },
+      problemLeiaId: {
+        type: Schema.Types.ObjectId,
+        default: null,
+      },
+      sharedTask: {
+        type: String,
+        default: '',
+      },
+    },
     isPublished: {
       type: Boolean,
       default: false,
