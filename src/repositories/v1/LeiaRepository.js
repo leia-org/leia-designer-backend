@@ -78,7 +78,7 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId, page) {
     const query = {};
 
     // Apply visibility filters
@@ -100,14 +100,21 @@ class LeiaRepository {
         { 'metadata.label': labelObjectId },
       ];
     }
+    const pageNumber = page ? page : 1;
+    const limit = 10;
+    const totalItems = await Leia.countDocuments(query);
+    const totalPages = Math.ceil(totalItems / limit);
     if (version === 'latest') {
       // Pass the complete query to the aggregation
-      return await Leia.aggregate(aggregateFindLatestVersions(query));
+      return await { leias: await Leia.aggregate(aggregateFindLatestVersions(query))
+                      .sort({ 'metadata.name': 1,
+                       })
+                      .skip((pageNumber - 1) * limit).limit(limit), totalPages };
     } else if (version) {
       query['metadata.version'] = version;
     }
-
-    return await Leia.find(query).populate('metadata.labels');
+    return await { leias: await Leia.find(query).sort({ 'metadata.name': 1,
+                       }).skip((pageNumber - 1) * limit).limit(limit).populate('metadata.labels'), totalPages };
   }
 
   // WRITE METHODS
