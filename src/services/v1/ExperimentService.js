@@ -40,7 +40,7 @@ class ExperimentService {
       error.statusCode = 404;
       throw error;
     }
-    if (!experiment.user.equals(userId)) {
+    if (experiment.user.id !== userId) {
       const error = new Error('Unauthorized');
       error.statusCode = 403;
       throw error;
