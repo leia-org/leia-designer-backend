@@ -34,6 +34,8 @@ tags:
     description: Main Experiment API and v1 endpoints
   - name : Labels v1
     description: Main Label API and v1 endpoints
+  - name: Rubrics v1
+    description: Instructor-owned evaluation rubrics
   - name: Runner v1
     description: Main Runner API and v1 endpoints
   - name: Provider v1
@@ -117,6 +119,12 @@ paths:
     $ref: './paths/v1/labels/_id.yaml'
   /v1/labels/{sourceLabelId}/merge-into/{targetLabelId}:
     $ref: './paths/v1/labels/merge-_labels.yaml'
+
+  # Rubric v1 paths
+  /v1/rubrics:
+    $ref: './paths/v1/rubrics/index.yaml'
+  /v1/rubrics/{id}:
+    $ref: './paths/v1/rubrics/_id.yaml'
 
   # Runner v1 paths
   /v1/runner/initialize:

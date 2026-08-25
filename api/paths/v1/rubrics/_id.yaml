@@ -1,0 +1,53 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    description: Rubric identifier
+    schema:
+      type: string
+get:
+  tags:
+    - Rubrics v1
+  summary: Retrieve one of the current instructor's rubrics
+  operationId: getRubricById
+  responses:
+    '200':
+      description: Rubric retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
+    '404':
+      description: Rubric not found
+put:
+  tags:
+    - Rubrics v1
+  summary: Replace one of the current instructor's rubrics
+  operationId: updateRubric
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/rubric/rubricInput.yaml'
+  responses:
+    '200':
+      description: Rubric updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
+    '400':
+      description: Invalid rubric or Markdown table
+    '404':
+      description: Rubric not found
+delete:
+  tags:
+    - Rubrics v1
+  summary: Delete one of the current instructor's rubrics
+  operationId: deleteRubric
+  responses:
+    '204':
+      description: Rubric deleted successfully
+    '404':
+      description: Rubric not found

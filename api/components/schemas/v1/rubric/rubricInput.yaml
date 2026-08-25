@@ -1,0 +1,19 @@
+type: object
+required:
+  - name
+  - markdown
+properties:
+  name:
+    type: string
+    minLength: 1
+    maxLength: 120
+    example: Oral presentation
+  description:
+    type: string
+    maxLength: 500
+    example: Criteria for the final project presentation.
+  markdown:
+    type: string
+    maxLength: 50000
+    description: A Markdown table with a header, separator, and at least one criterion row.
+    example: "| Criterion | Emerging | Proficient |\n| --- | --- | --- |\n| Clarity | Unclear | Clear and concise |"
