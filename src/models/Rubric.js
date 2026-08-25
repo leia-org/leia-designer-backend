@@ -2,22 +2,25 @@ import mongoose, { Schema } from 'mongoose';
 
 const RubricSchema = new Schema(
   {
-    name: {
+    apiVersion: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 120,
+      enum: ['v1'],
     },
-    description: {
-      type: String,
-      trim: true,
-      default: '',
-      maxlength: 500,
+    metadata: {
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 120,
+      },
     },
-    markdown: {
-      type: String,
-      required: true,
-      maxlength: 50000,
+    spec: {
+      markdown: {
+        type: String,
+        required: true,
+        maxlength: 50000,
+      },
     },
     user: {
       type: Schema.Types.ObjectId,

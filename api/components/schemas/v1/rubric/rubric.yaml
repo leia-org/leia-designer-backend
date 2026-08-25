@@ -1,12 +1,41 @@
-allOf:
-  - $ref: './rubricInput.yaml'
-  - type: object
+type: object
+additionalProperties: false
+required:
+  - _id
+  - apiVersion
+  - metadata
+  - spec
+  - createdAt
+  - updatedAt
+properties:
+  _id:
+    type: string
+  apiVersion:
+    type: string
+    enum: [v1]
+  metadata:
+    type: object
+    additionalProperties: false
+    required:
+      - name
     properties:
-      _id:
+      name:
         type: string
-      createdAt:
+        minLength: 1
+        maxLength: 120
+  spec:
+    type: object
+    additionalProperties: false
+    required:
+      - markdown
+    properties:
+      markdown:
         type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
+        maxLength: 50000
+        description: One or more Markdown tables, optionally grouped under headings whose trailing [n%] sets the section weight.
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

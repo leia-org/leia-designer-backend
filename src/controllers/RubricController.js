@@ -23,7 +23,6 @@ export const createRubric = async (req, res, next) => {
   try {
     const value = await createRubricValidator.validateAsync(req.body, {
       abortEarly: false,
-      stripUnknown: true,
     });
     const rubric = await RubricService.create(value, currentUserId(req));
     res.status(201).json(rubric);
@@ -36,7 +35,6 @@ export const updateRubric = async (req, res, next) => {
   try {
     const value = await updateRubricValidator.validateAsync(req.body, {
       abortEarly: false,
-      stripUnknown: true,
     });
     res.json(await RubricService.update(req.params.id, value, currentUserId(req)));
   } catch (error) {

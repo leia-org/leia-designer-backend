@@ -119,13 +119,21 @@ const markdownTable = Joi.string()
   });
 
 export const createRubricValidator = Joi.object({
-  name: Joi.string().trim().min(1).max(120).required(),
-  description: Joi.string().trim().allow('').max(500).default(''),
-  markdown: markdownTable.required(),
+  apiVersion: Joi.string().valid('v1').required(),
+  metadata: Joi.object({
+    name: Joi.string().trim().min(1).max(120).required(),
+  }).required(),
+  spec: Joi.object({
+    markdown: markdownTable.required(),
+  }).required(),
 });
 
 export const updateRubricValidator = Joi.object({
-  name: Joi.string().trim().min(1).max(120).required(),
-  description: Joi.string().trim().allow('').max(500).default(''),
-  markdown: markdownTable.required(),
+  apiVersion: Joi.string().valid('v1').required(),
+  metadata: Joi.object({
+    name: Joi.string().trim().min(1).max(120).required(),
+  }).required(),
+  spec: Joi.object({
+    markdown: markdownTable.required(),
+  }).required(),
 });

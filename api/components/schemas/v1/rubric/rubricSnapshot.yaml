@@ -1,10 +1,13 @@
 type: object
 additionalProperties: false
 required:
+  - _id
   - apiVersion
   - metadata
   - spec
 properties:
+  _id:
+    type: string
   apiVersion:
     type: string
     enum: [v1]
@@ -18,7 +21,6 @@ properties:
         type: string
         minLength: 1
         maxLength: 120
-        example: Oral presentation
   spec:
     type: object
     additionalProperties: false
@@ -28,5 +30,4 @@ properties:
       markdown:
         type: string
         maxLength: 50000
-        description: One or more Markdown tables, optionally grouped under headings whose trailing [n%] sets the section weight.
-        example: "## Content [60%]\n| Criterion | Emerging | Proficient |\n| --- | --- | --- |\n| Accuracy | Some errors | Correct |\n\n## Presentation [40%]\n| Criterion | Emerging | Proficient |\n| --- | --- | --- |\n| Clarity | Unclear | Clear and concise |"
+        description: Markdown content copied into a LEIA version.

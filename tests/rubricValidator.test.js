@@ -9,23 +9,39 @@ const validMarkdown = `| Criterion | Emerging | Proficient |
 | --- | --- | --- |
 | Accuracy | Some errors | Correct result |`;
 
+const validRubric = {
+  apiVersion: 'v1',
+  metadata: { name: 'Programming exercise' },
+  spec: { markdown: validMarkdown },
+};
+
 describe('rubric validator', () => {
   test('accepts a rubric containing a Markdown table', async () => {
-    const value = await createRubricValidator.validateAsync({
-      name: 'Programming exercise',
-      description: 'Evaluation guide',
-      markdown: validMarkdown,
-    });
+    const value = await createRubricValidator.validateAsync(validRubric);
 
-    expect(value.markdown).toBe(validMarkdown);
+    expect(value.spec.markdown).toBe(validMarkdown);
     expect(isMarkdownTable(validMarkdown)).toBe(true);
   });
 
   test('rejects Markdown without a table', async () => {
     await expect(createRubricValidator.validateAsync({
-      name: 'Programming exercise',
-      markdown: '# General notes',
+      ...validRubric,
+      spec: { markdown: '# General notes' },
     })).rejects.toThrow('must contain at least one Markdown table');
+  });
+
+  test('rejects the removed description field', async () => {
+    await expect(createRubricValidator.validateAsync({
+      ...validRubric,
+      metadata: { name: 'Programming exercise', description: 'Evaluation guide' },
+    })).rejects.toThrow('is not allowed');
+  });
+
+  test('rejects the previous flat rubric contract', async () => {
+    await expect(createRubricValidator.validateAsync({
+      name: 'Programming exercise',
+      markdown: validMarkdown,
+    })).rejects.toThrow('is required');
   });
 
   test('requires at least one criterion row', () => {
@@ -97,7 +113,11 @@ describe('rubric validator', () => {
 | --- | --- |
 | Clarity | Excellent |`;
 
-    await expect(createRubricValidator.validateAsync({ name: 'Weighted', markdown }))
+    await expect(createRubricValidator.validateAsync({
+      apiVersion: 'v1',
+      metadata: { name: 'Weighted rubric' },
+      spec: { markdown },
+    }))
       .rejects.toThrow('must total 100%');
   });
 
