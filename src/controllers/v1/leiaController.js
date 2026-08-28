@@ -108,8 +108,8 @@ export const getLeiaByNameAndVersion = async (req, res, next) => {
 
 export const getLeiasByQuery = async (req, res, next) => {
   try {
-    const { text, version, apiVersion, labelId } = req.query;
-
+    const { text, version, apiVersion, labelId, page } = req.query;
+    console.log({page});
     if (version && !isVersionQueryValid(version)) {
       const error = new Error('Invalid version format');
       error.statusCode = 400;
@@ -133,9 +133,11 @@ export const getLeiasByQuery = async (req, res, next) => {
       role: req.auth?.payload?.role
     };
 
-    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context, labelId);
+    const result = await LeiaService.findByQuery(text, version, apiVersion, validateVisibility(req.query.visibility), context, labelId, page);
 
-    res.json(result);
+    res.setHeader('X-Total-Pages', result.totalPages);
+    res.setHeader("Access-Control-Expose-Headers", "X-Total-Pages");
+    res.json(result.leias);
   } catch (err) {
     next(err);
   }
