@@ -4,7 +4,8 @@ import {
   createExperimentValidator,
   updateExperimentNameValidator,
   leiaConfigValidator,
-  createExperimentReplicationValidator
+  createExperimentReplicationValidator,
+  updateExperimentOrchestrationValidator,
 } from '../../validators/v1/experimentValidator.js';
 import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
 
@@ -79,6 +80,24 @@ export const updateExperimentName = async (req, res, next) => {
     await ExperimentService.checkEditable(experimentId, userId);
 
     const updatedExperiment = await ExperimentService.updateName(experimentId, value.name);
+    res.json(updatedExperiment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateExperimentOrchestration = async (req, res, next) => {
+  try {
+    const value = await updateExperimentOrchestrationValidator.validateAsync(req.body, {
+      abortEarly: false,
+    });
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await ExperimentService.checkEditable(experimentId, userId);
+    const updatedExperiment = await ExperimentService.updateOrchestration(
+      experimentId,
+      value
+    );
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
