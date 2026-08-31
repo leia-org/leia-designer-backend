@@ -41,7 +41,7 @@ describe('LEIA rubric snapshot', () => {
       _id: 'rubric-1',
       apiVersion: 'v1',
       metadata: { name: 'Interview rubric' },
-      spec: { markdown: '| A | B |' },
+      spec: { sections: [{ title: 'General', weight: 100, levels: ['B'], criteria: [] }] },
     });
     LeiaRepository.create.mockImplementation(async (value) => value);
 
@@ -62,7 +62,7 @@ describe('LEIA rubric snapshot', () => {
       _id: 'rubric-1',
       apiVersion: 'v1',
       metadata: { name: 'Interview rubric' },
-      spec: { markdown: '| A | B |' },
+      spec: { sections: [{ title: 'General', weight: 100, levels: ['B'], criteria: [] }] },
     });
   });
 });

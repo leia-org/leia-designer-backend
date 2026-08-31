@@ -123,6 +123,8 @@ paths:
   # Rubric v1 paths
   /v1/rubrics:
     $ref: './paths/v1/rubrics/index.yaml'
+  /v1/rubrics/schema:
+    $ref: './paths/v1/rubrics/schema.yaml'
   /v1/rubrics/{id}:
     $ref: './paths/v1/rubrics/_id.yaml'
 

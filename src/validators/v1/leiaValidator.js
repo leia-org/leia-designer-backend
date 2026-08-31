@@ -8,6 +8,21 @@ const nameVersion = Joi.object({
     .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
 });
 
+const rubricSpec = Joi.object({
+  sections: Joi.array().min(1).items(Joi.object({
+    title: Joi.string().required(),
+    weight: Joi.number().greater(0).max(100).required(),
+    levels: Joi.array().min(1).unique().items(Joi.string().required()).required(),
+    criteria: Joi.array().min(1).items(Joi.object({
+      name: Joi.string().required(),
+      descriptors: Joi.array().min(1).items(Joi.object({
+        level: Joi.string().required(),
+        description: Joi.string().required(),
+      })).required(),
+    })).required(),
+  })).required(),
+});
+
 // Per-LEIA background supervisor, authored by the instructor. Optional; rides
 // in the LEIA spec and is denormalized to the workbench (leia.leia.spec).
 const supervisorConfig = Joi.object({
@@ -82,7 +97,7 @@ export const runnerLeiaValidator = Joi.object({
         name: Joi.string().required(),
       }).required(),
       spec: Joi.object({
-        markdown: Joi.string().required(),
+        sections: rubricSpec.extract('sections'),
       }).required(),
     }).optional(),
     supervisorConfig,

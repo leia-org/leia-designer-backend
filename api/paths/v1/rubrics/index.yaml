@@ -33,6 +33,6 @@ post:
           schema:
             $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
     '400':
-      description: Invalid rubric or Markdown table
+      description: Invalid rubric structure or semantics
     '401':
       description: Login required

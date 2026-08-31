@@ -1,7 +1,10 @@
 import RubricService from '../services/v1/RubricService.js';
 import { createRubricValidator, updateRubricValidator } from '../validators/v1/rubricValidator.js';
+import rubricDefinitionSchema from '../schemas/v1/rubricSchema.js';
 
 const currentUserId = (req) => req.auth.payload.id;
+
+export const getRubricSchema = (_req, res) => res.type('application/schema+json').json(rubricDefinitionSchema);
 
 export const getRubrics = async (req, res, next) => {
   try {

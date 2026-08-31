@@ -3,6 +3,7 @@ import {
   createRubric,
   deleteRubric,
   getRubricById,
+  getRubricSchema,
   getRubrics,
   updateRubric,
 } from '../../controllers/RubricController.js';
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.use(requireJwtAuthentication);
 router.get('/', getRubrics);
+router.get('/schema', getRubricSchema);
 router.get('/:id', getRubricById);
 router.post('/', createRubric);
 router.put('/:id', updateRubric);

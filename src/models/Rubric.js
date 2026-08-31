@@ -16,11 +16,21 @@ const RubricSchema = new Schema(
       },
     },
     spec: {
-      markdown: {
-        type: String,
-        required: true,
-        maxlength: 50000,
-      },
+      sections: [{
+        _id: false,
+        title: { type: String, required: true },
+        weight: { type: Number, required: true, min: 0, max: 100 },
+        levels: [{ type: String, required: true }],
+        criteria: [{
+          _id: false,
+          name: { type: String, required: true },
+          descriptors: [{
+            _id: false,
+            level: { type: String, required: true },
+            description: { type: String, required: true },
+          }],
+        }],
+      }],
     },
     user: {
       type: Schema.Types.ObjectId,

@@ -40,7 +40,7 @@ describe('RubricService ownership', () => {
     await RubricService.create({
       apiVersion: 'v1',
       metadata: { name: 'A' },
-      spec: { markdown: '| A | B |' },
+      spec: { sections: [] },
       user: 'other-user',
     }, 'user-1');
 
@@ -53,7 +53,7 @@ describe('RubricService ownership', () => {
     await expect(RubricService.update('rubric-1', {
       apiVersion: 'v1',
       metadata: { name: 'A' },
-      spec: { markdown: '| A | B |' },
+      spec: { sections: [] },
     }, 'user-2')).rejects.toMatchObject({
       message: 'Rubric not found',
       statusCode: 404,

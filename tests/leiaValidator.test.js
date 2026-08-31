@@ -53,9 +53,10 @@ describe('runnerLeiaValidator', () => {
           _id: objectId,
           apiVersion: 'v1',
           metadata: { name: 'Interview rubric' },
-          spec: {
-            markdown: '## Content\n| Criterion | Score |\n| --- | --- |\n| Clarity | Strong |',
-          },
+          spec: { sections: [{
+            title: 'Content', weight: 100, levels: ['Score'],
+            criteria: [{ name: 'Clarity', descriptors: [{ level: 'Score', description: 'Strong' }] }],
+          }] },
         },
       },
     };
@@ -73,9 +74,10 @@ describe('runnerLeiaValidator', () => {
         rubric: {
           apiVersion: 'v1',
           metadata: { name: 'Interview rubric', description: 'Legacy description' },
-          spec: {
-            markdown: '| Criterion | Score |\n| --- | --- |\n| Clarity | Strong |',
-          },
+          spec: { sections: [{
+            title: 'Content', weight: 100, levels: ['Score'],
+            criteria: [{ name: 'Clarity', descriptors: [{ level: 'Score', description: 'Strong' }] }],
+          }] },
         },
       },
     };

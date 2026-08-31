@@ -1,54 +1,50 @@
 import { describe, expect, test } from 'vitest';
-import {
-  createRubricValidator,
-  isMarkdownTable,
-  parseRubricMarkdown,
-} from '../src/validators/v1/rubricValidator.js';
+import { createRubricValidator, isMarkdownTable, parseRubricMarkdown, validateRubric } from '../src/validators/v1/rubricValidator.js';
 
-const validMarkdown = `| Criterion | Emerging | Proficient |
-| --- | --- | --- |
-| Accuracy | Some errors | Correct result |`;
-
-const validRubric = {
-  apiVersion: 'v1',
-  metadata: { name: 'Programming exercise' },
-  spec: { markdown: validMarkdown },
-};
+const section = (weight = 100) => ({
+  title: 'Content', weight, levels: ['Emerging', 'Proficient'],
+  criteria: [{
+    name: 'Accuracy',
+    descriptors: [
+      { level: 'Emerging', description: 'Some errors' },
+      { level: 'Proficient', description: 'Correct result' },
+    ],
+  }],
+});
+const validRubric = { apiVersion: 'v1', metadata: { name: 'Programming exercise' }, spec: { sections: [section()] } };
 
 describe('rubric validator', () => {
-  test('accepts a rubric containing a Markdown table', async () => {
-    const value = await createRubricValidator.validateAsync(validRubric);
-
-    expect(value.spec.markdown).toBe(validMarkdown);
-    expect(isMarkdownTable(validMarkdown)).toBe(true);
+  test('accepts the canonical structured rubric', async () => {
+    await expect(createRubricValidator.validateAsync(validRubric)).resolves.toEqual(validRubric);
   });
 
-  test('rejects Markdown without a table', async () => {
+  test('rejects the former Markdown persistence contract', async () => {
     await expect(createRubricValidator.validateAsync({
-      ...validRubric,
-      spec: { markdown: '# General notes' },
-    })).rejects.toThrow('must contain at least one Markdown table');
+      apiVersion: 'v1', metadata: { name: 'Legacy' }, spec: { markdown: '| A | B |' },
+    })).rejects.toThrow('additional properties');
   });
 
-  test('rejects the removed description field', async () => {
-    await expect(createRubricValidator.validateAsync({
-      ...validRubric,
-      metadata: { name: 'Programming exercise', description: 'Evaluation guide' },
-    })).rejects.toThrow('is not allowed');
+  test('rejects fields outside the JSON Schema', async () => {
+    await expect(createRubricValidator.validateAsync({ ...validRubric, metadata: { name: 'Test', description: 'extra' } }))
+      .rejects.toThrow('additional properties');
   });
 
-  test('rejects the previous flat rubric contract', async () => {
-    await expect(createRubricValidator.validateAsync({
-      name: 'Programming exercise',
-      markdown: validMarkdown,
-    })).rejects.toThrow('is required');
+  test('requires weights to total 100', () => {
+    expect(validateRubric({ ...validRubric, spec: { sections: [section(60), { ...section(30), title: 'Delivery' }] } }))
+      .toContain('Section weights must total 100%');
   });
 
-  test('requires at least one criterion row', () => {
+  test('requires one descriptor for every level', () => {
+    const invalid = structuredClone(validRubric);
+    invalid.spec.sections[0].criteria[0].descriptors.pop();
+    expect(validateRubric(invalid)[0]).toContain('exactly one descriptor');
+  });
+
+  test('requires at least one criterion row in Markdown', () => {
     expect(isMarkdownTable('| Criterion | Score |\n| --- | --- |')).toBe(false);
   });
 
-  test('parses multiple equally weighted sections', () => {
+  test('converts equally weighted Markdown into canonical sections', () => {
     const parsed = parseRubricMarkdown(`## Content
 | Criterion | Score |
 | --- | --- |
@@ -58,75 +54,38 @@ describe('rubric validator', () => {
 | Criterion | Score |
 | --- | --- |
 | Clarity | Excellent |`);
-
     expect(parsed.error).toBeNull();
-    expect(parsed.weightingMode).toBe('equal');
-    expect(parsed.sections).toHaveLength(2);
-    expect(parsed.sections.map((section) => section.weight)).toEqual([50, 50]);
+    expect(parsed.spec.sections.map((item) => item.weight)).toEqual([50, 50]);
+    expect(parsed.spec.sections[0].criteria[0].descriptors).toEqual([{ level: 'Score', description: 'Excellent' }]);
   });
 
-  test('parses explicit section weights that total 100%', () => {
-    const parsed = parseRubricMarkdown(`## Content [70%]
-| Criterion | Score |
-| --- | --- |
-| Accuracy | Excellent |
-
-## Presentation [30%]
-| Criterion | Score |
-| --- | --- |
-| Clarity | Excellent |`);
-
-    expect(parsed.error).toBeNull();
-    expect(parsed.weightingMode).toBe('explicit');
-    expect(parsed.sections.map((section) => section.weight)).toEqual([70, 30]);
-  });
-
-  test('distributes the remaining weight between unweighted sections', () => {
+  test('converts explicit and mixed weights', () => {
     const parsed = parseRubricMarkdown(`## Content [60%]
-| Criterion | Score |
-| --- | --- |
-| Accuracy | Excellent |
+| Criterion | Initial | Strong |
+| --- | --- | --- |
+| Accuracy | Weak | Excellent |
 
 ## Delivery
-| Criterion | Score |
-| --- | --- |
-| Clarity | Excellent |
+| Criterion | Initial | Strong |
+| --- | --- | --- |
+| Clarity | Weak | Excellent |
 
 ## Timing
-| Criterion | Score |
-| --- | --- |
-| Duration | Excellent |`);
-
+| Criterion | Initial | Strong |
+| --- | --- | --- |
+| Duration | Weak | Excellent |`);
     expect(parsed.error).toBeNull();
-    expect(parsed.weightingMode).toBe('mixed');
-    expect(parsed.sections.map((section) => section.weight)).toEqual([60, 20, 20]);
+    expect(parsed.spec.sections.map((item) => item.weight)).toEqual([60, 20, 20]);
   });
 
-  test('rejects explicit weights that do not total 100%', async () => {
-    const markdown = `## Content [60%]
-| Criterion | Score |
-| --- | --- |
-| Accuracy | Excellent |
-
-## Presentation [30%]
-| Criterion | Score |
-| --- | --- |
-| Clarity | Excellent |`;
-
-    await expect(createRubricValidator.validateAsync({
-      apiVersion: 'v1',
-      metadata: { name: 'Weighted rubric' },
-      spec: { markdown },
-    }))
-      .rejects.toThrow('must total 100%');
+  test('preserves escaped pipes and Markdown line breaks in descriptors', () => {
+    const parsed = parseRubricMarkdown(`| Criterion | Strong |\n| --- | --- |\n| Accuracy | Uses A \\| B<br>Clearly |`);
+    expect(parsed.error).toBeNull();
+    expect(parsed.spec.sections[0].criteria[0].descriptors[0].description).toBe('Uses A | B\nClearly');
   });
 
-  test('rejects a section heading without a table', () => {
-    expect(parseRubricMarkdown(`## Content
-| Criterion | Score |
-| --- | --- |
-| Accuracy | Excellent |
-
-## Missing table`).error).toBe('rubric.sectionTable');
+  test('rejects invalid Markdown weights and headings without tables', () => {
+    expect(parseRubricMarkdown(`## Content [60%]\n| A | B |\n| --- | --- |\n| C | D |`).error).toBe('rubric.weightTotal');
+    expect(parseRubricMarkdown(`## Missing table`).error).toBe('rubric.sectionTable');
   });
 });

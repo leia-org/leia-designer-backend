@@ -22,7 +22,7 @@ const toRubricSnapshot = (rubric) => ({
     name: rubric.metadata.name,
   },
   spec: {
-    markdown: rubric.spec.markdown,
+    sections: rubric.spec.sections,
   },
 });
 

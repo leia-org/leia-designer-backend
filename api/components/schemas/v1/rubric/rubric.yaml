@@ -24,15 +24,7 @@ properties:
         minLength: 1
         maxLength: 120
   spec:
-    type: object
-    additionalProperties: false
-    required:
-      - markdown
-    properties:
-      markdown:
-        type: string
-        maxLength: 50000
-        description: One or more Markdown tables, optionally grouped under headings whose trailing [n%] sets the section weight.
+    $ref: './rubricSpec.yaml'
   createdAt:
     type: string
     format: date-time

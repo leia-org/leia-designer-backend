@@ -38,7 +38,7 @@ put:
           schema:
             $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
     '400':
-      description: Invalid rubric or Markdown table
+      description: Invalid rubric structure or semantics
     '404':
       description: Rubric not found
 delete:

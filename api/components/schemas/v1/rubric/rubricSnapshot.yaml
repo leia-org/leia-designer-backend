@@ -22,12 +22,4 @@ properties:
         minLength: 1
         maxLength: 120
   spec:
-    type: object
-    additionalProperties: false
-    required:
-      - markdown
-    properties:
-      markdown:
-        type: string
-        maxLength: 50000
-        description: Markdown content copied into a LEIA version.
+    $ref: './rubricSpec.yaml'
