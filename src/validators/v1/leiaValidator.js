@@ -8,6 +8,21 @@ const nameVersion = Joi.object({
     .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
 });
 
+const rubricSpec = Joi.object({
+  sections: Joi.array().min(1).items(Joi.object({
+    title: Joi.string().required(),
+    weight: Joi.number().greater(0).max(100).required(),
+    levels: Joi.array().min(1).unique().items(Joi.string().required()).required(),
+    criteria: Joi.array().min(1).items(Joi.object({
+      name: Joi.string().required(),
+      descriptors: Joi.array().min(1).items(Joi.object({
+        level: Joi.string().required(),
+        description: Joi.string().required(),
+      })).required(),
+    })).required(),
+  })).required(),
+});
+
 // Per-LEIA background supervisor, authored by the instructor. Optional; rides
 // in the LEIA spec and is denormalized to the workbench (leia.leia.spec).
 const supervisorConfig = Joi.object({
@@ -39,6 +54,7 @@ export const createLeiaValidator = Joi.object({
     persona: Joi.alternatives().try(mongoId, nameVersion).required(),
     behaviour: Joi.alternatives().try(mongoId, nameVersion).required(),
     problem: Joi.alternatives().try(mongoId, nameVersion).required(),
+    rubric: Joi.string().hex().length(24).optional(),
     supervisorConfig,
   }).required(),
 });
@@ -56,6 +72,7 @@ export const updateLeiaValidator = Joi.object({
     persona: Joi.alternatives().try(mongoId, nameVersion).required(),
     behaviour: Joi.alternatives().try(mongoId, nameVersion).required(),
     problem: Joi.alternatives().try(mongoId, nameVersion).required(),
+    rubric: Joi.string().hex().length(24).optional(),
     supervisorConfig,
   }).required(),
 });
@@ -65,6 +82,7 @@ export const runnerLeiaValidator = Joi.object({
     personaId: mongoId.optional(),
     behaviourId: mongoId.optional(),
     problemId: mongoId.optional(),
+    rubricId: mongoId.optional(),
     persona: Joi.object().required(),
     behaviour: Joi.object({
       spec: Joi.object({
@@ -72,6 +90,16 @@ export const runnerLeiaValidator = Joi.object({
       }).required().unknown(true)
     }).required().unknown(true),
     problem: Joi.object().required(),
+    rubric: Joi.object({
+      _id: Joi.alternatives().try(Joi.string(), Joi.object()).optional(),
+      apiVersion: Joi.string().valid('v1').required(),
+      metadata: Joi.object({
+        name: Joi.string().required(),
+      }).required(),
+      spec: Joi.object({
+        sections: rubricSpec.extract('sections'),
+      }).required(),
+    }).optional(),
     supervisorConfig,
     avatar: Joi.string().allow('', null).optional(),
     infographic: Joi.string().allow('', null).optional(),

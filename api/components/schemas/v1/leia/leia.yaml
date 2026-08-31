@@ -23,6 +23,13 @@ properties:
         $ref: '../problem/problem.yaml'
       behaviour:
         $ref: '../behaviour/behaviour.yaml'
+      rubricId:
+        type: string
+        description: Identifier of the source rubric, when selected.
+      rubric:
+        allOf:
+          - $ref: '../rubric/rubricSnapshot.yaml'
+        description: Rubric snapshot embedded in this LEIA version.
   user:
     type: string
     description: ID of the user who owns this leia
