@@ -11,7 +11,7 @@ import {
   uploadProblemChatFile,
   sendProblemChatMessage,
 } from '../../controllers/v1/runnerController.js';
-import { requireJwtAuthentication } from '../../middlewares/auth.js';
+import { requireAdvanced, requireJwtAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.post('/:sessionId/messages', requireJwtAuthentication, sendMessage);
 router.post('/:sessionId/evaluate', requireJwtAuthentication, evaluate);
 router.post('/transcriptions/generate', requireJwtAuthentication, generateTranscription);
 router.post('/problems/generate', requireJwtAuthentication, generateProblem);
-router.post('/behaviours/generate', requireJwtAuthentication, generateBehaviour);
+router.post('/behaviours/generate', requireAdvanced, generateBehaviour);
 
 // Problem-chat assistant (design-time): attach PDFs, chat; tools run in the FE.
 router.post('/problem-chat/session', requireJwtAuthentication, openProblemChat);

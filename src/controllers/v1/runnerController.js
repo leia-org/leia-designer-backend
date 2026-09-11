@@ -1,5 +1,6 @@
 import RunnerService from "../../services/v1/RunnerService.js";
 import { runnerLeiaValidator } from "../../validators/v1/leiaValidator.js";
+import { filterProblemChatToolsForRole } from "../../utils/behaviourPermissions.js";
 
 export const initializeRunner = async (req, res, next) => {
   try {
@@ -192,7 +193,15 @@ export const sendProblemChatMessage = async (req, res, next) => {
   try {
     const { chatId } = req.params;
     const { message, tools, toolResults, fileIds } = req.body;
-    const result = await RunnerService.sendProblemChatMessage(chatId, { message, tools, toolResults, fileIds });
+    const permittedTools = filterProblemChatToolsForRole(tools, {
+      role: req.auth?.payload?.role
+    });
+    const result = await RunnerService.sendProblemChatMessage(chatId, {
+      message,
+      tools: permittedTools,
+      toolResults,
+      fileIds
+    });
     res.json(result);
   } catch (err) {
     next(err);
