@@ -21,6 +21,9 @@ export const createBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
+    reflective: Joi.boolean().optional(),
+    evaluationPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
+    stoppingPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: processValidator,
@@ -37,6 +40,9 @@ export const updateBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
+    reflective: Joi.boolean().optional(),
+    evaluationPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
+    stoppingPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: processValidator,

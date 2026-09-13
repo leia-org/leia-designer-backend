@@ -58,6 +58,7 @@ export function replaceStringPlaceholders(str, view) {
     // If the string has only one placeholder, return the value directly
     if (soloPlaceholder) {
       const flattenedKey = soloPlaceholder[1];
+      if (flattenedKey.startsWith('reflectiveContext.')) return str;
       const value = getValueFromFlattenedKey(view, flattenedKey);
       // If the value exists, replace it, if not, return the original string
       if (value !== undefined) {
@@ -69,6 +70,7 @@ export function replaceStringPlaceholders(str, view) {
     } else {
       const regex = /\{\{\s*([\w.]+)\s*\}\}/g;
       return str.replace(regex, (_, flattenedKey) => {
+        if (flattenedKey.startsWith('reflectiveContext.')) return _;
         const value = getValueFromFlattenedKey(view, flattenedKey);
         // If the value exists, replace it, if not, return the original string
         if (isObject(value)) {

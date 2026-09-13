@@ -1,4 +1,6 @@
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
+import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
+import { validateReflectiveChain } from '../../utils/reflective.js';
 import { populateUserInEntity } from '../../utils/authClient.js';
 
 function normalizeProcess(process) {
@@ -93,6 +95,12 @@ class ExperimentService {
   // WRITE METHODS
 
   async create(experimentData) {
+    if (experimentData.leias?.length) {
+      const leias = await Promise.all(experimentData.leias.map(async (entry) => ({
+        ...entry, leia: await LeiaRepository.findById(entry.leia),
+      })));
+      validateReflectiveChain({ ...experimentData, leias });
+    }
     return await ExperimentRepository.create(experimentData);
   }
 
@@ -109,6 +117,7 @@ class ExperimentService {
     }
 
     const leias = experiment.leias || [];
+    validateReflectiveChain({ leias, orchestration });
     if (orchestration.mode === 'multi' && leias.length < 2) {
       const error = new Error('A MultiLEIA activity requires at least two LEIAs');
       error.statusCode = 400;
@@ -163,6 +172,7 @@ class ExperimentService {
   //fix to add check for leia before publishing modeled after checkEditable
   async publish(id) {
     const experiment = await this.findByIdPopulated(id);
+    validateReflectiveChain(experiment);
     if (!experiment.leias || experiment.leias.length === 0) {
       const error = new Error('Experiment must have an associated LEIA before publishing');
       error.statusCode = 400;
@@ -189,11 +199,17 @@ class ExperimentService {
   }
 
   async addLeia(experimentId, leiaConfig) {
+    const experiment = await this.findByIdPopulated(experimentId);
+    const leia = await LeiaRepository.findById(leiaConfig.leia);
+    validateReflectiveChain({ orchestration: experiment.orchestration, leias: [...experiment.leias, { ...leiaConfig, leia }] });
     return await ExperimentRepository.addLeia(experimentId, leiaConfig);
   }
 
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
-    const experiment = await this.findById(experimentId);
+    const experiment = await this.findByIdPopulated(experimentId);
+    const leia = await LeiaRepository.findById(leiaConfig.leia);
+    validateReflectiveChain({ orchestration: experiment.orchestration, leias: experiment.leias.map((entry) =>
+      String(entry.id) === String(leiaConfigId) ? { ...leiaConfig, leia } : entry) });
     if (
       experiment?.orchestration?.mode === 'multi' &&
       leiaConfig.configuration?.mode === 'transcription'
@@ -208,7 +224,14 @@ class ExperimentService {
   // DELETE METHODS
 
   async deleteLeia(experimentId, leiaConfigId) {
-    const experiment = await this.findById(experimentId);
+    const experiment = await this.findByIdPopulated(experimentId);
+    const entries = experiment.leias || [];
+    const index = entries.findIndex((entry) => String(entry.id) === String(leiaConfigId));
+    if (index >= 0 && entries[index + 1]?.leia?.spec?.behaviour?.spec?.reflective) {
+      const error = new Error('Remove the following Reflective LEIA before removing its normal LEIA');
+      error.statusCode = 400;
+      throw error;
+    }
     const updatedExperiment = await ExperimentRepository.deleteLeia(experimentId, leiaConfigId);
     if (experiment?.orchestration?.mode !== 'multi') return updatedExperiment;
 

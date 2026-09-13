@@ -32,6 +32,9 @@ const BehaviourSchema = new Schema(
       },
     },
     spec: {
+      reflective: { type: Boolean, default: false },
+      evaluationPrompt: { type: String },
+      stoppingPrompt: { type: String },
       description: {
         type: String,
       },

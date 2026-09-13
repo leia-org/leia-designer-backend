@@ -17,6 +17,16 @@ properties:
   spec:
     type: object
     properties:
+      reflective:
+        type: boolean
+        default: false
+        description: Enables a reflective interview following a normal LEIA.
+      evaluationPrompt:
+        type: string
+        description: Required and non-empty when reflective is true. Instructor's evaluation objective (not the problem's automatic grading prompt).
+      stoppingPrompt:
+        type: string
+        description: Required and non-empty when reflective is true. Instructions for concluding the interview.
       description:
         type: string
       role:
