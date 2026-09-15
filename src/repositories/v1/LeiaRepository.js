@@ -94,14 +94,14 @@ class LeiaRepository {
       query['apiVersion'] = apiVersion;
     }
     if (labelId) {
-      const labelObjectId = new mongoose.Types.ObjectId(labelId);
+      const labelObjectId = new mongoose.Types.ObjectId(`${labelId}`);
       query['$or'] = [
         { 'metadata.labels': labelObjectId },
         { 'metadata.label': labelObjectId },
       ];
     }
     if (lastLeiaId) {
-      query._id = { $gt: new mongoose.Types.ObjectId(lastLeiaId) };
+      query._id = { $gt: new mongoose.Types.ObjectId(`${lastLeiaId}`) };
     }
     const limit = 10;
     if (version === 'latest') {
@@ -133,8 +133,8 @@ class LeiaRepository {
 
   // Replace all occurrences of sourceLabelId with targetLabelId in Leias
   async replaceLabels(sourceLabelId, targetLabelId) {
-    const sourceLabelObjectId = new mongoose.Types.ObjectId(sourceLabelId);
-    const targetLabelObjectId = new mongoose.Types.ObjectId(targetLabelId);
+    const sourceLabelObjectId = new mongoose.Types.ObjectId(`${sourceLabelId}`);
+    const targetLabelObjectId = new mongoose.Types.ObjectId(`${targetLabelId}`);
 
     await Leia.updateMany(
       { 'metadata.labels': sourceLabelObjectId },
