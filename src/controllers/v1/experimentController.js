@@ -7,7 +7,7 @@ import {
   createExperimentReplicationValidator,
   updateExperimentOrchestrationValidator,
 } from '../../validators/v1/experimentValidator.js';
-import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
+import { validateBoolean, validateVisibility, isMongoIdQueryValid } from '../../validators/queryValidator.js';
 
 export const createExperiment = async (req, res, next) => {
   try {
@@ -64,7 +64,15 @@ export const getAllExperimentsByUser = async (req, res, next) => {
     const visibility = validateVisibility(req.query.visibility);
     const populated = validateBoolean(req.query.populated, false);
     const userId = req.auth?.payload?.id;
-    const experiments = await ExperimentService.findByUserId(userId, visibility, populated);
+    const lastActivityId = req.query.lastActivityId;
+
+    if (lastActivityId && !isMongoIdQueryValid(lastActivityId)) {
+          const error = new Error('Invalid lastActivityId format');
+          error.statusCode = 400;
+          throw error;
+        }
+        
+    const experiments = await ExperimentService.findByUserId(userId, visibility, populated, lastActivityId);
     res.json(experiments);
   } catch (err) {
     next(err);
