@@ -78,7 +78,7 @@ class LeiaRepository {
     return await Leia.findOne({ 'metadata.name': name, 'metadata.version': version });
   }
 
-  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId) {
+  async findByQuery(text, version, apiVersion, userId = null, visibility = 'all', privileged = false, labelId, lastLeiaId) {
     const query = {};
 
     // Apply visibility filters
@@ -100,14 +100,23 @@ class LeiaRepository {
         { 'metadata.label': labelObjectId },
       ];
     }
+    if (lastLeiaId) {
+      query._id = { $gt: new mongoose.Types.ObjectId(lastLeiaId) };
+    }
+    const limit = 10;
     if (version === 'latest') {
       // Pass the complete query to the aggregation
-      return await Leia.aggregate(aggregateFindLatestVersions(query));
+      const results = await Leia.aggregate(aggregateFindLatestVersions(query)).sort({ id: 1 }).limit(limit+1);
+      const leias = results.slice(0, limit);
+      const nextCursor = leias.length === limit ? leias[leias.length - 1].id : null;
+      return {leias, nextCursor};
     } else if (version) {
       query['metadata.version'] = version;
     }
-
-    return await Leia.find(query).populate('metadata.labels');
+    const results = await Leia.find(query).sort({ id: 1 }).populate('metadata.labels').limit(limit);
+    const leias = results.slice(0, limit);
+    const nextCursor = leias.length === limit ? leias[leias.length - 1].id : null;
+    return {leias, nextCursor};
   }
 
   // WRITE METHODS
