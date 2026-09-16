@@ -43,7 +43,13 @@ export const getExperimentById = async (req, res, next) => {
 
 export const getAllExperiments = async (req, res, next) => {
   try {
-    const experiments = await ExperimentService.findAll();
+    const lastActivityId = req.query.lastActivityId;
+    if (lastActivityId && !isMongoIdQueryValid(lastActivityId)) {
+      const error = new Error('Invalid lastActivityId format');
+      error.statusCode = 400;
+      throw error;
+    }
+    const experiments = await ExperimentService.findAll(lastActivityId);
     res.json(experiments);
   } catch (err) {
     next(err);
