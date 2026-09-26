@@ -41,7 +41,7 @@ const BehaviourSchema = new Schema(
       process: {
         type: [String],
         default: [],
-        enum: ['requirements-elicitation', 'game', 'other'],
+        enum: ['requirements-elicitation', 'game', 'design-patterns', 'other'],
       },
       tooltip: {
         type: String,

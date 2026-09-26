@@ -30,10 +30,10 @@ export const isMongoIdQueryValid = (id) => typeof id === 'string' && /^[a-fA-F0-
 /**
  * Validates and returns a sanitized process parameter
  * @param {string} process - The process parameter to validate
- * @returns {string|null} - Valid process value ('requirements-elicitation', 'game', 'other') or null if invalid/empty
+ * @returns {string|null} - Valid process value ('requirements-elicitation', 'game', 'design-patterns', 'other') or null if invalid/empty
  */
 export const validateProcess = (process) => {
   // TODO: When the process table is implemented, fetch allowed processes from there
-  const allowedProcesses = ['requirements-elicitation', 'game', 'other'];
+  const allowedProcesses = ['requirements-elicitation', 'game', 'design-patterns', 'other'];
   return process && allowedProcesses.includes(process) ? process : 'all';
 };
