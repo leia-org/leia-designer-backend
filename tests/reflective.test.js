@@ -4,39 +4,41 @@ import { resolvePlaceholders } from '../src/utils/leia.js';
 import { validateReflectiveChain } from '../src/utils/reflective.js';
 import Behaviour from '../src/models/Behaviour.js';
 
-const normal = { leia: { spec: { behaviour: { spec: {} } } } };
-const spec = { reflective: true, evaluationPrompt: 'Explain your decisions', stoppingPrompt: 'Stop after two justified answers' };
-const reflective = { leia: { spec: { behaviour: { spec } } } };
+const entry = (description) => ({ leia: { spec: { behaviour: { spec: { description } } } } });
 
-describe('Reflective authoring', () => {
-  test('validates creation and versioning and preserves new behaviour fields', () => {
-    const data = { apiVersion: 'v1', metadata: { name: 'Reflective', version: '1.0.0' }, spec };
+describe('Behaviour with optional conversation controls', () => {
+  test('accepts optional stopping and opening instructions without reflective fields', () => {
+    const spec = { description: 'Guide the student', conversationDynamics: {
+      stoppingCondition: { enabled: true, prompt: 'Stop after two answers' },
+      speaksFirst: { enabled: true, prompt: 'Ask how they started' },
+    } };
+    const data = { apiVersion: 'v1', metadata: { name: 'Guide', version: '1.0.0' }, spec };
     for (const schema of [createBehaviourValidator, updateBehaviourValidator]) {
       expect(schema.validate(data).error).toBeUndefined();
-      expect(schema.validate({ ...data, spec: { ...spec, evaluationPrompt: ' ' } }).error).toBeDefined();
-      expect(schema.validate({ ...data, spec: { ...spec, stoppingPrompt: '' } }).error).toBeDefined();
-      expect(schema.validate({ ...data, spec: { description: 'Normal' } }).error).toBeUndefined();
+      expect(schema.validate({ ...data, spec: { description: 'Plain' } }).error).toBeUndefined();
+      expect(schema.validate({ ...data, spec: { ...spec, conversationDynamics: { ...spec.conversationDynamics, stoppingCondition: { enabled: true, prompt: '' } } } }).error).toBeDefined();
+      expect(schema.validate({ ...data, spec: { ...spec, conversationDynamics: { ...spec.conversationDynamics, stoppingCondition: { enabled: false, prompt: '' } } } }).error).toBeUndefined();
+      expect(schema.validate({ ...data, spec: { ...spec, stoppingPrompt: 'Old field' } }).error).toBeDefined();
+      expect(schema.validate({ ...data, spec: { ...spec, reflective: true } }).error).toBeDefined();
+      expect(schema.validate({ ...data, spec: { ...spec, evaluationPrompt: 'Old field' } }).error).toBeDefined();
     }
-    const model = new Behaviour({ ...data, metadata: { name: 'Reflective' } });
-    expect(model.toJSON().spec).toMatchObject(spec);
+    expect(new Behaviour({ ...data, metadata: { name: 'Guide' } }).toJSON().spec).toMatchObject(spec);
   });
-  test('leaves runtime variables intact while resolving static variables', () => {
-    const leia = {
-      persona: { spec: { firstName: 'Ada' } },
-      problem: { spec: {} },
-      behaviour: { spec: { description: '{{persona.firstName}}: {{reflectiveContext.previousConversation}}', evaluationPrompt: '{{ reflectiveContext.previousSolution }}' } },
-    };
-    expect(resolvePlaceholders(leia).behaviour.spec).toEqual({
-      description: 'Ada: {{reflectiveContext.previousConversation}}', evaluationPrompt: '{{ reflectiveContext.previousSolution }}',
-    });
+
+  test('preserves runtime context variables during static composition', () => {
+    const leia = { persona: { spec: { firstName: 'Ada' } }, problem: { spec: {} },
+      behaviour: { spec: { description: '{{persona.firstName}}: {{reflectiveContext.previousConversation}}' } } };
+    expect(resolvePlaceholders(leia).behaviour.spec.description).toBe('Ada: {{reflectiveContext.previousConversation}}');
   });
-  test('permits pairs and normal-only activities, rejects orphan and consecutive reflections', () => {
-    for (const leias of [[normal], [normal, reflective], [normal, reflective, normal, reflective]]) {
-      expect(() => validateReflectiveChain({ leias })).not.toThrow();
-    }
-    for (const leias of [[reflective], [normal, reflective, reflective]]) {
-      expect(() => validateReflectiveChain({ leias })).toThrow(/immediately follow/);
-    }
-    expect(() => validateReflectiveChain({ leias: [normal, reflective], orchestration: { mode: 'multi' } })).toThrow(/sequential/);
+
+  test('requires a preceding LEIA only when context is referenced', () => {
+    const normal = entry('Normal');
+    const contextual = entry('{{reflectiveContext.previousSolution}}');
+    expect(() => validateReflectiveChain({ leias: [normal, contextual, contextual] })).not.toThrow();
+    expect(() => validateReflectiveChain({ leias: [normal, entry('Stop here')] })).not.toThrow();
+    const inactive = { leia: { spec: { behaviour: { spec: { conversationDynamics: { stoppingCondition: { enabled: false, prompt: '{{reflectiveContext.previousSolution}}' } } } } } } };
+    expect(() => validateReflectiveChain({ leias: [inactive] })).not.toThrow();
+    expect(() => validateReflectiveChain({ leias: [contextual] })).toThrow(/follow another/);
+    expect(() => validateReflectiveChain({ leias: [normal, contextual], orchestration: { mode: 'multi' } })).toThrow(/sequential/);
   });
 });

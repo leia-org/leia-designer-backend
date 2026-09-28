@@ -1,13 +1,21 @@
+const contextReference = /{{\s*reflectiveContext\.(?:previousConversation|previousSolution)\s*}}/;
+
+export const needsPreviousConversation = (entry) => {
+  const spec = { ...entry?.leia?.spec?.behaviour?.spec };
+  const dynamics = spec.conversationDynamics || {};
+  spec.conversationDynamics = Object.fromEntries(
+    Object.entries(dynamics).filter(([, dynamic]) => dynamic?.enabled)
+  );
+  return contextReference.test(JSON.stringify(spec));
+};
+
 export function validateReflectiveChain(experiment) {
   const entries = experiment?.leias || [];
-  const reflective = (entry) => entry?.leia?.spec?.behaviour?.spec?.reflective === true;
-  for (let index = 0; index < entries.length; index++) {
-    if (!reflective(entries[index])) continue;
+  entries.forEach((entry, index) => {
+    if (!needsPreviousConversation(entry)) return;
     const error = (message) => Object.assign(new Error(message), { statusCode: 400 });
-    if (experiment.orchestration?.mode === 'multi') throw error('Reflective LEIA requires sequential LN → LR sessions');
-    if (index === 0 || reflective(entries[index - 1])) throw error('Each Reflective LEIA must immediately follow a normal LEIA');
-    if (entries[index].configuration?.mode === 'transcription') throw error('Reflective LEIA requires an interactive session');
-    const spec = entries[index].leia.spec.behaviour.spec;
-    if (!spec.evaluationPrompt?.trim() || !spec.stoppingPrompt?.trim()) throw error('Reflective LEIA requires evaluationPrompt and stoppingPrompt');
-  }
+    if (experiment.orchestration?.mode === 'multi') throw error('Previous conversation context requires sequential sessions');
+    if (index === 0) throw error('A LEIA using reflectiveContext must follow another LEIA in the activity');
+    if (entry.configuration?.mode === 'transcription') throw error('Previous conversation context requires an interactive session');
+  });
 }

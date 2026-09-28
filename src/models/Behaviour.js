@@ -32,9 +32,16 @@ const BehaviourSchema = new Schema(
       },
     },
     spec: {
-      reflective: { type: Boolean, default: false },
-      evaluationPrompt: { type: String },
-      stoppingPrompt: { type: String },
+      conversationDynamics: {
+        stoppingCondition: {
+          enabled: { type: Boolean, default: false },
+          prompt: { type: String },
+        },
+        speaksFirst: {
+          enabled: { type: Boolean, default: false },
+          prompt: { type: String },
+        },
+      },
       description: {
         type: String,
       },

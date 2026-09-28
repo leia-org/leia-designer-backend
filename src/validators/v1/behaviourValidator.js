@@ -12,6 +12,17 @@ const processValidator = Joi.array()
     'any.invalid': "When 'other' is selected in process, it must be the only value.",
   });
 
+const conversationDynamicsValidator = Joi.object({
+  stoppingCondition: Joi.object({
+    enabled: Joi.boolean().optional(),
+    prompt: Joi.when('enabled', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
+  }).optional(),
+  speaksFirst: Joi.object({
+    enabled: Joi.boolean().optional(),
+    prompt: Joi.string().allow('').optional(),
+  }).optional(),
+}).optional();
+
 export const createBehaviourValidator = Joi.object({
   apiVersion: Joi.string().required().valid('v1'),
   metadata: Joi.object({
@@ -21,9 +32,7 @@ export const createBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
-    reflective: Joi.boolean().optional(),
-    evaluationPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
-    stoppingPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
+    conversationDynamics: conversationDynamicsValidator,
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: processValidator,
@@ -40,9 +49,7 @@ export const updateBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
-    reflective: Joi.boolean().optional(),
-    evaluationPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
-    stoppingPrompt: Joi.when('reflective', { is: true, then: Joi.string().trim().required(), otherwise: Joi.string().allow('').optional() }),
+    conversationDynamics: conversationDynamicsValidator,
     description: Joi.string().optional(),
     role: Joi.string().optional(),
     process: processValidator,

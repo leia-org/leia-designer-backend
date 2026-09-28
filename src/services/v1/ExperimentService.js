@@ -1,6 +1,6 @@
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
 import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
-import { validateReflectiveChain } from '../../utils/reflective.js';
+import { needsPreviousConversation, validateReflectiveChain } from '../../utils/reflective.js';
 import { populateUserInEntity } from '../../utils/authClient.js';
 
 function normalizeProcess(process) {
@@ -227,8 +227,8 @@ class ExperimentService {
     const experiment = await this.findByIdPopulated(experimentId);
     const entries = experiment.leias || [];
     const index = entries.findIndex((entry) => String(entry.id) === String(leiaConfigId));
-    if (index >= 0 && entries[index + 1]?.leia?.spec?.behaviour?.spec?.reflective) {
-      const error = new Error('Remove the following Reflective LEIA before removing its normal LEIA');
+    if (index >= 0 && needsPreviousConversation(entries[index + 1])) {
+      const error = new Error('Remove the following LEIA using previous conversation context first');
       error.statusCode = 400;
       throw error;
     }
