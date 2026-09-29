@@ -1,0 +1,36 @@
+patch:
+  tags: [Experiments v1]
+  summary: Replace the activity stage sequence
+  operationId: updateExperimentStages
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required: [stages]
+          properties:
+            stages:
+              type: array
+              maxItems: 100
+              items:
+                $ref: '../../../components/schemas/v1/experiment/stage.yaml'
+  responses:
+    '200':
+      description: Updated activity.
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+    '400':
+      description: Invalid configuration or incompatible predecessor artifacts.
+    '403':
+      description: The user cannot edit this activity.
+    '409':
+      description: Published activities cannot be edited.

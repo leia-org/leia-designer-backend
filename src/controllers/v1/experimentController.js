@@ -2,12 +2,21 @@ import ExperimentService from '../../services/v1/ExperimentService.js';
 import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
+  updateExperimentStagesValidator,
   updateExperimentNameValidator,
   leiaConfigValidator,
   createExperimentReplicationValidator,
   updateExperimentOrchestrationValidator,
 } from '../../validators/v1/experimentValidator.js';
 import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
+
+export const updateExperimentStages = async (req, res, next) => {
+  try {
+    const { stages } = await updateExperimentStagesValidator.validateAsync(req.body);
+    await ExperimentService.checkEditable(req.params.id, req.auth?.payload?.id);
+    res.json(await ExperimentService.updateStages(req.params.id, stages));
+  } catch (error) { next(error); }
+};
 
 export const createExperiment = async (req, res, next) => {
   try {

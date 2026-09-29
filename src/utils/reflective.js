@@ -1,4 +1,6 @@
-const contextReference = /{{\s*reflectiveContext\.(?:previousConversation|previousSolution)\s*}}/;
+import { validateStages } from './stages.js';
+
+const contextReference = /{{\s*(?:reflectiveContext|previousStage)\.[\w]+\s*}}/;
 
 export const needsPreviousConversation = (entry) => {
   const spec = { ...entry?.leia?.spec?.behaviour?.spec };
@@ -10,6 +12,7 @@ export const needsPreviousConversation = (entry) => {
 };
 
 export function validateReflectiveChain(experiment) {
+  if (Array.isArray(experiment?.stages)) return validateStages(experiment);
   const entries = experiment?.leias || [];
   entries.forEach((entry, index) => {
     if (!needsPreviousConversation(entry)) return;

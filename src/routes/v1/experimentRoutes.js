@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createExperiment,
+  updateExperimentStages,
   getExperimentById,
   getAllExperiments,
   updateExperimentName,
@@ -24,6 +25,7 @@ router.post('/:id/leias', requireJwtAuthentication, addExperimentLeia);
 router.post('/leia', requireJwtAuthentication, createExperimentReplication);
 
 // PATCH
+router.patch('/:id/stages', requireJwtAuthentication, updateExperimentStages);
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
 router.patch('/:id/publish', requireJwtAuthentication, publishExperiment);
 router.patch('/:id/orchestration', requireJwtAuthentication, updateExperimentOrchestration);

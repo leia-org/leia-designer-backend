@@ -1,0 +1,21 @@
+type: object
+required: [id, type, version, title, config]
+additionalProperties: false
+properties:
+  id:
+    type: string
+    pattern: '^[\w-]{1,100}$'
+  type:
+    type: string
+    description: Registered stage implementation, initially LEIAStage, MultiLEIAStage or StaticContentStage.
+  version:
+    type: integer
+    enum: [1]
+  title:
+    type: string
+    minLength: 1
+    maxLength: 200
+  config:
+    type: object
+    additionalProperties: true
+    description: LEIAStage requires leiaId; MultiLEIAStage requires leiaIds and accepts orchestration; StaticContentStage requires Markdown content. Each implementation validates its own fields.

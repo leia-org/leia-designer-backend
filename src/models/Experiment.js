@@ -9,6 +9,7 @@ const ExperimentSchema = new Schema(
       unique: true,
     },
     leias: [LeiaConfigSchema],
+    stages: { type: [Schema.Types.Mixed], default: undefined },
     orchestration: {
       mode: {
         type: String,

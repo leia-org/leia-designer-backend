@@ -6,6 +6,11 @@ properties:
     type: array
     items:
       $ref: './leiaConfig.yaml'
+  stages:
+    type: array
+    maxItems: 100
+    items:
+      $ref: './stage.yaml'
   orchestration:
     $ref: './orchestration.yaml'
   user:

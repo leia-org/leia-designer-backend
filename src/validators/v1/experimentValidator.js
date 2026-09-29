@@ -1,4 +1,11 @@
 import Joi from 'joi';
+export const updateExperimentStagesValidator = Joi.object({
+  stages: Joi.array().max(100).items(Joi.object({
+    id: Joi.string().pattern(/^[\w-]{1,100}$/).required(),
+    type: Joi.string().required(), version: Joi.number().integer().valid(1).required(),
+    title: Joi.string().max(200).required(), config: Joi.object().unknown(true).required(),
+  })).required(),
+});
 
 export const createExperimentValidator = Joi.object({
   name: Joi.string().required(),

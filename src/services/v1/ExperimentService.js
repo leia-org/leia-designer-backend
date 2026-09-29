@@ -1,3 +1,5 @@
+import { validateStages } from '../../utils/stages.js';
+import { Types } from 'mongoose';
 import ExperimentRepository from '../../repositories/v1/ExperimentRepository.js';
 import LeiaRepository from '../../repositories/v1/LeiaRepository.js';
 import { needsPreviousConversation, validateReflectiveChain } from '../../utils/reflective.js';
@@ -95,13 +97,30 @@ class ExperimentService {
   // WRITE METHODS
 
   async create(experimentData) {
+    let leias = [];
     if (experimentData.leias?.length) {
-      const leias = await Promise.all(experimentData.leias.map(async (entry) => ({
+      experimentData.leias = experimentData.leias.map((entry) => ({ ...entry, _id: entry._id || entry.id || new Types.ObjectId() }));
+      leias = await Promise.all(experimentData.leias.map(async (entry) => ({
         ...entry, leia: await LeiaRepository.findById(entry.leia),
       })));
-      validateReflectiveChain({ ...experimentData, leias });
     }
+    if (!experimentData.stages) {
+      experimentData.stages = experimentData.orchestration?.mode === 'multi' && leias.length
+        ? [{ id: `multi-${leias[0]._id}`, type: 'MultiLEIAStage', version: 1, title: 'MultiLEIA',
+          config: { leiaIds: leias.map((entry) => String(entry._id)), orchestration: experimentData.orchestration } }]
+        : leias.map((entry, index) => ({ id: `leia-${entry._id}`, type: 'LEIAStage', version: 1,
+          title: entry.leia?.metadata?.name || `Stage ${index + 1}`, config: { leiaId: String(entry._id) } }));
+    }
+    validateStages({ ...experimentData, leias });
+    if (experimentData.isPublished && !experimentData.stages.length) throw Object.assign(new Error('Activity must have a stage before publishing'), { statusCode: 400 });
     return await ExperimentRepository.create(experimentData);
+  }
+
+  async updateStages(id, stages) {
+    const experiment = await this.findByIdPopulated(id);
+    if (!experiment) throw Object.assign(new Error('Experiment not found'), { statusCode: 404 });
+    validateStages({ leias: experiment.leias, stages });
+    return await ExperimentRepository.update(id, { stages });
   }
 
   async updateName(id, name) {
@@ -116,6 +135,7 @@ class ExperimentService {
       throw error;
     }
 
+    if (experiment.stages) throw Object.assign(new Error('Configure orchestration on a MultiLEIAStage'), { statusCode: 409 });
     const leias = experiment.leias || [];
     validateReflectiveChain({ leias, orchestration });
     if (orchestration.mode === 'multi' && leias.length < 2) {
@@ -173,6 +193,10 @@ class ExperimentService {
   async publish(id) {
     const experiment = await this.findByIdPopulated(id);
     validateReflectiveChain(experiment);
+    if (Array.isArray(experiment.stages)) {
+      if (!experiment.stages.length) throw Object.assign(new Error('Activity must have a stage before publishing'), { statusCode: 400 });
+      return await ExperimentRepository.update(id, { isPublished: true });
+    }
     if (!experiment.leias || experiment.leias.length === 0) {
       const error = new Error('Experiment must have an associated LEIA before publishing');
       error.statusCode = 400;
@@ -201,17 +225,17 @@ class ExperimentService {
   async addLeia(experimentId, leiaConfig) {
     const experiment = await this.findByIdPopulated(experimentId);
     const leia = await LeiaRepository.findById(leiaConfig.leia);
-    validateReflectiveChain({ orchestration: experiment.orchestration, leias: [...experiment.leias, { ...leiaConfig, leia }] });
+    validateReflectiveChain({ stages: experiment.stages, orchestration: experiment.orchestration, leias: [...experiment.leias, { ...leiaConfig, leia }] });
     return await ExperimentRepository.addLeia(experimentId, leiaConfig);
   }
 
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
     const experiment = await this.findByIdPopulated(experimentId);
     const leia = await LeiaRepository.findById(leiaConfig.leia);
-    validateReflectiveChain({ orchestration: experiment.orchestration, leias: experiment.leias.map((entry) =>
+    validateReflectiveChain({ stages: experiment.stages, orchestration: experiment.orchestration, leias: experiment.leias.map((entry) =>
       String(entry.id) === String(leiaConfigId) ? { ...leiaConfig, leia } : entry) });
     if (
-      experiment?.orchestration?.mode === 'multi' &&
+      !experiment.stages && experiment?.orchestration?.mode === 'multi' &&
       leiaConfig.configuration?.mode === 'transcription'
     ) {
       const error = new Error('MultiLEIA activities currently support standard text mode only');
@@ -225,15 +249,18 @@ class ExperimentService {
 
   async deleteLeia(experimentId, leiaConfigId) {
     const experiment = await this.findByIdPopulated(experimentId);
+    if (experiment.stages?.some((stage) => stage.config.leiaId === String(leiaConfigId) || stage.config.leiaIds?.includes(String(leiaConfigId)))) {
+      throw Object.assign(new Error('Remove this LEIA from its stages before deleting it'), { statusCode: 409 });
+    }
     const entries = experiment.leias || [];
     const index = entries.findIndex((entry) => String(entry.id) === String(leiaConfigId));
-    if (index >= 0 && needsPreviousConversation(entries[index + 1])) {
+    if (!experiment.stages && index >= 0 && needsPreviousConversation(entries[index + 1])) {
       const error = new Error('Remove the following LEIA using previous conversation context first');
       error.statusCode = 400;
       throw error;
     }
     const updatedExperiment = await ExperimentRepository.deleteLeia(experimentId, leiaConfigId);
-    if (experiment?.orchestration?.mode !== 'multi') return updatedExperiment;
+    if (experiment.stages || experiment?.orchestration?.mode !== 'multi') return updatedExperiment;
 
     if (updatedExperiment.leias.length < 2) {
       return await ExperimentRepository.updateOrchestration(experimentId, {
