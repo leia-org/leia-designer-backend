@@ -21,8 +21,8 @@ export const createBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
-    description: Joi.string().optional(),
-    role: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    role: Joi.string().optional().allow(''),
     process: processValidator,
     tooltip: Joi.string().optional(),
   }).required(),
@@ -37,8 +37,8 @@ export const updateBehaviourValidator = Joi.object({
       .pattern(/^[0-9]+\.[0-9]+\.[0-9]+$/),
   }).required(),
   spec: Joi.object({
-    description: Joi.string().optional(),
-    role: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    role: Joi.string().optional().allow(''),
     process: processValidator,
     tooltip: Joi.string().optional(),
   }).required(),
