@@ -1,10 +1,19 @@
 import Experiment from '../../models/Experiment.js';
+import mongoose from 'mongoose';
 
 class ExperimentRepository {
   // READ METHODS
 
-  async findAll() {
-    return await Experiment.find();
+  async findAll(lastActivityId) {
+    const query = {};
+    if (lastActivityId) {
+      query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    const limit = 15;
+    const results =  await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = experiments.length === limit ? experiments[experiments.length - 1].id : null;
+    return {experiments, nextCursor}
   }
 
   async findById(id) {
@@ -23,14 +32,21 @@ class ExperimentRepository {
     return await Experiment.find({ 'leias.leia': leiaId });
   }
 
-  async findByUserId(userId, visibility = 'all', populated = false) {
+  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId) {
     const query = { user: userId };
     if (visibility === 'public') {
       query.isPublished = true;
     } else if (visibility === 'private') {
       query.isPublished = false;
     }
-    return populated ? await Experiment.find(query).populate('leias.leia') : await Experiment.find(query);
+    if (lastActivityId) {
+      query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    const limit = 10;
+    const results = populated ? await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1) : await Experiment.find(query).sort({ _id: 1 }).limit(limit+1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = experiments.length === limit ? experiments[experiments.length - 1].id : null;
+    return {experiments, nextCursor};
   }
 
   async existsByName(name) {

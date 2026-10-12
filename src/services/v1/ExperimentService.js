@@ -40,9 +40,9 @@ class ExperimentService {
 
   // READ METHODS
 
-  async findAll() {
-    const experiments = await ExperimentRepository.findAll();
-    return await populateUserInEntity(experiments);
+  async findAll(lastActivityId) {
+    const {experiments, nextCursor} = await ExperimentRepository.findAll(lastActivityId);
+    return await {experiments: await populateUserInEntity(experiments), nextCursor};
   }
 
   async findById(id) {
@@ -64,9 +64,9 @@ class ExperimentService {
     return await populateUserInEntity(experiment);
   }
 
-  async findByUserId(userId, visibility = 'all', populated = false) {
-    const experiments = await ExperimentRepository.findByUserId(userId, visibility, populated);
-    return await populateUserInEntity(experiments);
+  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId) {
+    const {experiments, nextCursor} = await ExperimentRepository.findByUserId(userId, visibility, populated, lastActivityId);
+    return await {experiments, nextCursor};
   }
 
   async checkEditable(experimentId, userId) {

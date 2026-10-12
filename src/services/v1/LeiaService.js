@@ -138,21 +138,24 @@ class LeiaService {
     return leia;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId) {
+  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId, lastLeiaId) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
 
-    const leias = await LeiaRepository.findByQuery(
+    const { leias, nextCursor } = await LeiaRepository.findByQuery(
       text,
       version,
       apiVersion,
       context.userId,
       visibility,
       context.role === 'admin' || context.internal,
-      labelId
+      labelId,
+      lastLeiaId
     );
-    return await populateUserInEntity(leias);
+
+    const populatedLeias = await populateUserInEntity(leias);
+    return { leias: populatedLeias, nextCursor };
   }
 
   // WRITE METHODS
