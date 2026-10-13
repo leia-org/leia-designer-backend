@@ -1,0 +1,36 @@
+type: object
+description: Independent conversation dynamics. Missing or disabled entries have no effect.
+additionalProperties:
+  type: object
+  required: [enabled, config]
+  properties:
+    enabled:
+      type: boolean
+    config:
+      type: object
+      additionalProperties: true
+properties:
+  leiaSpeaksFirst:
+    type: object
+    required: [enabled, config]
+    properties:
+      enabled:
+        type: boolean
+      config:
+        type: object
+        properties:
+          firstMessage:
+            type: string
+            description: Instructions for the opening. Required and nonblank when enabled.
+  stoppingCondition:
+    type: object
+    required: [enabled, config]
+    properties:
+      enabled:
+        type: boolean
+      config:
+        type: object
+        properties:
+          condition:
+            type: string
+            description: Instructor stopping criterion. Required and nonblank when enabled.

@@ -17,6 +17,8 @@ properties:
   spec:
     type: object
     properties:
+      conversationDynamics:
+        $ref: './conversationDynamics.yaml'
       description:
         type: string
       role:
