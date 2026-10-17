@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import {
   initializeRunner,
+  getTestSession,
   sendMessage,
   generateTranscription,
   generateProblem,
@@ -19,6 +20,7 @@ const router = express.Router();
 const uploadPdf = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.post('/initialize', requireJwtAuthentication, initializeRunner);
+router.get('/:sessionId', requireJwtAuthentication, getTestSession);
 router.post('/:sessionId/messages', requireJwtAuthentication, sendMessage);
 router.post('/:sessionId/evaluate', requireJwtAuthentication, evaluate);
 router.post('/transcriptions/generate', requireJwtAuthentication, generateTranscription);
