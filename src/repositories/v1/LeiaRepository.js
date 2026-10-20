@@ -114,7 +114,11 @@ class LeiaRepository {
       query['metadata.version'] = version;
     }
     const results = await Leia.find(query).sort({ id: 1 }).limit(limit+1);
-    const leiasWithLabels = await Leia.populate(results, { path: 'metadata.labels', match:{$or: [{user: userId}, {isGlobal: true}]}});
+    const userObjectId = userId ? new mongoose.Types.ObjectId(userId) : null;
+    const leiasWithLabels = await Leia.populate(results, {
+      path: 'metadata.labels',
+      match: { $or: [{ user: userObjectId }, { isGlobal: true }] },
+    });
     const leias = leiasWithLabels.slice(0, limit);
     const nextCursor = leias.length === limit ? leias[leias.length - 1].id : null;
     return {leias, nextCursor};

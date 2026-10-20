@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 /**
  * Returns an aggregation pipeline that finds the latest version of each package.
  * @param {Object} match - The complete match query object containing all filters (text, visibility, apiVersion, etc.).
@@ -6,6 +8,7 @@
  */
 export function aggregateFindLatestVersions(match = {}, userId) {
   const pipeline = [];
+  const userObjectId = userId ? new mongoose.Types.ObjectId(userId) : null;
 
   // Only add $match stage if there are conditions
   if (Object.keys(match).length > 0) {
@@ -48,22 +51,22 @@ export function aggregateFindLatestVersions(match = {}, userId) {
     },
     {
       $lookup: {
-    from: 'labels',
-    let: { labelIds: '$metadata.labels' },
-    pipeline: [
-      {
-        $match: {
-          $expr: {
-            $in: ['$_id', '$$labelIds'],
+        from: 'labels',
+        let: { labelIds: '$metadata.labels' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ['$_id', '$$labelIds'],
+              },
+              $or: [
+                { user: userObjectId },
+                { isGlobal: true },
+              ],
+            },
           },
-          $or: [
-            { user: userId },
-            { isGlobal: true },
-          ],
-        },
-      },
-    ],
-    as: 'metadata.labels',
+        ],
+        as: 'metadata.labels',
       },
     },
     {
