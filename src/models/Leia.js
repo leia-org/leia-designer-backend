@@ -48,6 +48,10 @@ const LeiaSchema = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Problem',
       },
+      rubricId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Rubric',
+      },
       persona: {
         type: Object,
       },
@@ -55,6 +59,9 @@ const LeiaSchema = new Schema(
         type: Object,
       },
       problem: {
+        type: Object,
+      },
+      rubric: {
         type: Object,
       },
       avatar: {

@@ -32,3 +32,7 @@ properties:
         oneOf:
           - $ref: '../../mongoId.yaml'
           - $ref: '../../nameVersion.yaml'
+      rubric:
+        allOf:
+          - $ref: '../../mongoId.yaml'
+        description: Optional identifier of a rubric owned by the current user.

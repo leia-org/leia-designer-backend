@@ -1,0 +1,12 @@
+get:
+  tags:
+    - Rubrics v1
+  summary: Retrieve the canonical rubric JSON Schema
+  operationId: getRubricSchema
+  responses:
+    '200':
+      description: JSON Schema used to validate rubric definitions
+      content:
+        application/schema+json:
+          schema:
+            type: object

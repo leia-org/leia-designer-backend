@@ -1,0 +1,23 @@
+type: object
+additionalProperties: false
+required:
+  - apiVersion
+  - metadata
+  - spec
+properties:
+  apiVersion:
+    type: string
+    enum: [v1]
+  metadata:
+    type: object
+    additionalProperties: false
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        minLength: 1
+        maxLength: 120
+        example: Oral presentation
+  spec:
+    $ref: './rubricSpec.yaml'
