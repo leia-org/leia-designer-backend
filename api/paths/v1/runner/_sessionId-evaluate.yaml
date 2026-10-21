@@ -1,0 +1,28 @@
+post:
+  tags:
+    - Runner v1
+  summary: Evaluate a runner session result
+  operationId: evaluateRunnerResult
+  parameters:
+    - in: path
+      name: sessionId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Runner session identifier
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/evaluateRunnerRequest.yaml'
+  responses:
+    '200':
+      description: Evaluation and score generated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/evaluateRunnerResponse.yaml'
+    '400':
+      description: Session ID or result is missing

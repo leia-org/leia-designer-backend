@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Runner v1
+  summary: Generate a Behaviour from a subject and example
+  operationId: generateRunnerBehaviour
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/generateBehaviourRequest.yaml'
+  responses:
+    '200':
+      description: Behaviour generated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/behaviour/behaviour.yaml'
+    '400':
+      description: Subject or example behaviour is missing

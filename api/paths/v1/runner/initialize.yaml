@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Runner v1
+  summary: Initialize a runner session
+  operationId: initializeRunner
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/initializeRunnerRequest.yaml'
+  responses:
+    '200':
+      description: Runner session initialized successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/initializeRunnerResponse.yaml'
+    '400':
+      description: Invalid request body or runner configuration

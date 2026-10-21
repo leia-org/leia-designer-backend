@@ -6,6 +6,8 @@ properties:
     type: array
     items:
       $ref: './leiaConfig.yaml'
+  orchestration:
+    $ref: './orchestration.yaml'
   user:
     type: string
     description: Unique identifier for the user who created the experiment

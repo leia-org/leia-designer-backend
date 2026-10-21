@@ -1,0 +1,8 @@
+type: object
+required:
+  - spec
+properties:
+  spec:
+    $ref: './runnerLeiaSpec.yaml'
+  runnerConfiguration:
+    $ref: './runnerConfiguration.yaml'

@@ -1,0 +1,13 @@
+type: object
+required:
+  - subject
+  - exampleProblem
+properties:
+  subject:
+    type: string
+    example: Sistema de biblioteca
+  additionalDetails:
+    type: string
+    example: Incluye catalogo, prestamos, reservas, cuentas de socios y notificaciones de vencimiento.
+  exampleProblem:
+    $ref: '../problem/problem.yaml'

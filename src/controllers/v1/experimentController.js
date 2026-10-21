@@ -1,11 +1,13 @@
 import ExperimentService from '../../services/v1/ExperimentService.js';
+import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
   updateExperimentNameValidator,
   leiaConfigValidator,
-  createAddPublishExperimentFromLeiaValidator
+  createExperimentReplicationValidator,
+  updateExperimentOrchestrationValidator,
 } from '../../validators/v1/experimentValidator.js';
-import { validateBoolean, validateVisibility } from '../../validators/queryValidator.js';
+import { validateBoolean, validateVisibility, isMongoIdQueryValid } from '../../validators/queryValidator.js';
 
 export const createExperiment = async (req, res, next) => {
   try {
@@ -27,7 +29,13 @@ export const getExperimentById = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-    res.json(experiment);
+    if (experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
+      res.json(experiment);
+    } else {
+      const error = new Error('Unauthorized: You do not have permission to access this experiment');
+      error.statusCode = 403;
+      throw error;
+    }
   } catch (err) {
     next(err);
   }
@@ -35,8 +43,23 @@ export const getExperimentById = async (req, res, next) => {
 
 export const getAllExperiments = async (req, res, next) => {
   try {
-    const experiments = await ExperimentService.findAll();
+    const lastActivityId = req.query.lastActivityId;
+    if (lastActivityId && !isMongoIdQueryValid(lastActivityId)) {
+      const error = new Error('Invalid lastActivityId format');
+      error.statusCode = 400;
+      throw error;
+    }
+    const experiments = await ExperimentService.findAll(lastActivityId);
     res.json(experiments);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const checkExperimentNameExists = async (req, res, next) => {
+  try {
+    const exists = await ExperimentService.checkNameExists(req.params.name);
+    res.json({ exists });
   } catch (err) {
     next(err);
   }
@@ -47,7 +70,15 @@ export const getAllExperimentsByUser = async (req, res, next) => {
     const visibility = validateVisibility(req.query.visibility);
     const populated = validateBoolean(req.query.populated, false);
     const userId = req.auth?.payload?.id;
-    const experiments = await ExperimentService.findByUserId(userId, visibility, populated);
+    const lastActivityId = req.query.lastActivityId;
+
+    if (lastActivityId && !isMongoIdQueryValid(lastActivityId)) {
+          const error = new Error('Invalid lastActivityId format');
+          error.statusCode = 400;
+          throw error;
+        }
+        
+    const experiments = await ExperimentService.findByUserId(userId, visibility, populated, lastActivityId);
     res.json(experiments);
   } catch (err) {
     next(err);
@@ -63,6 +94,24 @@ export const updateExperimentName = async (req, res, next) => {
     await ExperimentService.checkEditable(experimentId, userId);
 
     const updatedExperiment = await ExperimentService.updateName(experimentId, value.name);
+    res.json(updatedExperiment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateExperimentOrchestration = async (req, res, next) => {
+  try {
+    const value = await updateExperimentOrchestrationValidator.validateAsync(req.body, {
+      abortEarly: false,
+    });
+    const userId = req.auth?.payload?.id;
+    const experimentId = req.params.id;
+    await ExperimentService.checkEditable(experimentId, userId);
+    const updatedExperiment = await ExperimentService.updateOrchestration(
+      experimentId,
+      value
+    );
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -137,27 +186,26 @@ export const deleteExperimentById = async (req, res, next) => {
     next(err);
   }
 };
-export const createAddPublishExperimentFromLeia = async (req, res, next) => {
+export const createExperimentReplication = async (req, res, next) => {
   try {
-    const value = await createAddPublishExperimentFromLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await createExperimentReplicationValidator.validateAsync(req.body, { abortEarly: false });
     const userId = req.auth?.payload?.id;
+    const existsActivity = await ExperimentService.checkNameExists(value.leiaName);
+    if (existsActivity) {
+      return res.status(409).json({ error: 'Activity name already exists' });
+    }
+    const existsReplication = await WorkbenchService.replicationNameExists(value.leiaName, req.headers.authorization);
+    if (existsReplication) {
+      return res.status(409).json({ error: 'Replication name already exists' });
+    }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
       isPublished: true
     });
-
-    res.status(201).json(newExperiment);
-  } catch (err) {
-    next(err);
-  }
-};
-export const checkExperimentNameExists = async (req, res, next) => {
-  try {
-    const experimentName = req.params.name;
-    const exists = await ExperimentService.checkNameExists(experimentName);
-    res.json({ exists });
+    const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
+    res.status(201).json({ experiment: newExperiment, replication: newReplication });
   } catch (err) {
     next(err);
   }

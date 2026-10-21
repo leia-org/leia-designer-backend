@@ -1,0 +1,14 @@
+type: object
+required:
+  - result
+properties:
+  result:
+    description: Result to evaluate for the runner session
+    oneOf:
+      - type: string
+      - type: object
+        additionalProperties: true
+      - type: array
+        items:
+          type: object
+          additionalProperties: true

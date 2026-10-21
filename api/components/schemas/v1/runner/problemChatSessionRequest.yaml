@@ -1,0 +1,9 @@
+type: object
+required:
+  - modelName
+  - apiKeyId
+properties:
+  modelName:
+    type: string
+  apiKeyId:
+    $ref: '../../mongoId.yaml'

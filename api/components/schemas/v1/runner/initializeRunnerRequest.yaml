@@ -1,0 +1,31 @@
+type: object
+required:
+  - spec
+  - runnerConfiguration
+properties:
+  spec:
+    type: object
+    required:
+      - persona
+      - behaviour
+      - problem
+    properties:
+      persona:
+        $ref: '../persona/persona.yaml'
+      behaviour:
+        $ref: '../behaviour/behaviour.yaml'
+      problem:
+        $ref: '../problem/problem.yaml'
+
+  runnerConfiguration:
+    type: object
+    required:
+      - modelName
+      - apiKeyId
+    properties:
+      modelName:
+        type: string
+        example: gpt-5.4-mini
+      apiKeyId:
+        type: string
+        example: 6a22eec5130a4f803deb2db9

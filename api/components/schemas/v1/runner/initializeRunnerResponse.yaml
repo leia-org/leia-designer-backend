@@ -1,0 +1,5 @@
+type: object
+properties:
+  sessionId:
+    type: string
+    format: uuid

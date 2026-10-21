@@ -1,5 +1,10 @@
 import jwt from 'jsonwebtoken';
 
+const getVerificationOptions = () => ({
+  ...(process.env.JWT_ISSUER ? { issuer: process.env.JWT_ISSUER } : {}),
+  ...(process.env.JWT_AUDIENCE ? { audience: process.env.JWT_AUDIENCE } : {}),
+});
+
 export const generateToken = (user) => {
   const toSign = {
     id: user.id,
@@ -12,7 +17,11 @@ export const generateToken = (user) => {
 };
 
 export const verifyToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET);
+  const payload = jwt.verify(token, process.env.JWT_SECRET, getVerificationOptions());
+  if (payload.type && payload.type !== 'access') {
+    throw new Error('Access token required');
+  }
+  return payload;
 };
 
 export const decodeToken = (token) => {

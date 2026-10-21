@@ -1,0 +1,27 @@
+post:
+  tags:
+    - Runner v1
+  summary: Upload a PDF file to a problem-chat assistant session
+  operationId: uploadProblemChatFile
+  parameters:
+    - in: path
+      name: chatId
+      required: true
+      schema:
+        type: string
+      description: Problem-chat session identifier
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/uploadProblemChatFileRequest.yaml'
+  responses:
+    '201':
+      description: PDF file uploaded successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/uploadProblemChatFileResponse.yaml'
+    '400':
+      description: PDF file is missing

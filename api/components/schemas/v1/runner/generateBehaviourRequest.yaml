@@ -1,0 +1,12 @@
+type: object
+required:
+  - subject
+  - exampleBehaviour
+properties:
+  subject:
+    type: string
+  additionalDetails:
+    type: string
+  exampleBehaviour:
+    $ref: '../behaviour/behaviour.yaml'
+

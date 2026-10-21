@@ -4,7 +4,8 @@ import { createLabelValidator, updateLabelValidator } from '../../validators/v1/
 export const getLabels = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
-    const labels = await LabelService.findAllVisible(userId);
+    const isAdmin = req.auth?.payload?.role === 'admin';
+    const labels = isAdmin ? await LabelService.findAll() : await LabelService.findAllVisible(userId);
     res.json(labels);
   } catch (err) {
     next(err);
@@ -81,6 +82,22 @@ export const deleteLabel = async (req, res, next) => {
     }
     await LabelService.delete(req.params.id);
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const mergeLabels = async (req, res, next) => {
+  try {
+    const { sourceLabelId, targetLabelId } = req.params;
+    const role = req.auth?.payload?.role;
+    if (role !== 'admin') {
+      const error = new Error('Unauthorized: Only admins can merge labels');
+      error.statusCode = 403;
+      throw error;
+    }
+    const mergedLabel = await LabelService.merge(sourceLabelId, targetLabelId);
+    res.json(mergedLabel);
   } catch (err) {
     next(err);
   }

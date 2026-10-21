@@ -1,0 +1,51 @@
+type: object
+properties:
+  models:
+    type: array
+    description: List of available models
+    items:
+      type: string
+    example:
+      - gemini-3.1-flash-lite-preview
+      - gemma3:4b
+      - gpt-5.4-mini
+
+  default:
+    type: string
+    description: Default model to use if none is specified
+    example: gemini-3.1-flash-lite-preview
+
+  apiKeyProviders:
+    type: object
+    properties:
+      gemini:
+        type: array
+        items:
+          type: string
+        example:
+          - gemini-3.1-flash-lite-preview
+      ollama:
+        type: array
+        items:
+          type: string
+        example:
+          - gemma3:4b
+      openai:
+        type: array
+        items:
+          type: string
+        example:
+          - gpt-5.4-mini
+
+  providerProviderModuleMap:
+    type: object
+    properties:
+      gemini:
+        type: string
+        example: gemini
+      ollama:
+        type: string
+        example: ollama
+      openai:
+        type: string
+        example: openai-responses

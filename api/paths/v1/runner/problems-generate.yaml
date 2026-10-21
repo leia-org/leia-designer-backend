@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Runner v1
+  summary: Generate a Problem from a subject and example
+  operationId: generateRunnerProblem
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/generateProblemRequest.yaml'
+  responses:
+    '200':
+      description: Problem generated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/problem/problem.yaml'
+    '400':
+      description: Subject or example problem is missing

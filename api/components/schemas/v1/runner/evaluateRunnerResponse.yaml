@@ -1,0 +1,6 @@
+type: object
+properties:
+  evaluation:
+    type: string
+  score:
+    type: number

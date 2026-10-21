@@ -1,0 +1,59 @@
+type: object
+properties:
+  message:
+    type: string
+    example: ahi llevas
+
+  tools:
+    type: array
+    items:
+      type: object
+      required:
+        - name
+        - description
+        - parameters
+      properties:
+        name:
+          type: string
+          example: get_current_problem
+
+        description:
+          type: string
+          example: Returns the problem currently in the editor.
+
+        parameters:
+          type: object
+          description: JSON Schema describing the tool input parameters.
+          additionalProperties: true
+          example:
+            type: object
+            properties: {}
+
+  toolResults:
+    type: array
+    items:
+      type: object
+      required:
+        - callId
+        - output
+      properties:
+        callId:
+          type: string
+          example: call_123
+
+        output:
+          description: Result returned by a previously requested tool call. Can be any JSON value.
+          nullable: true
+
+  fileIds:
+    type: array
+    items:
+      type: string
+    example:
+      - file-4jabRCnUSCsJ4UQWuG6T8B
+
+anyOf:
+  - required:
+      - message
+  - required:
+      - toolResults

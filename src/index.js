@@ -1,6 +1,7 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
+import { createFrontendOriginHandler } from './utils/frontendOrigins.js';
 import logger from './utils/logger.js';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
@@ -9,36 +10,26 @@ import personaRoutesV1 from './routes/v1/personaRoutes.js';
 import problemRoutesV1 from './routes/v1/problemRoutes.js';
 import behaviourRoutesV1 from './routes/v1/behaviourRoutes.js';
 import leiaRoutesV1 from './routes/v1/leiaRoutes.js';
+import leiaDraftRoutesV1 from './routes/v1/leiaDraftRoutes.js';
 import labelRoutesV1 from './routes/v1/labelRoutes.js';
 import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
-import workbenchRoutesV1 from './routes/v1/workbenchRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
 import providerRoutesV1 from './routes/v1/providerRoutes.js';
+import imageRoutesV1 from './routes/v1/imageRoutes.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
 const app = express();
-
+const PORT = process.env.PORT || 3000;
 const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
+allowedOrigins.push(`http://localhost:${PORT}`);
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`CORS origin not allowed: ${origin}`));
-    },
+    origin: createFrontendOriginHandler(allowedOrigins),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   })
@@ -61,16 +52,16 @@ app.use('/api/v1/personas', personaRoutesV1);
 app.use('/api/v1/problems', problemRoutesV1);
 app.use('/api/v1/behaviours', behaviourRoutesV1);
 app.use('/api/v1/leias', leiaRoutesV1);
+app.use('/api/v1/leia-drafts', leiaDraftRoutesV1);
 app.use('/api/v1/labels', labelRoutesV1);
 app.use('/api/v1/experiments', experimentRoutesV1);
-app.use('/api/v1/workbench', workbenchRoutesV1);
 app.use('/api/v1/runner', runnerRoutesV1);
 app.use('/api/v1/provider', providerRoutesV1);
+app.use('/api/v1/images', imageRoutesV1);
 
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {

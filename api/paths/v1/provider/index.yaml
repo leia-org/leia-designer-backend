@@ -1,0 +1,14 @@
+get:
+  tags:
+    - Provider v1
+  summary: Retrieve all provider models and details
+  operationId: getAllProviderModelsAndDetails
+  responses:
+    '200':
+      description: Provider models and metadata retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/provider/modelsAndDetails.yaml'
+    '401':
+      description: Login required

@@ -12,6 +12,12 @@ export const getUserProfileFromAuthService = async (userId) => {
     });
     return response.data;
   } catch (error) {
+    // Designer resources can outlive their Auth user. Keep the stored owner ID
+    // in that case so the resource remains readable and ownership checks work.
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+
     console.error(`Error fetching user ${userId} from Auth Service:`, error.message);
     return null;
   }
@@ -25,8 +31,8 @@ export const populateUserInEntity = async (entity) => {
   }
 
   const entityObj = entity.toJSON ? entity.toJSON() : entity;
-  
-  if (entityObj.user && typeof entityObj.user !== 'object') {
+  delete entityObj.userId;
+  if (entityObj.user) {
     const userProfile = await getUserProfileFromAuthService(entityObj.user);
     if (userProfile) {
       entityObj.user = userProfile;

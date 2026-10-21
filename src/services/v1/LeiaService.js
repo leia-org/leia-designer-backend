@@ -5,7 +5,13 @@ import BehaviourService from './BehaviourService.js';
 import ProblemService from './ProblemService.js';
 import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
-import { checkConstraints, resolveExtensions, resolveOverrides, resolvePlaceholders } from '../../utils/leia.js';
+import {
+  checkConstraints,
+  resolveExtensions,
+  resolveOverrides,
+  resolvePlaceholders,
+  synchronizeProcessTypes,
+} from '../../utils/leia.js';
 import { populateUserInEntity } from '../../utils/authClient.js';
 
 class LeiaService {
@@ -132,21 +138,24 @@ class LeiaService {
     return leia;
   }
 
-  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId) {
+  async findByQuery(text, version, apiVersion, visibility = 'all', context = {}, labelId, lastLeiaId) {
     if (version && version !== 'latest') {
       version = getVersionObjectFromString(version);
     }
 
-    const leias = await LeiaRepository.findByQuery(
+    const { leias, nextCursor } = await LeiaRepository.findByQuery(
       text,
       version,
       apiVersion,
       context.userId,
       visibility,
       context.role === 'admin' || context.internal,
-      labelId
+      labelId,
+      lastLeiaId
     );
-    return await populateUserInEntity(leias);
+
+    const populatedLeias = await populateUserInEntity(leias);
+    return { leias: populatedLeias, nextCursor };
   }
 
   // WRITE METHODS
@@ -170,12 +179,14 @@ class LeiaService {
       return problem.toJSON();
     });
 
-    const entities = { persona, behaviour, problem };
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
     const overriddenEntities = resolveOverrides(extendedEntities);
+    synchronizeProcessTypes(overriddenEntities);
     const replacedEntities = resolvePlaceholders(overriddenEntities);
+    synchronizeProcessTypes(replacedEntities);
 
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;
@@ -255,12 +266,14 @@ class LeiaService {
       return problem.toJSON();
     });
 
-    const entities = { persona, behaviour, problem };
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
     const overriddenEntities = resolveOverrides(extendedEntities);
+    synchronizeProcessTypes(overriddenEntities);
     const replacedEntities = resolvePlaceholders(overriddenEntities);
+    synchronizeProcessTypes(replacedEntities);
 
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;

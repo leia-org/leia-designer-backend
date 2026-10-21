@@ -63,12 +63,10 @@ get:
         - **Admin override**: Administrators can see all leias regardless of visibility
   responses:
     '200':
-      description: Successful response with one or more Leias
+      description: Successful response with a list of Leias
       content:
         application/json:
           schema:
-            oneOf:
-              - $ref: '../../../components/schemas/v1/leia/leia.yaml'
-              - type: array
-                items:
-                  $ref: '../../../components/schemas/v1/leia/leia.yaml'
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/leia/leia.yaml'

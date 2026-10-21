@@ -1,0 +1,25 @@
+post:
+  tags:
+    - Runner v1
+  summary: Send a message to a problem-chat assistant session
+  operationId: sendProblemChatMessage
+  parameters:
+    - in: path
+      name: chatId
+      required: true
+      schema:
+        type: string
+      description: Problem-chat session identifier
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/runner/problemChatMessageRequest.yaml'
+  responses:
+    '200':
+      description: Problem-chat assistant response
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/runner/problemChatMessageResponse.yaml'
