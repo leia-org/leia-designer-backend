@@ -29,7 +29,7 @@ describe('ImageGeneration BYOK payloads', () => {
         apiKeyId: 'key1',
         apiKeyRequesterId: 'user1',
       },
-      { headers: { Authorization: 'Bearer runner-secret' } }
+      { headers: { Authorization: 'Bearer runner-secret' }, timeout: 180000 }
     );
   });
 
@@ -48,7 +48,7 @@ describe('ImageGeneration BYOK payloads', () => {
         apiKeyId: 'key1',
         apiKeyRequesterId: 'user1',
       },
-      { headers: { Authorization: 'Bearer runner-secret' } }
+      { headers: { Authorization: 'Bearer runner-secret' }, timeout: 180000 }
     );
   });
 });
