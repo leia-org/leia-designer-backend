@@ -70,7 +70,7 @@ export const getAllExperimentsByUser = async (req, res, next) => {
     const visibility = validateVisibility(req.query.visibility);
     const populated = validateBoolean(req.query.populated, false);
     const userId = req.auth?.payload?.id;
-    const lastActivityId = req.query.lastActivityId;
+    const {lastActivityId, text} = req.query;
 
     if (lastActivityId && !isMongoIdQueryValid(lastActivityId)) {
           const error = new Error('Invalid lastActivityId format');
@@ -78,7 +78,7 @@ export const getAllExperimentsByUser = async (req, res, next) => {
           throw error;
         }
         
-    const experiments = await ExperimentService.findByUserId(userId, visibility, populated, lastActivityId);
+    const experiments = await ExperimentService.findByUserId(userId, visibility, populated, lastActivityId, text);
     res.json(experiments);
   } catch (err) {
     next(err);

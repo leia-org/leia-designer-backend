@@ -40,8 +40,8 @@ class ExperimentService {
 
   // READ METHODS
 
-  async findAll(lastActivityId) {
-    const {experiments, nextCursor} = await ExperimentRepository.findAll(lastActivityId);
+  async findAll(lastActivityId, text) {
+    const {experiments, nextCursor} = await ExperimentRepository.findAll(lastActivityId, text);
     return await {experiments: await populateUserInEntity(experiments), nextCursor};
   }
 
@@ -64,8 +64,8 @@ class ExperimentService {
     return await populateUserInEntity(experiment);
   }
 
-  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId) {
-    const {experiments, nextCursor} = await ExperimentRepository.findByUserId(userId, visibility, populated, lastActivityId);
+  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId, text) {
+    const {experiments, nextCursor} = await ExperimentRepository.findByUserId(userId, visibility, populated, lastActivityId, text);
     return await {experiments, nextCursor};
   }
 
