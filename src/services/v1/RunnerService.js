@@ -78,6 +78,7 @@ class RunnerService {
 
   async sendMessage(sessionId, message, options = {}) {
     const body = {};
+    if (options.opening === true) body.opening = true;
     if (typeof message === 'string' && message.length > 0) body.message = message;
     if (Array.isArray(options.tools) && options.tools.length > 0) body.tools = options.tools;
     if (Array.isArray(options.toolResults) && options.toolResults.length > 0) body.toolResults = options.toolResults;
@@ -94,6 +95,13 @@ class RunnerService {
     // Forward the full runner response so the caller can branch on
     // toolCalls vs. final text.
     return response.data;
+  }
+
+  async evaluateStoppingCondition(condition, transcript, behaviour, runnerConfiguration) {
+    const { data } = await axios.post(`${process.env.RUNNER_URL}/api/v1/conversation-dynamics/evaluate`,
+      { condition, transcript, behaviour, runnerConfiguration },
+      { headers: { Authorization: 'Bearer ' + process.env.RUNNER_KEY }, timeout: 60000 });
+    return data;
   }
 
   async generateTranscription(leia) {

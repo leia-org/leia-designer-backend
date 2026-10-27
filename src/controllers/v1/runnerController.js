@@ -1,4 +1,5 @@
 import RunnerService from "../../services/v1/RunnerService.js";
+import ConversationDynamicsService from "../../services/v1/ConversationDynamicsService.js";
 import { runnerLeiaValidator } from "../../validators/v1/leiaValidator.js";
 import { filterProblemChatToolsForRole } from "../../utils/behaviourPermissions.js";
 
@@ -40,7 +41,16 @@ export const initializeRunner = async (req, res, next) => {
       { spec: value.spec },
       runnerConfiguration
     );
+    await ConversationDynamicsService.create(sessionId, req.auth.payload.id, { spec: value.spec }, runnerConfiguration);
     res.json({ sessionId });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getTestSession = async (req, res, next) => {
+  try {
+    res.json(await ConversationDynamicsService.getState(req.params.sessionId, req.auth.payload.id));
   } catch (err) {
     next(err);
   }
@@ -61,7 +71,18 @@ export const sendMessage = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
+    const session = await ConversationDynamicsService.find(sessionId, req.auth.payload.id);
+    await ConversationDynamicsService.open(session);
+    const current = await ConversationDynamicsService.find(sessionId, req.auth.payload.id);
+    if (current.openingClaimedAt && !current.openingCompleted) {
+      const error = new Error('LEIA is preparing the opening message. Retry shortly.');
+      error.statusCode = 409;
+      throw error;
+    }
     const response = await RunnerService.sendMessage(sessionId, message, { tools, toolResults });
+    await ConversationDynamicsService.record(sessionId, message, false);
+    await ConversationDynamicsService.record(sessionId, typeof response === 'string' ? response : response?.message, true);
+    await ConversationDynamicsService.observe(sessionId);
     // Forward the full runner shape: { message } or { toolCalls }.
     res.json(response);
   } catch (err) {
@@ -144,6 +165,7 @@ export const evaluate = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
+    await ConversationDynamicsService.assertCanFinish(sessionId, req.auth.payload.id);
     const evaluation = await RunnerService.getEvaluationAndScore(sessionId, result);
     res.json(evaluation);
   } catch (err) {
