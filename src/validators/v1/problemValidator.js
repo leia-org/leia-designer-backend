@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 const processValidator = Joi.array()
-  .items(Joi.string().valid('requirements-elicitation', 'game', 'other'))
+  .items(Joi.string().valid('requirements-elicitation', 'game', 'design-patterns', 'other'))
   .custom((value, helpers) => {
     if (Array.isArray(value) && value.includes('other') && value.length > 1) {
       return helpers.error('any.invalid');
