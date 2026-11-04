@@ -1,13 +1,16 @@
 import Experiment from '../../models/Experiment.js';
 import mongoose from 'mongoose';
-
+import { regexQuery } from '../../utils/search.js';
 class ExperimentRepository {
   // READ METHODS
 
-  async findAll(lastActivityId) {
+  async findAll(lastActivityId, text) {
     const query = {};
     if (lastActivityId) {
       query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    if (text) {
+      Object.assign(query, regexQuery(text, 'name'));
     }
     const limit = 15;
     const results =  await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1);
@@ -32,7 +35,7 @@ class ExperimentRepository {
     return await Experiment.find({ 'leias.leia': leiaId });
   }
 
-  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId) {
+  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId, text) {
     const query = { user: userId };
     if (visibility === 'public') {
       query.isPublished = true;
@@ -41,6 +44,9 @@ class ExperimentRepository {
     }
     if (lastActivityId) {
       query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    if (text) {
+      Object.assign(query, regexQuery(text, 'name'));
     }
     const limit = 10;
     const results = populated ? await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1) : await Experiment.find(query).sort({ _id: 1 }).limit(limit+1);

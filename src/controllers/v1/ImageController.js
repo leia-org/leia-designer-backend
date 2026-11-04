@@ -4,6 +4,8 @@ import LeiaService from '../../services/v1/LeiaService.js';
 import PersonaService from '../../services/v1/PersonaService.js';
 import ProblemService from '../../services/v1/ProblemService.js';
 import axios from 'axios';
+import { randomUUID } from 'node:crypto';
+import Leia from '../../models/Leia.js';
 
 const ENTITY_CONFIG = {
   personas: {
@@ -43,14 +45,16 @@ const INFOGRAPHIC_CONFIG = {
   },
 };
 
-function canModify(entity, context) {
+export function canModify(entity, context) {
   if (context.role === 'admin' || context.internal) {
     return true;
   }
-  return !!entity?.user && entity.user.equals(context.userId);
+  const owner = entity?.user;
+  const ownerId = owner?._id || (typeof owner?.id === 'string' ? owner.id : owner);
+  return !!ownerId && String(ownerId) === String(context.userId);
 }
 
-function getGeminiApiKeyConfig(req) {
+export function getGeminiApiKeyConfig(req) {
   const apiKeyId = typeof req.body?.apiKeyId === 'string' ? req.body.apiKeyId.trim() : '';
   const apiKeyRequesterId = req.auth?.payload?.id;
 
@@ -69,7 +73,7 @@ function getGeminiApiKeyConfig(req) {
   return { apiKeyId, apiKeyRequesterId };
 }
 
-async function validateGeminiApiKey({ apiKeyId, apiKeyRequesterId }) {
+export async function validateGeminiApiKey({ apiKeyId, apiKeyRequesterId }) {
   try {
     await axios.post(
       `${process.env.AUTH_SERVICE_URL}/api/v1/apikeys/validate-provider`,
@@ -142,35 +146,44 @@ async function loadMutableEntity(req, config) {
   return entity;
 }
 
-async function generateStoredImageForEntity(req, res, next, config) {
-  try {
+async function generateStoredImage(req, config) {
     const apiKeyConfig = getGeminiApiKeyConfig(req);
     const entity = await loadMutableEntity(req, config);
     await validateGeminiApiKey(apiKeyConfig);
     const generationResult = await config.generate(entity, apiKeyConfig);
     const storedImage = await config.store(entity, generationResult);
 
-    entity.set(config.specPath, storedImage.key);
+    // Persist the version, so reopening another view/browser bypasses cached
+    // content and cached 404s too, rather than only the original modal doing so.
+    const image = `${storedImage.key}?v=${randomUUID()}`;
+    entity.set(config.specPath, image);
     const updatedEntity = await entity.save();
+
+    // LEIAs contain snapshots of their components. Keep only their image
+    // reference in sync; never overwrite the rest of a versioned snapshot.
+    if (config.entityType === 'problems' || config.entityType === 'personas') {
+      const component = config.entityType === 'problems' ? 'problem' : 'persona';
+      await Leia.updateMany(
+        { [`spec.${component}Id`]: entity._id },
+        { $set: { [`spec.${component}.spec.avatar`]: image } }
+      );
+    }
 
     if (storedImage.previousKey && storedImage.previousKey !== storedImage.key) {
       await S3Service.deleteObject(storedImage.previousKey);
     }
 
-    res.status(200).json({
-      [config.responseField]: storedImage.key,
+    return {
+      [config.responseField]: image,
       key: storedImage.key,
       contentType: storedImage.contentType,
       sizeBytes: storedImage.sizeBytes,
       entity: updatedEntity,
-    });
-  } catch (err) {
-    next(err);
-  }
+    };
 }
 
-async function generateAvatarForEntity(req, res, next, config) {
-  await generateStoredImageForEntity(req, res, next, {
+function avatarConfig(config) {
+  return {
     ...config,
     specPath: 'spec.avatar',
     responseField: 'avatar',
@@ -182,11 +195,11 @@ async function generateAvatarForEntity(req, res, next, config) {
         imageDataUrl: generationResult.avatar,
         previousAvatar: entity.spec?.avatar,
       }),
-  });
+  };
 }
 
-async function generateInfographicForLeia(req, res, next, config) {
-  await generateStoredImageForEntity(req, res, next, {
+function infographicConfig(config) {
+  return {
     ...config,
     service: LeiaService,
     generate: (leia, apiKeyConfig) => {
@@ -200,25 +213,41 @@ async function generateInfographicForLeia(req, res, next, config) {
         contentType: generationResult.contentType,
         previousImage: leia.get(config.specPath),
       }),
-  });
+  };
+}
+
+export async function generateImageForTarget(target, id, context, apiKeyConfig) {
+  const config = ENTITY_CONFIG[target]
+    ? avatarConfig(ENTITY_CONFIG[target])
+    : INFOGRAPHIC_CONFIG[target] ? infographicConfig(INFOGRAPHIC_CONFIG[target]) : null;
+  if (!config) throw Object.assign(new Error('Invalid image target'), { statusCode: 400 });
+  return generateStoredImage({ params: { id }, auth: { payload: { id: context.userId, role: context.role } }, body: apiKeyConfig }, config);
+}
+
+async function generateForRequest(req, res, next, target) {
+  try {
+    const result = await generateImageForTarget(target, req.params.id,
+      { userId: req.auth?.payload?.id, role: req.auth?.payload?.role }, req.body);
+    res.status(200).json(result);
+  } catch (error) { next(error); }
 }
 
 export const generatePersonaAvatar = async (req, res, next) => {
-  await generateAvatarForEntity(req, res, next, ENTITY_CONFIG.personas);
+  await generateForRequest(req, res, next, 'personas');
 };
 
 export const generateProblemAvatar = async (req, res, next) => {
-  await generateAvatarForEntity(req, res, next, ENTITY_CONFIG.problems);
+  await generateForRequest(req, res, next, 'problems');
 };
 
 export const generateLeiaAvatar = async (req, res, next) => {
-  await generateAvatarForEntity(req, res, next, ENTITY_CONFIG.leias);
+  await generateForRequest(req, res, next, 'leias');
 };
 
 export const generateLeiaInfographic = async (req, res, next) => {
-  await generateInfographicForLeia(req, res, next, INFOGRAPHIC_CONFIG.infographic);
+  await generateForRequest(req, res, next, 'infographic');
 };
 
 export const generateLeiaInfographicSolution = async (req, res, next) => {
-  await generateInfographicForLeia(req, res, next, INFOGRAPHIC_CONFIG.infographicSolution);
+  await generateForRequest(req, res, next, 'infographicSolution');
 };

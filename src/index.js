@@ -16,6 +16,7 @@ import experimentRoutesV1 from './routes/v1/experimentRoutes.js';
 import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
 import providerRoutesV1 from './routes/v1/providerRoutes.js';
 import imageRoutesV1 from './routes/v1/imageRoutes.js';
+import { startImageJobWorker } from './services/v1/ImageRegeneration.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
@@ -66,6 +67,7 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
+    await startImageJobWorker();
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
     });

@@ -106,15 +106,20 @@ class LeiaRepository {
     const limit = 10;
     if (version === 'latest') {
       // Pass the complete query to the aggregation
-      const results = await Leia.aggregate(aggregateFindLatestVersions(query)).sort({ id: 1 }).limit(limit+1);
+      const results = await Leia.aggregate(aggregateFindLatestVersions(query, userId, privileged)).sort({ id: 1 }).limit(limit+1);
       const leias = results.slice(0, limit);
       const nextCursor = leias.length === limit ? leias[leias.length - 1].id : null;
       return {leias, nextCursor};
     } else if (version) {
       query['metadata.version'] = version;
     }
-    const results = await Leia.find(query).sort({ id: 1 }).populate('metadata.labels').limit(limit+1);
-    const leias = results.slice(0, limit);
+    const results = await Leia.find(query).sort({ id: 1 }).limit(limit+1);
+    const userObjectId = userId ? new mongoose.Types.ObjectId(userId) : null;
+    const leiasWithLabels = privileged ? await Leia.populate(results, {path: 'metadata.labels'}) : await Leia.populate(results, {
+      path: 'metadata.labels',
+      match: { $or: [{ user: userObjectId }, { isGlobal: true }] },
+    });
+    const leias = leiasWithLabels.slice(0, limit);
     const nextCursor = leias.length === limit ? leias[leias.length - 1].id : null;
     return {leias, nextCursor};
   }

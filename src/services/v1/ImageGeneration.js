@@ -5,7 +5,7 @@ class ImageGeneration {
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1${path}`,
       body,
-      { headers: { Authorization: 'Bearer ' + process.env.RUNNER_KEY } }
+      { headers: { Authorization: 'Bearer ' + process.env.RUNNER_KEY }, timeout: 180000 }
     );
     return response.data;
   }
