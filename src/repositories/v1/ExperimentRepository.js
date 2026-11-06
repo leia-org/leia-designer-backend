@@ -19,6 +19,17 @@ class ExperimentRepository {
     return {experiments, nextCursor}
   }
 
+  async findAccessible(userId, ownedOnly = false, lastActivityId, text) {
+    const query = ownedOnly ? { user: userId } : { $or: [{ user: userId }, { isPublished: true }] };
+    if (lastActivityId) query._id = { $gt: new mongoose.Types.ObjectId(lastActivityId) };
+    if (text) Object.assign(query, regexQuery(text, 'name'));
+    const limit = 10;
+    const results = await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit + 1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = results.length > limit ? experiments[experiments.length - 1].id : null;
+    return { experiments, nextCursor };
+  }
+
   async findById(id) {
     return await Experiment.findById(id);
   }
