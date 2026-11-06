@@ -1,0 +1,40 @@
+get:
+  tags: [Experiments v1]
+  summary: List own activities and activities published by others
+  operationId: getAccessibleExperiments
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: query
+      name: ownedOnly
+      schema:
+        type: boolean
+        default: false
+    - in: query
+      name: text
+      schema:
+        type: string
+    - in: query
+      name: lastActivityId
+      schema:
+        type: string
+        pattern: '^[a-fA-F0-9]{24}$'
+  responses:
+    '200':
+      description: Activities ordered by ID with populated LEIAs; excludes foreign private activities.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              experiments:
+                type: array
+                items:
+                  $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+              nextCursor:
+                type: string
+                nullable: true
+    '400':
+      description: Invalid filters
+    '401':
+      description: Authentication required

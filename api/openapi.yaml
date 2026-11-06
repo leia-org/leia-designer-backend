@@ -99,6 +99,8 @@ paths:
   # Experiment v1 paths
   /v1/experiments:
     $ref: './paths/v1/experiments/index.yaml'
+  /v1/experiments/accessible:
+    $ref: './paths/v1/experiments/accessible.yaml'
   /v1/experiments/{id}:
     $ref: './paths/v1/experiments/_id.yaml'
   /v1/experiments/{id}/name:

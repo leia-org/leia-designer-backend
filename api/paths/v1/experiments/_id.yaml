@@ -1,7 +1,7 @@
 get:
   tags:
     - Experiments v1
-  summary: Retrieve experiment by ID
+  summary: Retrieve an owned or published experiment by ID (admins may also access private experiments)
   operationId: getExperimentById
   parameters:
     - in: path

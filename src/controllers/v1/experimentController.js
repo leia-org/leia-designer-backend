@@ -29,13 +29,29 @@ export const getExperimentById = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-    if (experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
+    if (experiment.isPublished || experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
       res.json(experiment);
     } else {
       const error = new Error('Unauthorized: You do not have permission to access this experiment');
       error.statusCode = 403;
       throw error;
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAccessibleExperiments = async (req, res, next) => {
+  try {
+    const { lastActivityId, text, ownedOnly } = req.query;
+    if ((lastActivityId !== undefined && !isMongoIdQueryValid(lastActivityId)) ||
+        (text !== undefined && typeof text !== 'string') ||
+        (ownedOnly !== undefined && !['true', 'false'].includes(ownedOnly))) {
+      const error = new Error('Invalid activity filter');
+      error.statusCode = 400;
+      throw error;
+    }
+    res.json(await ExperimentService.findAccessible(req.auth.payload.id, ownedOnly === 'true', lastActivityId, text));
   } catch (err) {
     next(err);
   }

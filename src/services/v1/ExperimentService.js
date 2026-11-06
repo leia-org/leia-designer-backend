@@ -40,6 +40,10 @@ class ExperimentService {
 
   // READ METHODS
 
+  async findAccessible(userId, ownedOnly, lastActivityId, text) {
+    return await ExperimentRepository.findAccessible(userId, ownedOnly, lastActivityId, text);
+  }
+
   async findAll(lastActivityId, text) {
     const {experiments, nextCursor} = await ExperimentRepository.findAll(lastActivityId, text);
     return await {experiments: await populateUserInEntity(experiments), nextCursor};
