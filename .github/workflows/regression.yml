@@ -33,6 +33,9 @@ jobs:
     services:
       mongo:
         image: mongo:8
+        env:
+          # Use per-thread allocator caches on hosted runner kernels (SERVER-131779).
+          GLIBC_TUNABLES: glibc.pthread.rseq=1
         ports: ['27017:27017']
         options: >-
           --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
