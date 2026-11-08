@@ -46,6 +46,9 @@ test('create → attach a real LEIA → publish → read populates resources and
     expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, owner, role)).status).toBe(403);
     expect((await Experiment.findById(activity.id)).isPublished).toBe(false);
   }
+  expect((await request(`/${activity.id}/publish`, 'PATCH')).status).toBe(400);
+  expect((await Experiment.findById(activity.id)).isPublished).toBe(false);
+  await Leia.updateOne({ _id: leia.id }, { isPublished: true });
   const published = await request(`/${activity.id}/publish`, 'PATCH');
   expect(published.status).toBe(200);
   expect((await Experiment.findById(activity.id)).isPublished).toBe(true);

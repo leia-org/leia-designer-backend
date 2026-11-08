@@ -37,6 +37,15 @@ function assertProcessCompatibility(leias, problemLeiaId) {
 }
 
 class ExperimentService {
+  assertPublishedLeias(leias) {
+    const invalid = leias.filter((entry) => entry.leia?.isPublished !== true);
+    if (invalid.length) {
+      const labels = invalid.map((entry) => entry.leia?.metadata?.name || entry.leia?.id || entry.id || 'Missing LEIA');
+      const error = new Error(`All associated LEIAs must exist and be published: ${labels.join(', ')}`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
 
   // READ METHODS
 
@@ -172,6 +181,7 @@ class ExperimentService {
       error.statusCode = 400;
       throw error;
     }
+    this.assertPublishedLeias(experiment.leias);
     if (experiment.orchestration?.mode === 'multi') {
       if (experiment.leias.length < 2) {
         const error = new Error('A MultiLEIA activity requires at least two LEIAs before publishing');

@@ -1,4 +1,5 @@
 import ExperimentService from '../../services/v1/ExperimentService.js';
+import LeiaService from '../../services/v1/LeiaService.js';
 import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
@@ -214,6 +215,10 @@ export const createExperimentReplication = async (req, res, next) => {
     const existsReplication = await WorkbenchService.replicationNameExists(value.leiaName, req.headers.authorization);
     if (existsReplication) {
       return res.status(409).json({ error: 'Replication name already exists' });
+    }
+    if (req.auth?.payload?.role === 'admin') {
+      const leia = await LeiaService.findById(value.leiaId, { role: 'admin', userId });
+      ExperimentService.assertPublishedLeias([{ id: value.leiaId, leia }]);
     }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,

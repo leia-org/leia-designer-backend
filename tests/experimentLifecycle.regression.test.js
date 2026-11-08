@@ -33,7 +33,7 @@ beforeEach(() => {
   vi.stubEnv('JWT_SECRET', secret);
   vi.stubEnv('JWT_ISSUER', '');
   vi.stubEnv('JWT_AUDIENCE', '');
-  activity = { id: 'activity', user: { id: 'owner' }, name: 'Draft activity', isPublished: false, leias: [{ id: 'leia' }] };
+  activity = { id: 'activity', user: { id: 'owner' }, name: 'Draft activity', isPublished: false, leias: [{ id: 'leia', leia: { isPublished: true } }] };
   repository.findById.mockImplementation(async () => structuredClone(activity));
   repository.findByIdPopulated.mockImplementation(async () => structuredClone(activity));
   repository.update.mockImplementation(async (_id, changes) => Object.assign(activity, changes));
@@ -41,6 +41,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Designer activity HTTP lifecycle regressions', () => {
+  test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
+    activity.leias.push({ id: 'invalid-leia', leia });
+    const res = await request('/activity/publish', { method: 'PATCH' });
+    expect(res.status).toBe(400);
+    expect((await res.json()).message).toContain('invalid-leia');
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(activity.isPublished).toBe(false);
+  });
   test('publishing a populated draft makes it immutable for subsequent edits', async () => {
     const published = await request('/activity/publish', { method: 'PATCH' });
     expect(published.status).toBe(200);
