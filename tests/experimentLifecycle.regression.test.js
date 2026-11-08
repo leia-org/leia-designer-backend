@@ -16,7 +16,7 @@ import errorHandler from '../src/middlewares/errorHandler.js';
 
 let server, baseUrl, activity;
 const secret = 'regression-only-signing-secret';
-const headers = (id = 'owner') => ({ Authorization: `Bearer ${jwt.sign({ id, role: 'advanced' }, secret, { expiresIn: '5m' })}` });
+const headers = (id = 'owner', role = 'admin') => ({ Authorization: `Bearer ${jwt.sign({ id, role }, secret, { expiresIn: '5m' })}` });
 const request = (path, options = {}) => fetch(`${baseUrl}/api/v1/experiments${path}`, { ...options, headers: { ...headers(), ...options.headers } });
 
 beforeAll(async () => {
@@ -59,7 +59,15 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect(repository.update).not.toHaveBeenCalled();
   });
 
-  test('another authenticated user cannot publish an activity', async () => {
+  test.each(['instructor', 'advanced', 'read'])('owner with role %s cannot publish an activity', async (role) => {
+    const res = await request('/activity/publish', { method: 'PATCH', headers: headers('owner', role) });
+    expect(res.status).toBe(403);
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(activity.isPublished).toBe(false);
+  });
+
+  test('another administrator cannot publish an activity', async () => {
     const res = await request('/activity/publish', { method: 'PATCH', headers: headers('other-user') });
     expect(res.status).toBe(403);
     expect(repository.update).not.toHaveBeenCalled();
