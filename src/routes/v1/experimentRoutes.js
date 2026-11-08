@@ -26,7 +26,7 @@ router.post('/leia', requireJwtAuthentication, createExperimentReplication);
 
 // PATCH
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
-router.patch('/:id/publish', requireJwtAuthentication, publishExperiment);
+router.patch('/:id/publish', requireJwtAuthentication, requireAdmin, publishExperiment);
 router.patch('/:id/orchestration', requireJwtAuthentication, updateExperimentOrchestration);
 
 // PUT

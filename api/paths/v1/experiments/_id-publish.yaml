@@ -2,6 +2,7 @@ patch:
   tags:
     - Experiments v1
   summary: Publish experiment
+  description: Only administrators can publish their own activities.
   operationId: publishExperiment
   parameters:
     - in: path
@@ -11,6 +12,10 @@ patch:
       schema:
         type: string
   responses:
+    '401':
+      description: JWT authentication required
+    '403':
+      description: Administrator role and activity ownership required
     '200':
       description: Successful response with the updated Experiment
       content:

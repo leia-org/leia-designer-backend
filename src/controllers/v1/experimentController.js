@@ -219,7 +219,7 @@ export const createExperimentReplication = async (req, res, next) => {
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
-      isPublished: true
+      isPublished: req.auth?.payload?.role === 'admin'
     });
     const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
     res.status(201).json({ experiment: newExperiment, replication: newReplication });
