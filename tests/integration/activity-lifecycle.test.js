@@ -12,9 +12,9 @@ import { connectMongo, closeMongo, listen } from './support.js';
 let http, authPeer, leia;
 const owner = new mongoose.Types.ObjectId().toString();
 const other = new mongoose.Types.ObjectId().toString();
-const token = (id = owner) => jwt.sign({ id, role: 'advanced' }, 'integration-signing-secret', { expiresIn: '5m' });
-const request = (path, method = 'GET', body, id = owner) => fetch(`${http.url}/api/v1/experiments${path}`, {
-  method, headers: { Authorization: `Bearer ${token(id)}`, 'Content-Type': 'application/json' },
+const token = (id = owner, role = 'admin') => jwt.sign({ id, role }, 'integration-signing-secret', { expiresIn: '5m' });
+const request = (path, method = 'GET', body, id = owner, role = 'admin') => fetch(`${http.url}/api/v1/experiments${path}`, {
+  method, headers: { Authorization: `Bearer ${token(id, role)}`, 'Content-Type': 'application/json' },
   ...(body ? { body: JSON.stringify(body) } : {}),
 });
 
@@ -42,6 +42,13 @@ test('create → attach a real LEIA → publish → read populates resources and
   expect((await request(`/${activity.id}/publish`, 'PATCH')).status).toBe(400);
   expect((await request(`/${activity.id}/leias`, 'POST', { leia: leia.id })).status).toBe(200);
   expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, other)).status).toBe(403);
+  for (const role of ['instructor', 'advanced', 'read']) {
+    expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, owner, role)).status).toBe(403);
+    expect((await Experiment.findById(activity.id)).isPublished).toBe(false);
+  }
+  expect((await request(`/${activity.id}/publish`, 'PATCH')).status).toBe(400);
+  expect((await Experiment.findById(activity.id)).isPublished).toBe(false);
+  await Leia.updateOne({ _id: leia.id }, { isPublished: true });
   const published = await request(`/${activity.id}/publish`, 'PATCH');
   expect(published.status).toBe(200);
   expect((await Experiment.findById(activity.id)).isPublished).toBe(true);

@@ -1,4 +1,5 @@
 import ExperimentService from '../../services/v1/ExperimentService.js';
+import LeiaService from '../../services/v1/LeiaService.js';
 import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
@@ -29,13 +30,29 @@ export const getExperimentById = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-    if (experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
+    if (experiment.isPublished || experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
       res.json(experiment);
     } else {
       const error = new Error('Unauthorized: You do not have permission to access this experiment');
       error.statusCode = 403;
       throw error;
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAccessibleExperiments = async (req, res, next) => {
+  try {
+    const { lastActivityId, text, ownedOnly } = req.query;
+    if ((lastActivityId !== undefined && !isMongoIdQueryValid(lastActivityId)) ||
+        (text !== undefined && typeof text !== 'string') ||
+        (ownedOnly !== undefined && !['true', 'false'].includes(ownedOnly))) {
+      const error = new Error('Invalid activity filter');
+      error.statusCode = 400;
+      throw error;
+    }
+    res.json(await ExperimentService.findAccessible(req.auth.payload.id, ownedOnly === 'true', lastActivityId, text));
   } catch (err) {
     next(err);
   }
@@ -199,11 +216,15 @@ export const createExperimentReplication = async (req, res, next) => {
     if (existsReplication) {
       return res.status(409).json({ error: 'Replication name already exists' });
     }
+    if (req.auth?.payload?.role === 'admin') {
+      const leia = await LeiaService.findById(value.leiaId, { role: 'admin', userId });
+      ExperimentService.assertPublishedLeias([{ id: value.leiaId, leia }]);
+    }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
-      isPublished: true
+      isPublished: req.auth?.payload?.role === 'admin'
     });
     const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
     res.status(201).json({ experiment: newExperiment, replication: newReplication });

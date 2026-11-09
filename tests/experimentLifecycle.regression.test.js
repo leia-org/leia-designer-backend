@@ -16,7 +16,7 @@ import errorHandler from '../src/middlewares/errorHandler.js';
 
 let server, baseUrl, activity;
 const secret = 'regression-only-signing-secret';
-const headers = (id = 'owner') => ({ Authorization: `Bearer ${jwt.sign({ id, role: 'advanced' }, secret, { expiresIn: '5m' })}` });
+const headers = (id = 'owner', role = 'admin') => ({ Authorization: `Bearer ${jwt.sign({ id, role }, secret, { expiresIn: '5m' })}` });
 const request = (path, options = {}) => fetch(`${baseUrl}/api/v1/experiments${path}`, { ...options, headers: { ...headers(), ...options.headers } });
 
 beforeAll(async () => {
@@ -33,7 +33,7 @@ beforeEach(() => {
   vi.stubEnv('JWT_SECRET', secret);
   vi.stubEnv('JWT_ISSUER', '');
   vi.stubEnv('JWT_AUDIENCE', '');
-  activity = { id: 'activity', user: { id: 'owner' }, name: 'Draft activity', isPublished: false, leias: [{ id: 'leia' }] };
+  activity = { id: 'activity', user: { id: 'owner' }, name: 'Draft activity', isPublished: false, leias: [{ id: 'leia', leia: { isPublished: true } }] };
   repository.findById.mockImplementation(async () => structuredClone(activity));
   repository.findByIdPopulated.mockImplementation(async () => structuredClone(activity));
   repository.update.mockImplementation(async (_id, changes) => Object.assign(activity, changes));
@@ -41,6 +41,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Designer activity HTTP lifecycle regressions', () => {
+  test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
+    activity.leias.push({ id: 'invalid-leia', leia });
+    const res = await request('/activity/publish', { method: 'PATCH' });
+    expect(res.status).toBe(400);
+    expect((await res.json()).message).toContain('invalid-leia');
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(activity.isPublished).toBe(false);
+  });
   test('publishing a populated draft makes it immutable for subsequent edits', async () => {
     const published = await request('/activity/publish', { method: 'PATCH' });
     expect(published.status).toBe(200);
@@ -59,7 +67,15 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect(repository.update).not.toHaveBeenCalled();
   });
 
-  test('another authenticated user cannot publish an activity', async () => {
+  test.each(['instructor', 'advanced', 'read'])('owner with role %s cannot publish an activity', async (role) => {
+    const res = await request('/activity/publish', { method: 'PATCH', headers: headers('owner', role) });
+    expect(res.status).toBe(403);
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(activity.isPublished).toBe(false);
+  });
+
+  test('another administrator cannot publish an activity', async () => {
     const res = await request('/activity/publish', { method: 'PATCH', headers: headers('other-user') });
     expect(res.status).toBe(403);
     expect(repository.update).not.toHaveBeenCalled();

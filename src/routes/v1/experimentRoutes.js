@@ -3,6 +3,7 @@ import {
   createExperiment,
   getExperimentById,
   getAllExperiments,
+  getAccessibleExperiments,
   updateExperimentName,
   addExperimentLeia,
   updateExperimentLeia,
@@ -25,7 +26,7 @@ router.post('/leia', requireJwtAuthentication, createExperimentReplication);
 
 // PATCH
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
-router.patch('/:id/publish', requireJwtAuthentication, publishExperiment);
+router.patch('/:id/publish', requireJwtAuthentication, requireAdmin, publishExperiment);
 router.patch('/:id/orchestration', requireJwtAuthentication, updateExperimentOrchestration);
 
 // PUT
@@ -34,6 +35,7 @@ router.put('/:id/leias/:leiaId', requireJwtAuthentication, updateExperimentLeia)
 // GET
 router.get('/', requireAuthentication, getAllExperiments);
 router.get('/exists/:name', requireAuthentication, checkExperimentNameExists);
+router.get('/accessible', requireJwtAuthentication, getAccessibleExperiments);
 router.get('/:id', requireJwtAuthentication, getExperimentById);
 router.get('/user/me', requireJwtAuthentication, getAllExperimentsByUser);
 router.get('/user/:userId', requireAdmin, getAllExperimentsByUser);
