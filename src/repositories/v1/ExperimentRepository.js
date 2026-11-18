@@ -1,6 +1,7 @@
 import Experiment from '../../models/Experiment.js';
 import mongoose from 'mongoose';
 import { regexQuery } from '../../utils/search.js';
+import { stageError } from '../../utils/activityStages.js';
 class ExperimentRepository {
   // READ METHODS
 
@@ -78,6 +79,16 @@ class ExperimentRepository {
 
   async update(id, experimentData) {
     return await Experiment.findByIdAndUpdate(id, experimentData, { new: true }).populate('leias.leia');
+  }
+
+  async updateStagedDraft(experiment, changes) {
+    const updated = await Experiment.findOneAndUpdate(
+      { _id: experiment.id, __v: experiment.__v, isPublished: false },
+      { $set: changes, $inc: { __v: 1 } },
+      { new: true, runValidators: true }
+    ).populate('leias.leia');
+    if (!updated) throw stageError('The activity changed. Reload it and try again.', 409);
+    return updated;
   }
 
   async updateOrchestration(id, orchestration) {

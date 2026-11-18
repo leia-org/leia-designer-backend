@@ -1,0 +1,14 @@
+type: object
+additionalProperties: false
+required: [id, orchestration]
+properties:
+  id:
+    type: string
+    format: uuid
+  previousStageId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Earlier stage whose completed conversation and submitted solution can be used by behaviours in this stage.
+  orchestration:
+    $ref: './orchestration.yaml'

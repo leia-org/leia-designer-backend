@@ -1,9 +1,11 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'node:crypto';
 
 vi.mock('../src/repositories/v1/ExperimentRepository.js', () => ({ default: {
   findById: vi.fn(), findByIdPopulated: vi.fn(), findAll: vi.fn(), update: vi.fn(),
+  create: vi.fn(), updateStagedDraft: vi.fn(),
 } }));
 vi.mock('../src/utils/authClient.js', () => ({ populateUserInEntity: async (entity) => entity }));
 vi.mock('../src/services/v1/WorkbenchService.js', () => ({ default: {} }));
@@ -37,10 +39,44 @@ beforeEach(() => {
   repository.findById.mockImplementation(async () => structuredClone(activity));
   repository.findByIdPopulated.mockImplementation(async () => structuredClone(activity));
   repository.update.mockImplementation(async (_id, changes) => Object.assign(activity, changes));
+  repository.updateStagedDraft.mockImplementation(async (_experiment, changes) => Object.assign(activity, changes));
 });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Designer activity HTTP lifecycle regressions', () => {
+  test('new activities always start with a stage', async () => {
+    repository.create.mockImplementation(async (draft) => draft);
+    const response = await request('', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'New activity' }),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ stages: [{ id: expect.any(String) }], leias: [] });
+  });
+
+  test('a behaviour can reference any earlier stage and cannot move ahead of its source', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].previousStageId = stages[0].id;
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2 ? '{{previousStage.outputs.conversation}}' : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+    expect((await update(stages)).status).toBe(200);
+    expect((await update([{ ...stages[0], name: 'Interview' }, ...stages.slice(1)])).status).toBe(400);
+    expect((await update([stages[1], stages[2], stages[0]])).status).toBe(400);
+    expect((await update([stages[2], stages[0], stages[1]])).status).toBe(400);
+    expect(repository.updateStagedDraft).toHaveBeenCalledTimes(1);
+    activity.stages[2].previousStageId = null;
+    expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(400);
+  });
+
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
     activity.leias.push({ id: 'invalid-leia', leia });
     const res = await request('/activity/publish', { method: 'PATCH' });

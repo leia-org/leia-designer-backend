@@ -7,7 +7,10 @@ import {
   leiaConfigValidator,
   createExperimentReplicationValidator,
   updateExperimentOrchestrationValidator,
+  updateExperimentStagesValidator,
+  stagedLeiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
+import { hasStageReferences, stageError } from '../../utils/activityStages.js';
 import { validateBoolean, validateVisibility, isMongoIdQueryValid } from '../../validators/queryValidator.js';
 
 export const createExperiment = async (req, res, next) => {
@@ -136,15 +139,27 @@ export const updateExperimentOrchestration = async (req, res, next) => {
   }
 };
 
+export const updateExperimentStages = async (req, res, next) => {
+  try {
+    const { stages } = await updateExperimentStagesValidator.validateAsync(req.body);
+    await ExperimentService.checkEditable(req.params.id, req.auth.payload.id);
+    res.json(await ExperimentService.updateStages(req.params.id, stages));
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const addExperimentLeia = async (req, res, next) => {
   try {
-    const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await stagedLeiaConfigValidator.validateAsync(req.body, { abortEarly: false });
 
     const userId = req.auth?.payload?.id;
     const experimentId = req.params.id;
     await ExperimentService.checkEditable(experimentId, userId);
 
-    const updatedExperiment = await ExperimentService.addLeia(experimentId, value);
+    const updatedExperiment = await ExperimentService.addLeia(experimentId, value, {
+      userId, role: req.auth?.payload?.role,
+    });
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -216,15 +231,18 @@ export const createExperimentReplication = async (req, res, next) => {
     if (existsReplication) {
       return res.status(409).json({ error: 'Replication name already exists' });
     }
-    if (req.auth?.payload?.role === 'admin') {
-      const leia = await LeiaService.findById(value.leiaId, { role: 'admin', userId });
+    const role = req.auth?.payload?.role;
+    const leia = await LeiaService.findById(value.leiaId, { role, userId });
+    if (!leia) throw stageError('LEIA not found', 404);
+    if (hasStageReferences(leia)) throw stageError('The first stage cannot use previous stage references');
+    if (role === 'admin') {
       ExperimentService.assertPublishedLeias([{ id: value.leiaId, leia }]);
     }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
-      isPublished: req.auth?.payload?.role === 'admin'
+      isPublished: role === 'admin'
     });
     const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
     res.status(201).json({ experiment: newExperiment, replication: newReplication });
