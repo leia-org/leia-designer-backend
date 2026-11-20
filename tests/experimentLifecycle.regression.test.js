@@ -110,6 +110,47 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(200);
   });
 
+  test('blocks transcription mode on a stage whose conversation is referenced by a later stage', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      configuration: { mode: index === 0 ? 'transcription' : 'standard', data: {} },
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2
+          ? '{{previousStage.outputs.submitedSolution}}\n{{previousStage.outputs.conversation}}'
+          : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+
+    // Stage 1 is in transcription mode and only supplies submitedSolution → allowed.
+    expect((await update(stages)).status).toBe(200);
+
+    // Pointing stage 3's conversation output at stage 1 (transcription) → rejected.
+    const invalidStages = stages.map((stage, index) => index === 2
+      ? { ...stage, outputSources: { conversation: stages[0].id, submitedSolution: stages[0].id } }
+      : stage);
+    const badConversationSource = await update(invalidStages);
+    expect(badConversationSource.status).toBe(400);
+    expect((await badConversationSource.json()).message).toBe(
+      'Stage 1 cannot use transcription mode because stage 3 uses its conversation'
+    );
+
+    // Switching stage 2 to transcription while stage 3 references stage 2's conversation → rejected on publish.
+    activity.leias[1].configuration.mode = 'transcription';
+    const publishRejected = await request('/activity/publish', { method: 'PATCH' });
+    expect(publishRejected.status).toBe(400);
+    expect((await publishRejected.json()).message).toBe(
+      'Stage 2 cannot use transcription mode because stage 3 uses its conversation'
+    );
+  });
+
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
     activity.leias.push({ id: 'invalid-leia', leia });
     const res = await request('/activity/publish', { method: 'PATCH' });

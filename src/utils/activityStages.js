@@ -63,6 +63,16 @@ export function validateActivityStages(stages, leias, validateMulti, ready = fal
         throw stageError(`The source of stage ${number} must be an earlier stage`);
       }
     }
+    const conversationSourceId = getStageOutputSource(stage, 'conversation');
+    if (referencedOutputs.has('conversation') && conversationSourceId) {
+      const sourceIndex = positions.get(conversationSourceId);
+      const sourceEntries = leias.filter((entry) => entry.stageId === conversationSourceId);
+      if (sourceEntries.some((entry) => entry.configuration?.mode === 'transcription')) {
+        throw stageError(
+          `Stage ${sourceIndex + 1} cannot use transcription mode because stage ${number} uses its conversation`
+        );
+      }
+    }
     if (ready) {
       for (const output of referencedOutputs) {
         if (!getStageOutputSource(stage, output)) {
