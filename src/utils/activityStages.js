@@ -50,7 +50,13 @@ export function validateActivityStages(stages, leias, validateMulti, ready = fal
     if (ready && !entries.length) throw stageError(`Stage ${number} requires at least one LEIA`);
     const referencedOutputs = new Set();
     for (const entry of entries) {
-      for (const output of getStageReferences(entry.leia)) {
+      const entryRefs = getStageReferences(entry.leia);
+      if (entryRefs.size > 0 && entry.configuration?.mode === 'transcription') {
+        throw stageError(
+          `Stage ${number} cannot use transcription mode because it uses outputs from an earlier stage`
+        );
+      }
+      for (const output of entryRefs) {
         referencedOutputs.add(output);
       }
     }
