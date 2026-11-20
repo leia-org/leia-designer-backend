@@ -159,12 +159,19 @@ class ExperimentService {
   async updateStages(id, stages) {
     const experiment = await ExperimentRepository.findByIdPopulated(id);
     if (!experiment?.stages) throw stageError('This activity uses the legacy format', 409);
-    validateActivityStages(stages, experiment.leias, normalizeOrchestration);
-    for (const stage of stages) {
+    const normalizedStages = stages.map((stage) => ({
+      ...stage,
+      outputSources: {
+        conversation: stage.outputSources?.conversation ?? null,
+        submitedSolution: stage.outputSources?.submitedSolution ?? null,
+      },
+    }));
+    validateActivityStages(normalizedStages, experiment.leias, normalizeOrchestration);
+    for (const stage of normalizedStages) {
       const entries = experiment.leias.filter((entry) => entry.stageId === stage.id);
       stage.orchestration = normalizeOrchestration(entries, stage.orchestration);
     }
-    return await ExperimentRepository.updateStagedDraft(experiment, { stages });
+    return await ExperimentRepository.updateStagedDraft(experiment, { stages: normalizedStages });
   }
 
   //fix to add check for leia before publishing modeled after checkEditable

@@ -18,10 +18,15 @@ export const updateExperimentOrchestrationValidator = Joi.object({
 
 const stageId = Joi.string().uuid({ version: 'uuidv4' });
 
+const stageOutputSourcesValidator = Joi.object({
+  conversation: stageId.allow(null).default(null),
+  submitedSolution: stageId.allow(null).default(null),
+});
+
 export const updateExperimentStagesValidator = Joi.object({
   stages: Joi.array().min(1).items(Joi.object({
     id: stageId.required(),
-    previousStageId: stageId.allow(null).default(null),
+    outputSources: stageOutputSourcesValidator.default({ conversation: null, submitedSolution: null }),
     orchestration: updateExperimentOrchestrationValidator.required(),
   })).required(),
 });

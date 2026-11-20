@@ -4,7 +4,10 @@ import LeiaConfigSchema from './LeiaConfig.js';
 const StageSchema = new Schema(
   {
     id: { type: String, required: true },
-    previousStageId: { type: String, default: null },
+    outputSources: {
+      conversation: { type: String, default: null },
+      submitedSolution: { type: String, default: null },
+    },
     orchestration: {
       mode: { type: String, enum: ['single', 'multi'], default: 'single' },
       maxInternalTurns: { type: Number, min: 1, max: 8, default: 2 },

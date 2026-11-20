@@ -57,7 +57,7 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     const stages = Array.from({ length: 3 }, () => ({
       id: randomUUID(), orchestration: { mode: 'single' },
     }));
-    stages[2].previousStageId = stages[0].id;
+    stages[2].outputSources = { conversation: stages[0].id, submitedSolution: null };
     activity.stages = stages;
     activity.leias = stages.map(({ id: stageId }, index) => ({
       id: String(index), stageId,
@@ -73,8 +73,41 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect((await update([stages[1], stages[2], stages[0]])).status).toBe(400);
     expect((await update([stages[2], stages[0], stages[1]])).status).toBe(400);
     expect(repository.updateStagedDraft).toHaveBeenCalledTimes(1);
-    activity.stages[2].previousStageId = null;
+    activity.stages[2].outputSources = { conversation: null, submitedSolution: null };
     expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(400);
+  });
+
+  test('each referenced stage output can be resolved from a different earlier stage', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2
+          ? '{{previousStage.outputs.submitedSolution}}\n{{previousStage.outputs.conversation}}'
+          : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+
+    expect((await update(stages)).status).toBe(200);
+    // Moving stage 2 after stage 3 invalidates conversation's source even though submitedSolution still points to stage 1.
+    expect((await update([stages[0], stages[2], stages[1]])).status).toBe(400);
+
+    // Missing one of the two referenced output sources blocks publishing.
+    activity.stages[2].outputSources = { conversation: stages[1].id, submitedSolution: null };
+    const missingSolution = await request('/activity/publish', { method: 'PATCH' });
+    expect(missingSolution.status).toBe(400);
+    expect((await missingSolution.json()).message).toBe('Select an earlier stage for submitted solution in stage 3');
+
+    // Providing both earlier sources allows publishing.
+    activity.stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(200);
   });
 
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {

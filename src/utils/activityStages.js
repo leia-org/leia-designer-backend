@@ -1,19 +1,38 @@
 const referencePattern = /{{\s*previousStage\b([^{}]*)}}/g;
-const supportedOutputs = new Set(['.outputs.conversation', '.outputs.submitedSolution']);
+export const STAGE_OUTPUTS = ['conversation', 'submitedSolution'];
+const supportedOutputs = new Map([
+  ['.outputs.conversation', 'conversation'],
+  ['.outputs.submitedSolution', 'submitedSolution'],
+]);
+const outputLabels = {
+  conversation: 'conversation',
+  submitedSolution: 'submitted solution',
+};
 
 export function stageError(message, statusCode = 400) {
   return Object.assign(new Error(message), { statusCode });
 }
 
-export function hasStageReferences(leia) {
+export function getStageReferences(leia) {
   const description = leia?.spec?.behaviour?.spec?.description || '';
   const references = [...description.matchAll(referencePattern)];
+  const outputs = new Set();
   for (const [, path] of references) {
-    if (!supportedOutputs.has(path.trimEnd())) {
+    const output = supportedOutputs.get(path.trimEnd());
+    if (!output) {
       throw stageError(`Unsupported previous stage reference: previousStage${path.trimEnd()}`);
     }
+    outputs.add(output);
   }
-  return references.length > 0;
+  return outputs;
+}
+
+export function hasStageReferences(leia) {
+  return getStageReferences(leia).size > 0;
+}
+
+export function getStageOutputSource(stage, output) {
+  return stage?.outputSources?.[output] ?? null;
 }
 
 export function validateActivityStages(stages, leias, validateMulti, ready = false) {
@@ -29,15 +48,27 @@ export function validateActivityStages(stages, leias, validateMulti, ready = fal
     const number = index + 1;
     const entries = leias.filter((entry) => entry.stageId === stage.id);
     if (ready && !entries.length) throw stageError(`Stage ${number} requires at least one LEIA`);
-    const references = entries.map((entry) => hasStageReferences(entry.leia)).some(Boolean);
-    if (references && index === 0) {
+    const referencedOutputs = new Set();
+    for (const entry of entries) {
+      for (const output of getStageReferences(entry.leia)) {
+        referencedOutputs.add(output);
+      }
+    }
+    if (referencedOutputs.size > 0 && index === 0) {
       throw stageError('The first stage cannot use previous stage references');
     }
-    if (stage.previousStageId && !(positions.get(stage.previousStageId) < index)) {
-      throw stageError(`The source of stage ${number} must be an earlier stage`);
+    const configuredSources = STAGE_OUTPUTS.map((output) => stage.outputSources?.[output]).filter(Boolean);
+    for (const sourceId of configuredSources) {
+      if (!(positions.get(sourceId) < index)) {
+        throw stageError(`The source of stage ${number} must be an earlier stage`);
+      }
     }
-    if (ready && references && !stage.previousStageId) {
-      throw stageError(`Select an earlier stage for stage ${number}`);
+    if (ready) {
+      for (const output of referencedOutputs) {
+        if (!getStageOutputSource(stage, output)) {
+          throw stageError(`Select an earlier stage for ${outputLabels[output]} in stage ${number}`);
+        }
+      }
     }
     if (stage.orchestration.mode === 'multi') validateMulti(entries, stage.orchestration);
   }

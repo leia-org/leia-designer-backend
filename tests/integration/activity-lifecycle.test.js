@@ -50,7 +50,7 @@ test('create → attach a real LEIA → publish → read populates resources and
   expect(updated.status).toBe(200);
   const emptyStageDraft = await updated.json();
   expect(emptyStageDraft.stages.map(({ id }) => id)).toEqual([stage.id, secondStage.id]);
-  expect(emptyStageDraft.stages[1].previousStageId).toBeNull();
+  expect(emptyStageDraft.stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null });
   expect(emptyStageDraft.leias).toHaveLength(1);
   const reflectiveLeia = await Leia.create({
     metadata: { name: 'Reflection LEIA' },
@@ -60,7 +60,7 @@ test('create → attach a real LEIA → publish → read populates resources and
   });
   const addedLeia = await request(`/${activity.id}/leias`, 'POST', { leia: reflectiveLeia.id, stageId: secondStage.id });
   expect(addedLeia.status).toBe(200);
-  expect((await addedLeia.json()).stages[1].previousStageId).toBeNull();
+  expect((await addedLeia.json()).stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null });
   expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, other)).status).toBe(403);
   for (const role of ['instructor', 'advanced', 'read']) {
     expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, owner, role)).status).toBe(403);
@@ -71,15 +71,15 @@ test('create → attach a real LEIA → publish → read populates resources and
   await Leia.updateOne({ _id: leia.id }, { isPublished: true });
   const unresolved = await request(`/${activity.id}/publish`, 'PATCH');
   expect(unresolved.status).toBe(400);
-  expect((await unresolved.json()).message).toBe('Select an earlier stage for stage 2');
-  expect((await updateStages([stage, { ...secondStage, previousStageId: stage.id }])).status).toBe(200);
+  expect((await unresolved.json()).message).toBe('Select an earlier stage for conversation in stage 2');
+  expect((await updateStages([stage, { ...secondStage, outputSources: { conversation: stage.id, submitedSolution: null } }])).status).toBe(200);
   const published = await request(`/${activity.id}/publish`, 'PATCH');
   expect(published.status).toBe(200);
   expect((await Experiment.findById(activity.id)).isPublished).toBe(true);
   const read = await (await request(`/${activity.id}`)).json();
   expect(read.leias[0].leia.metadata.name).toBe('Integration LEIA');
   expect(read.leias[0].stageId).toBe(stage.id);
-  expect(read.stages[1].previousStageId).toBe(stage.id);
+  expect(read.stages[1].outputSources.conversation).toBe(stage.id);
   expect(read.user.id).toBe(owner);
   expect((await request(`/${activity.id}/name`, 'PATCH', { name: 'Forbidden rename' })).status).toBe(409);
   expect((await Experiment.findById(activity.id)).name).toBe('Published integration activity');
