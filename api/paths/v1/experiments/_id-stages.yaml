@@ -1,0 +1,36 @@
+patch:
+  tags: [Experiments v1]
+  summary: Save the ordered stages of an activity draft
+  operationId: updateExperimentStages
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required: [stages]
+          properties:
+            stages:
+              type: array
+              minItems: 1
+              items:
+                $ref: '../../../components/schemas/v1/experiment/stage.yaml'
+  responses:
+    '200':
+      description: Updated activity draft.
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+    '400':
+      description: Invalid stage order, membership, reference or conversation mode.
+    '403':
+      description: The current user cannot edit the activity.
+    '409':
+      description: The activity is published, uses the legacy format or changed concurrently.

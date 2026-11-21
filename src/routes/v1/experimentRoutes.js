@@ -14,6 +14,7 @@ import {
   createExperimentReplication,
   checkExperimentNameExists,
   updateExperimentOrchestration,
+  updateExperimentStages,
 } from '../../controllers/v1/experimentController.js';
 import { requireJwtAuthentication, requireAuthentication, requireAdmin } from '../../middlewares/auth.js';
 
@@ -28,6 +29,7 @@ router.post('/leia', requireJwtAuthentication, createExperimentReplication);
 router.patch('/:id/name', requireJwtAuthentication, updateExperimentName);
 router.patch('/:id/publish', requireJwtAuthentication, requireAdmin, publishExperiment);
 router.patch('/:id/orchestration', requireJwtAuthentication, updateExperimentOrchestration);
+router.patch('/:id/stages', requireJwtAuthentication, updateExperimentStages);
 
 // PUT
 router.put('/:id/leias/:leiaId', requireJwtAuthentication, updateExperimentLeia);

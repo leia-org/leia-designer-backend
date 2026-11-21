@@ -1,6 +1,24 @@
 import mongoose, { Schema } from 'mongoose';
 import LeiaConfigSchema from './LeiaConfig.js';
 
+const StageSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    outputSources: {
+      conversation: { type: String, default: null },
+      submitedSolution: { type: String, default: null },
+    },
+    orchestration: {
+      mode: { type: String, enum: ['single', 'multi'], default: 'single' },
+      maxInternalTurns: { type: Number, min: 1, max: 8, default: 2 },
+      openingLeiaId: { type: String, default: null },
+      problemLeiaId: { type: String, default: null },
+      sharedTask: { type: String, default: '' },
+    },
+  },
+  { _id: false, id: false },
+);
+
 const ExperimentSchema = new Schema(
   {
     name: {
@@ -9,6 +27,7 @@ const ExperimentSchema = new Schema(
       unique: true,
     },
     leias: [LeiaConfigSchema],
+    stages: { type: [StageSchema], default: undefined },
     orchestration: {
       mode: {
         type: String,

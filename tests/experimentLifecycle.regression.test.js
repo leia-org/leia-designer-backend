@@ -1,9 +1,11 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'node:crypto';
 
 vi.mock('../src/repositories/v1/ExperimentRepository.js', () => ({ default: {
   findById: vi.fn(), findByIdPopulated: vi.fn(), findAll: vi.fn(), update: vi.fn(),
+  create: vi.fn(), updateStagedDraft: vi.fn(),
 } }));
 vi.mock('../src/utils/authClient.js', () => ({ populateUserInEntity: async (entity) => entity }));
 vi.mock('../src/services/v1/WorkbenchService.js', () => ({ default: {} }));
@@ -37,10 +39,118 @@ beforeEach(() => {
   repository.findById.mockImplementation(async () => structuredClone(activity));
   repository.findByIdPopulated.mockImplementation(async () => structuredClone(activity));
   repository.update.mockImplementation(async (_id, changes) => Object.assign(activity, changes));
+  repository.updateStagedDraft.mockImplementation(async (_experiment, changes) => Object.assign(activity, changes));
 });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Designer activity HTTP lifecycle regressions', () => {
+  test('new activities always start with a stage', async () => {
+    repository.create.mockImplementation(async (draft) => draft);
+    const response = await request('', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'New activity' }),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ stages: [{ id: expect.any(String) }], leias: [] });
+  });
+
+  test('a behaviour can reference any earlier stage and cannot move ahead of its source', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].outputSources = { conversation: stages[0].id, submitedSolution: null };
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2 ? '{{previousStage.outputs.conversation}}' : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+    expect((await update(stages)).status).toBe(200);
+    expect((await update([{ ...stages[0], name: 'Interview' }, ...stages.slice(1)])).status).toBe(400);
+    expect((await update([stages[1], stages[2], stages[0]])).status).toBe(400);
+    expect((await update([stages[2], stages[0], stages[1]])).status).toBe(400);
+    expect(repository.updateStagedDraft).toHaveBeenCalledTimes(1);
+    activity.stages[2].outputSources = { conversation: null, submitedSolution: null };
+    expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(400);
+  });
+
+  test('each referenced stage output can be resolved from a different earlier stage', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2
+          ? '{{previousStage.outputs.submitedSolution}}\n{{previousStage.outputs.conversation}}'
+          : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+
+    expect((await update(stages)).status).toBe(200);
+    // Moving stage 2 after stage 3 invalidates conversation's source even though submitedSolution still points to stage 1.
+    expect((await update([stages[0], stages[2], stages[1]])).status).toBe(400);
+
+    // Missing one of the two referenced output sources blocks publishing.
+    activity.stages[2].outputSources = { conversation: stages[1].id, submitedSolution: null };
+    const missingSolution = await request('/activity/publish', { method: 'PATCH' });
+    expect(missingSolution.status).toBe(400);
+    expect((await missingSolution.json()).message).toBe('Select an earlier stage for submitted solution in stage 3');
+
+    // Providing both earlier sources allows publishing.
+    activity.stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(200);
+  });
+
+  test('blocks transcription mode on a stage whose conversation is referenced by a later stage', async () => {
+    const stages = Array.from({ length: 3 }, () => ({
+      id: randomUUID(), orchestration: { mode: 'single' },
+    }));
+    stages[2].outputSources = { conversation: stages[1].id, submitedSolution: stages[0].id };
+    activity.stages = stages;
+    activity.leias = stages.map(({ id: stageId }, index) => ({
+      id: String(index), stageId,
+      configuration: { mode: index === 0 ? 'transcription' : 'standard', data: {} },
+      leia: { isPublished: true, spec: { behaviour: { spec: {
+        description: index === 2
+          ? '{{previousStage.outputs.submitedSolution}}\n{{previousStage.outputs.conversation}}'
+          : 'Interview',
+      } } } },
+    }));
+    const update = (ordered) => request('/activity/stages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stages: ordered }),
+    });
+
+    // Stage 1 is in transcription mode and only supplies submitedSolution → allowed.
+    expect((await update(stages)).status).toBe(200);
+
+    // Pointing stage 3's conversation output at stage 1 (transcription) → rejected.
+    const invalidStages = stages.map((stage, index) => index === 2
+      ? { ...stage, outputSources: { conversation: stages[0].id, submitedSolution: stages[0].id } }
+      : stage);
+    const badConversationSource = await update(invalidStages);
+    expect(badConversationSource.status).toBe(400);
+    expect((await badConversationSource.json()).message).toBe(
+      'Stage 1 cannot use transcription mode because stage 3 uses its conversation'
+    );
+
+    // Switching stage 2 to transcription while stage 3 references stage 2's conversation → rejected on publish.
+    activity.leias[1].configuration.mode = 'transcription';
+    const publishRejected = await request('/activity/publish', { method: 'PATCH' });
+    expect(publishRejected.status).toBe(400);
+    expect((await publishRejected.json()).message).toBe(
+      'Stage 2 cannot use transcription mode because stage 3 uses its conversation'
+    );
+  });
+
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
     activity.leias.push({ id: 'invalid-leia', leia });
     const res = await request('/activity/publish', { method: 'PATCH' });
