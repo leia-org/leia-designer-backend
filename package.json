@@ -6,11 +6,13 @@
   "scripts": {
     "start": "node ./src/index.js",
     "dev": "node --env-file-if-exists=.env --watch ./src/index.js",
-    "test": "vitest",
+    "test": "npm run test:regression",
     "test:watch": "vitest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:regression": "vitest run --exclude 'tests/integration/**'",
+    "test:integration": "vitest run --config vitest.integration.config.mjs"
   },
   "repository": {
     "type": "git",

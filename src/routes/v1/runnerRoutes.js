@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import {
   initializeRunner,
+  getTestSession,
   sendMessage,
   generateTranscription,
   generateProblem,
@@ -11,7 +12,7 @@ import {
   uploadProblemChatFile,
   sendProblemChatMessage,
 } from '../../controllers/v1/runnerController.js';
-import { requireJwtAuthentication } from '../../middlewares/auth.js';
+import { requireAdvanced, requireJwtAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -19,11 +20,12 @@ const router = express.Router();
 const uploadPdf = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.post('/initialize', requireJwtAuthentication, initializeRunner);
+router.get('/:sessionId', requireJwtAuthentication, getTestSession);
 router.post('/:sessionId/messages', requireJwtAuthentication, sendMessage);
 router.post('/:sessionId/evaluate', requireJwtAuthentication, evaluate);
 router.post('/transcriptions/generate', requireJwtAuthentication, generateTranscription);
 router.post('/problems/generate', requireJwtAuthentication, generateProblem);
-router.post('/behaviours/generate', requireJwtAuthentication, generateBehaviour);
+router.post('/behaviours/generate', requireAdvanced, generateBehaviour);
 
 // Problem-chat assistant (design-time): attach PDFs, chat; tools run in the FE.
 router.post('/problem-chat/session', requireJwtAuthentication, openProblemChat);

@@ -9,7 +9,7 @@ import {
   getBehavioursByName,
   deleteBehaviourById
 } from '../../controllers/v1/behaviourController.js';
-import { requireAdvanced, requireAuthentication, requireJwtAuthentication } from '../../middlewares/auth.js';
+import { requireAdvanced, requireAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -25,6 +25,6 @@ router.get('/', requireAuthentication, getBehavioursByQuery);
 router.get('/:id', requireAuthentication, getBehaviourById);
 
 // DELETE
-router.delete('/:id', requireJwtAuthentication, deleteBehaviourById);
+router.delete('/:id', requireAdvanced, deleteBehaviourById);
 
 export default router;

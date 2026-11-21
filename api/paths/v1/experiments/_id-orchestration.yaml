@@ -1,0 +1,31 @@
+patch:
+  tags:
+    - Experiments v1
+  summary: Configure the activity conversation flow
+  operationId: updateExperimentOrchestration
+  parameters:
+    - in: path
+      name: id
+      required: true
+      description: ID of the Experiment to update
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/experiment/orchestration.yaml'
+  responses:
+    '200':
+      description: Updated Experiment.
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+    '400':
+      description: Invalid MultiLEIA graph, mode, or process compatibility.
+    '403':
+      description: The current user cannot edit the Experiment.
+    '409':
+      description: Published Experiments cannot be edited.

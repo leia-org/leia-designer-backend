@@ -32,6 +32,7 @@ const BehaviourSchema = new Schema(
       },
     },
     spec: {
+      conversationDynamics: { type: Schema.Types.Mixed, default: undefined },
       description: {
         type: String,
       },

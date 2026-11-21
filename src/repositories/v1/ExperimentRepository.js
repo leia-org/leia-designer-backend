@@ -1,10 +1,34 @@
 import Experiment from '../../models/Experiment.js';
-
+import mongoose from 'mongoose';
+import { regexQuery } from '../../utils/search.js';
+import { stageError } from '../../utils/activityStages.js';
 class ExperimentRepository {
   // READ METHODS
 
-  async findAll() {
-    return await Experiment.find();
+  async findAll(lastActivityId, text) {
+    const query = {};
+    if (lastActivityId) {
+      query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    if (text) {
+      Object.assign(query, regexQuery(text, 'name'));
+    }
+    const limit = 15;
+    const results =  await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = experiments.length === limit ? experiments[experiments.length - 1].id : null;
+    return {experiments, nextCursor}
+  }
+
+  async findAccessible(userId, ownedOnly = false, lastActivityId, text) {
+    const query = ownedOnly ? { user: userId } : { $or: [{ user: userId }, { isPublished: true }] };
+    if (lastActivityId) query._id = { $gt: new mongoose.Types.ObjectId(lastActivityId) };
+    if (text) Object.assign(query, regexQuery(text, 'name'));
+    const limit = 10;
+    const results = await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit + 1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = results.length > limit ? experiments[experiments.length - 1].id : null;
+    return { experiments, nextCursor };
   }
 
   async findById(id) {
@@ -23,14 +47,24 @@ class ExperimentRepository {
     return await Experiment.find({ 'leias.leia': leiaId });
   }
 
-  async findByUserId(userId, visibility = 'all', populated = false) {
+  async findByUserId(userId, visibility = 'all', populated = false, lastActivityId, text) {
     const query = { user: userId };
     if (visibility === 'public') {
       query.isPublished = true;
     } else if (visibility === 'private') {
       query.isPublished = false;
     }
-    return populated ? await Experiment.find(query).populate('leias.leia') : await Experiment.find(query);
+    if (lastActivityId) {
+      query._id = { $gt: new mongoose.Types.ObjectId(`${lastActivityId}`) };;
+    }
+    if (text) {
+      Object.assign(query, regexQuery(text, 'name'));
+    }
+    const limit = 10;
+    const results = populated ? await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit+1) : await Experiment.find(query).sort({ _id: 1 }).limit(limit+1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = experiments.length === limit ? experiments[experiments.length - 1].id : null;
+    return {experiments, nextCursor};
   }
 
   async existsByName(name) {
@@ -45,6 +79,24 @@ class ExperimentRepository {
 
   async update(id, experimentData) {
     return await Experiment.findByIdAndUpdate(id, experimentData, { new: true }).populate('leias.leia');
+  }
+
+  async updateStagedDraft(experiment, changes) {
+    const updated = await Experiment.findOneAndUpdate(
+      { _id: experiment.id, __v: experiment.__v, isPublished: false },
+      { $set: changes, $inc: { __v: 1 } },
+      { new: true, runValidators: true }
+    ).populate('leias.leia');
+    if (!updated) throw stageError('The activity changed. Reload it and try again.', 409);
+    return updated;
+  }
+
+  async updateOrchestration(id, orchestration) {
+    return await Experiment.findByIdAndUpdate(
+      id,
+      { $set: { orchestration } },
+      { new: true }
+    ).populate('leias.leia');
   }
 
   async regenerateCode(id) {
@@ -73,7 +125,7 @@ class ExperimentRepository {
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
     return await Experiment.findOneAndUpdate(
       { _id: experimentId, 'leias._id': leiaConfigId },
-      { $set: { 'leias.$': leiaConfig } },
+      { $set: { 'leias.$': { ...leiaConfig, _id: leiaConfigId } } },
       { new: true }
     ).populate('leias.leia');
   }

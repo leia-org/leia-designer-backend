@@ -1,6 +1,7 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
+import { createFrontendOriginHandler } from './utils/frontendOrigins.js';
 import logger from './utils/logger.js';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
@@ -16,6 +17,7 @@ import runnerRoutesV1 from './routes/v1/runnerRoutes.js';
 import providerRoutesV1 from './routes/v1/providerRoutes.js';
 import imageRoutesV1 from './routes/v1/imageRoutes.js';
 import rubricRoutesV1 from './routes/v1/rubricRoutes.js';
+import { startImageJobWorker } from './services/v1/ImageRegeneration.js';
 import SwaggerParser from 'swagger-parser';
 import { auth } from './middlewares/auth.js';
 
@@ -29,19 +31,7 @@ allowedOrigins.push(process.env.WORKBENCH_FRONTEND_URL);
 allowedOrigins.push(`http://localhost:${PORT}`);
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`CORS origin not allowed: ${origin}`));
-    },
+    origin: createFrontendOriginHandler(allowedOrigins),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   })
@@ -79,6 +69,7 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
+    await startImageJobWorker();
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
     });

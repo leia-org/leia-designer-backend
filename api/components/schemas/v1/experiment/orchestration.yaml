@@ -1,0 +1,24 @@
+type: object
+required:
+  - mode
+properties:
+  mode:
+    type: string
+    enum: [single, multi]
+  maxInternalTurns:
+    type: integer
+    minimum: 1
+    maximum: 8
+    default: 2
+  openingLeiaId:
+    type: string
+    nullable: true
+    description: Activity LEIA configuration that opens the deterministic traversal.
+  problemLeiaId:
+    type: string
+    nullable: true
+    description: Activity LEIA configuration whose problem is shared by all actors.
+  sharedTask:
+    type: string
+    maxLength: 4000
+    description: Optional common task. When empty, the Runner derives it from the shared problem.

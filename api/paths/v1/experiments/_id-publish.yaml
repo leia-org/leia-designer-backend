@@ -2,6 +2,7 @@ patch:
   tags:
     - Experiments v1
   summary: Publish experiment
+  description: Only administrators can publish their own activities. All associated LEIAs must exist and be published.
   operationId: publishExperiment
   parameters:
     - in: path
@@ -11,6 +12,12 @@ patch:
       schema:
         type: string
   responses:
+    '400':
+      description: Invalid activity configuration or missing or unpublished LEIAs
+    '401':
+      description: JWT authentication required
+    '403':
+      description: Administrator role and activity ownership required
     '200':
       description: Successful response with the updated Experiment
       content:

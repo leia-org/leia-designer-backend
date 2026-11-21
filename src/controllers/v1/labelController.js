@@ -4,7 +4,8 @@ import { createLabelValidator, updateLabelValidator } from '../../validators/v1/
 export const getLabels = async (req, res, next) => {
   try {
     const userId = req.auth?.payload?.id;
-    const labels = await LabelService.findAllVisible(userId);
+    const isAdmin = req.auth?.payload?.role === 'admin';
+    const labels = isAdmin ? await LabelService.findAll() : await LabelService.findAllVisible(userId);
     res.json(labels);
   } catch (err) {
     next(err);

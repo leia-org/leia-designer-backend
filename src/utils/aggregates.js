@@ -1,11 +1,25 @@
+import mongoose from 'mongoose';
+
 /**
  * Returns an aggregation pipeline that finds the latest version of each package.
  * @param {Object} match - The complete match query object containing all filters (text, visibility, apiVersion, etc.).
+ * @param {string} userId - The ID of the user.
+ * @param {boolean} privileged - Whether the user is admin or not.
  * @returns {Array} An array of aggregation pipeline stages.
  */
-export function aggregateFindLatestVersions(match = {}) {
+export function aggregateFindLatestVersions(match = {}, userId, privileged = false) {
   const pipeline = [];
+  const labelMatch = {
+    $expr: { $in: ['$_id', '$$labelIds'] },
+  };
 
+  if (!privileged) {
+    const visibility = [{ isGlobal: true }];
+    if (userId && mongoose.isValidObjectId(userId)) {
+      visibility.push({ user: new mongoose.Types.ObjectId(userId) });
+    }
+    labelMatch.$or = visibility; // always non-empty
+  }
   // Only add $match stage if there are conditions
   if (Object.keys(match).length > 0) {
     pipeline.push({ $match: match });
@@ -48,8 +62,13 @@ export function aggregateFindLatestVersions(match = {}) {
     {
       $lookup: {
         from: 'labels',
-        localField: 'metadata.labels',
-        foreignField: '_id',
+        let: { labelIds: '$metadata.labels' },
+        pipeline: [
+          {
+            $match: 
+              labelMatch,
+          },
+        ],
         as: 'metadata.labels',
       },
     },

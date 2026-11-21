@@ -115,7 +115,7 @@ function keyFromStoredImagePath(path) {
     return null;
   }
 
-  const value = trimSlashes(path);
+  const value = trimSlashes(path.split(/[?#]/, 1)[0]);
   if (value.startsWith('images/')) {
     return value;
   }
