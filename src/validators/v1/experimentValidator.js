@@ -8,7 +8,7 @@ export const updateExperimentNameValidator = Joi.object({
   name: Joi.string().required(),
 });
 
-export const updateExperimentOrchestrationValidator = Joi.object({
+export const stageOrchestrationValidator = Joi.object({
   mode: Joi.string().valid('single', 'multi').required(),
   maxInternalTurns: Joi.number().integer().min(1).max(8).default(2),
   openingLeiaId: Joi.string().hex().length(24).allow(null).default(null),
@@ -27,7 +27,7 @@ export const updateExperimentStagesValidator = Joi.object({
   stages: Joi.array().min(1).items(Joi.object({
     id: stageId.required(),
     outputSources: stageOutputSourcesValidator.default({ conversation: null, submitedSolution: null }),
-    orchestration: updateExperimentOrchestrationValidator.required(),
+    orchestration: stageOrchestrationValidator.required(),
   })).required(),
 });
 

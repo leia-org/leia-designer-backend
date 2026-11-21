@@ -36,8 +36,11 @@ export function getStageOutputSource(stage, output) {
 }
 
 export function validateActivityStages(stages, leias, validateMulti, ready = false) {
+  if (!Array.isArray(stages) || !stages.length) {
+    throw stageError('An activity requires at least one stage and unique stage IDs');
+  }
   const positions = new Map(stages.map(({ id }, index) => [id, index]));
-  if (!stages.length || positions.size !== stages.length) {
+  if (positions.size !== stages.length) {
     throw stageError('An activity requires at least one stage and unique stage IDs');
   }
   if (leias.some((entry) => !positions.has(entry.stageId))) {

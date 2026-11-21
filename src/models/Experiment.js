@@ -27,30 +27,12 @@ const ExperimentSchema = new Schema(
       unique: true,
     },
     leias: [LeiaConfigSchema],
-    stages: { type: [StageSchema], default: undefined },
-    orchestration: {
-      mode: {
-        type: String,
-        enum: ['single', 'multi'],
-        default: 'single',
-      },
-      maxInternalTurns: {
-        type: Number,
-        min: 1,
-        max: 8,
-        default: 2,
-      },
-      openingLeiaId: {
-        type: Schema.Types.ObjectId,
-        default: null,
-      },
-      problemLeiaId: {
-        type: Schema.Types.ObjectId,
-        default: null,
-      },
-      sharedTask: {
-        type: String,
-        default: '',
+    stages: {
+      type: [StageSchema],
+      required: true,
+      validate: {
+        validator: (value) => Array.isArray(value) && value.length > 0,
+        message: 'An activity requires at least one stage',
       },
     },
     isPublished: {

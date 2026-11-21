@@ -33,4 +33,4 @@ patch:
     '403':
       description: The current user cannot edit the activity.
     '409':
-      description: The activity is published, uses the legacy format or changed concurrently.
+      description: The activity is published or changed concurrently.

@@ -88,8 +88,12 @@ test('create → attach a real LEIA → publish → read populates resources and
 test('unique-name conflicts and cursor/search filtering use the real MongoDB indexes and queries', async () => {
   expect((await request('', 'POST', { name: 'Searchable router activity' })).status).toBe(201);
   expect((await request('', 'POST', { name: 'Searchable router activity' })).status).toBe(409);
-  await Experiment.insertMany(Array.from({ length: 12 }, (_, index) => ({ name: `Pagination router ${index}`, user: owner })));
-  await Experiment.create({ name: 'Unrelated activity', user: owner });
+  await Experiment.insertMany(Array.from({ length: 12 }, (_, index) => ({
+    name: `Pagination router ${index}`,
+    user: owner,
+    stages: [{ id: randomUUID(), orchestration: { mode: 'single' } }],
+  })));
+  await Experiment.create({ name: 'Unrelated activity', user: owner, stages: [{ id: randomUUID(), orchestration: { mode: 'single' } }] });
   const first = await (await request('/user/me?visibility=private&text=Pagination%20router')).json();
   expect(first.experiments).toHaveLength(10);
   expect(first.nextCursor).toBeTruthy();

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('../src/repositories/v1/ExperimentRepository.js', () => ({
   default: {
     findByIdPopulated: vi.fn(),
-    updateOrchestration: vi.fn(),
+    updateStagedDraft: vi.fn(),
   },
 }));
 vi.mock('../src/utils/authClient.js', () => ({
@@ -13,8 +13,11 @@ vi.mock('../src/utils/authClient.js', () => ({
 import ExperimentRepository from '../src/repositories/v1/ExperimentRepository.js';
 import ExperimentService from '../src/services/v1/ExperimentService.js';
 
+const stageId = '11111111-1111-4111-8111-111111111111';
+
 const entry = (id, problemProcess, behaviourProcess) => ({
   id,
+  stageId,
   configuration: { mode: 'standard' },
   leia: {
     metadata: { name: `LEIA ${id}` },
@@ -36,15 +39,20 @@ describe('MultiLEIA shared problem', () => {
       entry('problem', ['requirements-elicitation'], ['requirements-elicitation']),
     ];
     ExperimentRepository.findByIdPopulated.mockResolvedValue({ leias });
-    ExperimentRepository.updateOrchestration.mockImplementation(async (_id, value) => value);
+    ExperimentRepository.updateStagedDraft.mockImplementation(async (_exp, changes) => changes.stages[0].orchestration);
 
-    const result = await ExperimentService.updateOrchestration('experiment', {
-      mode: 'multi',
-      maxInternalTurns: 2,
-      openingLeiaId: 'opening',
-      problemLeiaId: 'problem',
-      sharedTask: '',
-    });
+    const result = await ExperimentService.updateStages('experiment', [
+      {
+        id: stageId,
+        orchestration: {
+          mode: 'multi',
+          maxInternalTurns: 2,
+          openingLeiaId: 'opening',
+          problemLeiaId: 'problem',
+          sharedTask: '',
+        },
+      },
+    ]);
 
     expect(result.openingLeiaId).toBe('opening');
     expect(result.problemLeiaId).toBe('problem');
@@ -56,15 +64,20 @@ describe('MultiLEIA shared problem', () => {
       entry('problem', ['requirements-elicitation'], ['requirements-elicitation']),
     ];
     ExperimentRepository.findByIdPopulated.mockResolvedValue({ leias });
-    ExperimentRepository.updateOrchestration.mockImplementation(async (_id, value) => value);
+    ExperimentRepository.updateStagedDraft.mockImplementation(async (_exp, changes) => changes.stages[0].orchestration);
 
-    const result = await ExperimentService.updateOrchestration('experiment', {
-      mode: 'multi',
-      maxInternalTurns: 6,
-      openingLeiaId: 'opening',
-      problemLeiaId: 'problem',
-      sharedTask: '',
-    });
+    const result = await ExperimentService.updateStages('experiment', [
+      {
+        id: stageId,
+        orchestration: {
+          mode: 'multi',
+          maxInternalTurns: 6,
+          openingLeiaId: 'opening',
+          problemLeiaId: 'problem',
+          sharedTask: '',
+        },
+      },
+    ]);
 
     expect(result.maxInternalTurns).toBe(6);
   });
@@ -78,14 +91,19 @@ describe('MultiLEIA shared problem', () => {
     });
 
     await expect(
-      ExperimentService.updateOrchestration('experiment', {
-        mode: 'multi',
-        maxInternalTurns: 2,
-        openingLeiaId: 'opening',
-        problemLeiaId: 'problem',
-        sharedTask: '',
-      })
+      ExperimentService.updateStages('experiment', [
+        {
+          id: stageId,
+          orchestration: {
+            mode: 'multi',
+            maxInternalTurns: 2,
+            openingLeiaId: 'opening',
+            problemLeiaId: 'problem',
+            sharedTask: '',
+          },
+        },
+      ])
     ).rejects.toMatchObject({ statusCode: 400 });
-    expect(ExperimentRepository.updateOrchestration).not.toHaveBeenCalled();
+    expect(ExperimentRepository.updateStagedDraft).not.toHaveBeenCalled();
   });
 });

@@ -35,7 +35,15 @@ beforeEach(() => {
   vi.stubEnv('JWT_SECRET', secret);
   vi.stubEnv('JWT_ISSUER', '');
   vi.stubEnv('JWT_AUDIENCE', '');
-  activity = { id: 'activity', user: { id: 'owner' }, name: 'Draft activity', isPublished: false, leias: [{ id: 'leia', leia: { isPublished: true } }] };
+  const defaultStageId = randomUUID();
+  activity = {
+    id: 'activity',
+    user: { id: 'owner' },
+    name: 'Draft activity',
+    isPublished: false,
+    stages: [{ id: defaultStageId, outputSources: { conversation: null, submitedSolution: null }, orchestration: { mode: 'single', maxInternalTurns: 2, openingLeiaId: null, problemLeiaId: null, sharedTask: '' } }],
+    leias: [{ id: 'leia', stageId: defaultStageId, leia: { isPublished: true } }],
+  };
   repository.findById.mockImplementation(async () => structuredClone(activity));
   repository.findByIdPopulated.mockImplementation(async () => structuredClone(activity));
   repository.update.mockImplementation(async (_id, changes) => Object.assign(activity, changes));
@@ -152,11 +160,11 @@ describe('Designer activity HTTP lifecycle regressions', () => {
   });
 
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {
-    activity.leias.push({ id: 'invalid-leia', leia });
+    activity.leias.push({ id: 'invalid-leia', stageId: activity.stages[0].id, leia });
     const res = await request('/activity/publish', { method: 'PATCH' });
     expect(res.status).toBe(400);
     expect((await res.json()).message).toContain('invalid-leia');
-    expect(repository.update).not.toHaveBeenCalled();
+    expect(repository.updateStagedDraft).not.toHaveBeenCalled();
     expect(activity.isPublished).toBe(false);
   });
   test('publishing a populated draft makes it immutable for subsequent edits', async () => {
@@ -169,12 +177,12 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect(repository.update).not.toHaveBeenCalled();
   });
 
-  test.each([[], undefined])('prevents publishing an activity without LEIAs (%s)', async (leias) => {
-    activity.leias = leias;
+  test('prevents publishing an activity without LEIAs', async () => {
+    activity.leias = [];
     const res = await request('/activity/publish', { method: 'PATCH' });
     expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ message: 'Experiment must have an associated LEIA before publishing' });
-    expect(repository.update).not.toHaveBeenCalled();
+    expect(await res.json()).toMatchObject({ message: 'Stage 1 requires at least one LEIA' });
+    expect(repository.updateStagedDraft).not.toHaveBeenCalled();
   });
 
   test.each(['instructor', 'advanced', 'read'])('owner with role %s cannot publish an activity', async (role) => {
