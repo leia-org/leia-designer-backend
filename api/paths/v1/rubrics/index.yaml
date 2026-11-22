@@ -1,0 +1,38 @@
+get:
+  tags:
+    - Rubrics v1
+  summary: Retrieve the current instructor's rubrics
+  operationId: getRubrics
+  responses:
+    '200':
+      description: The authenticated user's rubrics, most recently updated first
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
+    '401':
+      description: Login required
+post:
+  tags:
+    - Rubrics v1
+  summary: Create a rubric for the current instructor
+  operationId: createRubric
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../components/schemas/v1/rubric/rubricInput.yaml'
+  responses:
+    '201':
+      description: Rubric created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/v1/rubric/rubric.yaml'
+    '400':
+      description: Invalid rubric structure or semantics
+    '401':
+      description: Login required

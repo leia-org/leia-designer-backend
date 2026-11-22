@@ -154,19 +154,24 @@ export const generateBehaviour = async (req, res, next) => {
 export const evaluate = async (req, res, next) => {
   try {
     const sessionId = req.params.sessionId;
-    const { result } = req.body;
+    const { result, evaluationMode, rubric, context, language } = req.body || {};
     if (!sessionId) {
       const error = new Error('Session ID is required');
       error.statusCode = 400;
       throw error;
     }
-    if (!result) {
+    if (evaluationMode !== 'rubric' && !result) {
       const error = new Error('Result is required');
       error.statusCode = 400;
       throw error;
     }
     await ConversationDynamicsService.assertCanFinish(sessionId, req.auth.payload.id);
-    const evaluation = await RunnerService.getEvaluationAndScore(sessionId, result);
+    const evaluation = await RunnerService.getEvaluationAndScore(sessionId, result, {
+      evaluationMode,
+      rubric,
+      context,
+      language,
+    });
     res.json(evaluation);
   } catch (err) {
     next(err);

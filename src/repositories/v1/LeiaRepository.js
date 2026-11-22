@@ -47,6 +47,10 @@ class LeiaRepository {
     return await Leia.find({ 'spec.behaviourId': behaviourId });
   }
 
+  async findByRubricId(rubricId) {
+    return await Leia.find({ 'spec.rubricId': rubricId });
+  }
+
   async findByName(name, userId, visibility = 'all', privileged = false) {
     const query = { 'metadata.name': name };
 

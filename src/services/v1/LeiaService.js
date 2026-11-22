@@ -3,6 +3,7 @@ import { getVersionObjectFromString, isObjectVersionGreater } from '../../utils/
 import PersonaService from './PersonaService.js';
 import BehaviourService from './BehaviourService.js';
 import ProblemService from './ProblemService.js';
+import RubricService from './RubricService.js';
 import ExperimentService from './ExperimentService.js';
 import { findEntity, canAccess, createUnauthorizedError } from '../../utils/entity.js';
 import {
@@ -13,6 +14,20 @@ import {
   synchronizeProcessTypes,
 } from '../../utils/leia.js';
 import { populateUserInEntity } from '../../utils/authClient.js';
+
+const toRubricSnapshot = (rubric) => ({
+  _id: rubric._id,
+  apiVersion: rubric.apiVersion,
+  metadata: {
+    name: rubric.metadata.name,
+  },
+  spec: {
+    ...(typeof rubric.spec?.evaluationPrompt === 'string' && rubric.spec.evaluationPrompt
+      ? { evaluationPrompt: rubric.spec.evaluationPrompt }
+      : {}),
+    sections: rubric.spec.sections,
+  },
+});
 
 class LeiaService {
   // READ METHODS
@@ -73,6 +88,10 @@ class LeiaService {
 
   async findByBehaviourId(behaviourId) {
     return await LeiaRepository.findByBehaviourId(behaviourId);
+  }
+
+  async findByRubricId(rubricId) {
+    return await LeiaRepository.findByRubricId(rubricId);
   }
 
   async findByName(name, visibility = 'all', context = {}) {
@@ -178,8 +197,16 @@ class LeiaService {
       leiaData.spec.problemId = problem._id;
       return problem.toJSON();
     });
+    let selectedRubricDoc = null;
+    const rubric = leiaData.spec.rubric
+      ? await RubricService.findById(leiaData.spec.rubric, context).then((selectedRubric) => {
+          selectedRubricDoc = selectedRubric;
+          leiaData.spec.rubricId = selectedRubric._id;
+          return toRubricSnapshot(selectedRubric);
+        })
+      : null;
 
-    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem, ...(rubric ? { rubric } : {}) });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
@@ -191,6 +218,7 @@ class LeiaService {
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
+    if (replacedEntities.rubric) leiaData.spec.rubric = replacedEntities.rubric;
 
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
 
@@ -207,6 +235,9 @@ class LeiaService {
       if (!problem.isPublished) {
         await ProblemService.publish(problem.id, context);
         leiaData.spec.problem.isPublished = true;
+      }
+      if (selectedRubricDoc && !selectedRubricDoc.isPublished) {
+        await RubricService.publish(selectedRubricDoc._id, context);
       }
     }
 
@@ -265,8 +296,16 @@ class LeiaService {
       leiaData.spec.problemId = problem._id;
       return problem.toJSON();
     });
+    let selectedRubricDoc = null;
+    const rubric = leiaData.spec.rubric
+      ? await RubricService.findById(leiaData.spec.rubric, context).then((selectedRubric) => {
+          selectedRubricDoc = selectedRubric;
+          leiaData.spec.rubricId = selectedRubric._id;
+          return toRubricSnapshot(selectedRubric);
+        })
+      : null;
 
-    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem, ...(rubric ? { rubric } : {}) });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
@@ -278,6 +317,7 @@ class LeiaService {
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
+    if (replacedEntities.rubric) leiaData.spec.rubric = replacedEntities.rubric;
 
     if ((context.role === 'admin' || context.internal) && publish) {
       leiaData.isPublished = true;
@@ -292,6 +332,9 @@ class LeiaService {
       if (!problem.isPublished) {
         await ProblemService.publish(problem.id, context);
         leiaData.spec.problem.isPublished = true;
+      }
+      if (selectedRubricDoc && !selectedRubricDoc.isPublished) {
+        await RubricService.publish(selectedRubricDoc._id, context);
       }
     }
 
