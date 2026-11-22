@@ -1,12 +1,23 @@
 import Rubric from '../../models/Rubric.js';
+import { applyVisibilityFilters } from '../../utils/entity.js';
 
 class RubricRepository {
-  async findByOwner(userId) {
-    return await Rubric.find({ user: userId }).sort({ updatedAt: -1 });
+  async findById(id) {
+    return await Rubric.findById(id);
   }
 
-  async findOwnedById(id, userId) {
-    return await Rubric.findOne({ _id: id, user: userId });
+  async findByQuery(text, userId = null, visibility = 'all', privileged = false) {
+    const query = {};
+
+    if (!applyVisibilityFilters(query, userId, visibility, privileged)) {
+      return [];
+    }
+
+    if (text) {
+      query['$text'] = { $search: text };
+    }
+
+    return await Rubric.find(query).sort({ updatedAt: -1 });
   }
 
   async create(rubricData) {
@@ -14,16 +25,16 @@ class RubricRepository {
     return await rubric.save();
   }
 
-  async updateOwnedById(id, userId, rubricData) {
-    return await Rubric.findOneAndUpdate(
-      { _id: id, user: userId },
+  async updateById(id, rubricData) {
+    return await Rubric.findByIdAndUpdate(
+      id,
       { $set: rubricData },
       { new: true, runValidators: true },
     );
   }
 
-  async deleteOwnedById(id, userId) {
-    return await Rubric.findOneAndDelete({ _id: id, user: userId });
+  async deleteById(id) {
+    return await Rubric.findByIdAndDelete(id);
   }
 }
 

@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('../src/repositories/v1/LeiaRepository.js', () => ({
   default: { create: vi.fn() },
 }));
-vi.mock('../src/services/v1/PersonaService.js', () => ({ default: {} }));
-vi.mock('../src/services/v1/BehaviourService.js', () => ({ default: {} }));
-vi.mock('../src/services/v1/ProblemService.js', () => ({ default: {} }));
+vi.mock('../src/services/v1/PersonaService.js', () => ({ default: { publish: vi.fn() } }));
+vi.mock('../src/services/v1/BehaviourService.js', () => ({ default: { publish: vi.fn() } }));
+vi.mock('../src/services/v1/ProblemService.js', () => ({ default: { publish: vi.fn() } }));
 vi.mock('../src/services/v1/ExperimentService.js', () => ({ default: {} }));
 vi.mock('../src/services/v1/RubricService.js', () => ({
-  default: { findById: vi.fn() },
+  default: { findById: vi.fn(), publish: vi.fn() },
 }));
 vi.mock('../src/utils/entity.js', () => ({
   canAccess: vi.fn(),
@@ -36,11 +36,13 @@ import LeiaService from '../src/services/v1/LeiaService.js';
 describe('LEIA rubric snapshot', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test('resolves an owned rubric and embeds it in the new LEIA', async () => {
+  test('resolves an accessible rubric and embeds it in the new LEIA', async () => {
+    const context = { userId: 'user-1', role: 'instructor' };
     RubricService.findById.mockResolvedValue({
       _id: 'rubric-1',
       apiVersion: 'v1',
       metadata: { name: 'Interview rubric' },
+      isPublished: true,
       spec: { sections: [{ title: 'General', weight: 100, levels: ['B'], criteria: [] }] },
     });
     LeiaRepository.create.mockImplementation(async (value) => value);
@@ -54,9 +56,9 @@ describe('LEIA rubric snapshot', () => {
         problem: 'problem',
         rubric: 'rubric-1',
       },
-    }, { userId: 'user-1', role: 'instructor' });
+    }, context);
 
-    expect(RubricService.findById).toHaveBeenCalledWith('rubric-1', 'user-1');
+    expect(RubricService.findById).toHaveBeenCalledWith('rubric-1', context);
     expect(created.spec.rubricId).toBe('rubric-1');
     expect(created.spec.rubric).toEqual({
       _id: 'rubric-1',
@@ -64,5 +66,30 @@ describe('LEIA rubric snapshot', () => {
       metadata: { name: 'Interview rubric' },
       spec: { sections: [{ title: 'General', weight: 100, levels: ['B'], criteria: [] }] },
     });
+  });
+
+  test('publishes an unpublished rubric when admin publishes the LEIA', async () => {
+    const context = { userId: 'admin-1', role: 'admin' };
+    RubricService.findById.mockResolvedValue({
+      _id: 'rubric-2',
+      apiVersion: 'v1',
+      metadata: { name: 'Draft rubric' },
+      isPublished: false,
+      spec: { sections: [{ title: 'General', weight: 100, levels: ['B'], criteria: [] }] },
+    });
+    LeiaRepository.create.mockImplementation(async (value) => value);
+
+    await LeiaService.create({
+      apiVersion: 'v1',
+      metadata: { name: 'Published LEIA', version: '1.0.0' },
+      spec: {
+        persona: 'persona',
+        behaviour: 'behaviour',
+        problem: 'problem',
+        rubric: 'rubric-2',
+      },
+    }, context, true);
+
+    expect(RubricService.publish).toHaveBeenCalledWith('rubric-2', context);
   });
 });

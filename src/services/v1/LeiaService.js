@@ -197,8 +197,10 @@ class LeiaService {
       leiaData.spec.problemId = problem._id;
       return problem.toJSON();
     });
+    let selectedRubricDoc = null;
     const rubric = leiaData.spec.rubric
-      ? await RubricService.findById(leiaData.spec.rubric, context.userId).then((selectedRubric) => {
+      ? await RubricService.findById(leiaData.spec.rubric, context).then((selectedRubric) => {
+          selectedRubricDoc = selectedRubric;
           leiaData.spec.rubricId = selectedRubric._id;
           return toRubricSnapshot(selectedRubric);
         })
@@ -233,6 +235,9 @@ class LeiaService {
       if (!problem.isPublished) {
         await ProblemService.publish(problem.id, context);
         leiaData.spec.problem.isPublished = true;
+      }
+      if (selectedRubricDoc && !selectedRubricDoc.isPublished) {
+        await RubricService.publish(selectedRubricDoc._id, context);
       }
     }
 
@@ -291,8 +296,10 @@ class LeiaService {
       leiaData.spec.problemId = problem._id;
       return problem.toJSON();
     });
+    let selectedRubricDoc = null;
     const rubric = leiaData.spec.rubric
-      ? await RubricService.findById(leiaData.spec.rubric, context.userId).then((selectedRubric) => {
+      ? await RubricService.findById(leiaData.spec.rubric, context).then((selectedRubric) => {
+          selectedRubricDoc = selectedRubric;
           leiaData.spec.rubricId = selectedRubric._id;
           return toRubricSnapshot(selectedRubric);
         })
@@ -325,6 +332,9 @@ class LeiaService {
       if (!problem.isPublished) {
         await ProblemService.publish(problem.id, context);
         leiaData.spec.problem.isPublished = true;
+      }
+      if (selectedRubricDoc && !selectedRubricDoc.isPublished) {
+        await RubricService.publish(selectedRubricDoc._id, context);
       }
     }
 

@@ -41,13 +41,20 @@ const RubricSchema = new Schema(
       index: true,
       alias: 'userId',
     },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
     toJSON: {
+      virtuals: true,
       transform: (_doc, ret) => {
+        if (ret._id && !ret.id) {
+          ret.id = ret._id.toString();
+        }
         delete ret.__v;
-        delete ret.user;
         delete ret.userId;
       },
     },
@@ -55,5 +62,7 @@ const RubricSchema = new Schema(
 );
 
 RubricSchema.index({ user: 1, updatedAt: -1 });
+RubricSchema.index({ user: 1, isPublished: 1 });
+RubricSchema.index({ 'metadata.name': 'text' });
 
 export default mongoose.model('Rubric', RubricSchema);

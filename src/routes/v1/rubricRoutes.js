@@ -7,16 +7,15 @@ import {
   getRubrics,
   updateRubric,
 } from '../../controllers/RubricController.js';
-import { requireJwtAuthentication } from '../../middlewares/auth.js';
+import { requireAuthentication, requireJwtAuthentication } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
-router.use(requireJwtAuthentication);
-router.get('/', getRubrics);
-router.get('/schema', getRubricSchema);
-router.get('/:id', getRubricById);
-router.post('/', createRubric);
-router.put('/:id', updateRubric);
-router.delete('/:id', deleteRubric);
+router.get('/', requireAuthentication, getRubrics);
+router.get('/schema', requireAuthentication, getRubricSchema);
+router.get('/:id', requireAuthentication, getRubricById);
+router.post('/', requireJwtAuthentication, createRubric);
+router.put('/:id', requireJwtAuthentication, updateRubric);
+router.delete('/:id', requireJwtAuthentication, deleteRubric);
 
 export default router;
