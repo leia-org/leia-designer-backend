@@ -153,21 +153,25 @@ class RunnerService {
     return response.data;
   }
 
-  async getEvaluationAndScore(sessionId, result) {
+  async getEvaluationAndScore(sessionId, result, options = {}) {
+    const payload = {
+      sessionId,
+      ...(result !== undefined ? { result } : {}),
+      ...(options.evaluationMode ? { evaluationMode: options.evaluationMode } : {}),
+      ...(options.rubric ? { rubric: options.rubric } : {}),
+      ...(options.context ? { context: options.context } : {}),
+      ...(options.language ? { language: options.language } : {}),
+    };
     const response = await axios.post(
       `${process.env.RUNNER_URL}/api/v1/evaluation`,
-      {
-        sessionId,
-        result,
-      },
+      payload,
       {
         headers: {
           Authorization: 'Bearer ' + process.env.RUNNER_KEY,
         },
       }
     );
-    const { evaluation, score } = response.data;
-    return { evaluation, score };
+    return response.data;
   }
 }
 

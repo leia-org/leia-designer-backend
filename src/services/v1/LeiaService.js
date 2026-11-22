@@ -22,6 +22,9 @@ const toRubricSnapshot = (rubric) => ({
     name: rubric.metadata.name,
   },
   spec: {
+    ...(typeof rubric.spec?.evaluationPrompt === 'string' && rubric.spec.evaluationPrompt
+      ? { evaluationPrompt: rubric.spec.evaluationPrompt }
+      : {}),
     sections: rubric.spec.sections,
   },
 });
@@ -201,7 +204,7 @@ class LeiaService {
         })
       : null;
 
-    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem, ...(rubric ? { rubric } : {}) });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
@@ -213,7 +216,7 @@ class LeiaService {
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
-    if (rubric) leiaData.spec.rubric = rubric;
+    if (replacedEntities.rubric) leiaData.spec.rubric = replacedEntities.rubric;
 
     delete leiaData.metadata.version; // Remove to set the version to 1.0.0
 
@@ -295,7 +298,7 @@ class LeiaService {
         })
       : null;
 
-    const entities = synchronizeProcessTypes({ persona, behaviour, problem });
+    const entities = synchronizeProcessTypes({ persona, behaviour, problem, ...(rubric ? { rubric } : {}) });
 
     checkConstraints(entities);
     const extendedEntities = resolveExtensions(entities);
@@ -307,7 +310,7 @@ class LeiaService {
     leiaData.spec.persona = replacedEntities.persona;
     leiaData.spec.behaviour = replacedEntities.behaviour;
     leiaData.spec.problem = replacedEntities.problem;
-    if (rubric) leiaData.spec.rubric = rubric;
+    if (replacedEntities.rubric) leiaData.spec.rubric = replacedEntities.rubric;
 
     if ((context.role === 'admin' || context.internal) && publish) {
       leiaData.isPublished = true;

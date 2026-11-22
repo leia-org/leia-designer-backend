@@ -68,16 +68,16 @@ export function replaceStringPlaceholders(str, view) {
       }
     } else {
       const regex = /\{\{\s*([\w.]+)\s*\}\}/g;
-      return str.replace(regex, (_, flattenedKey) => {
+      return str.replace(regex, (match, flattenedKey) => {
         const value = getValueFromFlattenedKey(view, flattenedKey);
-        // If the value exists, replace it, if not, return the original string
+        // If the value exists, replace it, if not, keep the original placeholder untouched
         if (isObject(value)) {
           return JSON.stringify(value);
         } else if (value !== undefined) {
           return String(value);
         } else {
           logger.warn(`replaceStringPlaceholders: Value not found for key: ${flattenedKey}`);
-          return '{{ ' + flattenedKey + ' }}';
+          return match;
         }
       });
     }

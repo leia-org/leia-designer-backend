@@ -7,7 +7,17 @@ import {
   applyOverrideFlattenedKey,
   replacePlaceholders,
 } from './helper.js';
+import { buildRubricPlaceholderView } from './rubricFormat.js';
 import logger from './logger.js';
+
+const rubricPlaceholderPattern = /{{\s*rubric\.[\w.]+\s*}}/;
+
+function containsRubricPlaceholder(value) {
+  if (typeof value === 'string') return rubricPlaceholderPattern.test(value);
+  if (Array.isArray(value)) return value.some(containsRubricPlaceholder);
+  if (isObject(value)) return Object.values(value).some(containsRubricPlaceholder);
+  return false;
+}
 
 /**
  * Throws an error if problem constraints are not met.
@@ -124,24 +134,50 @@ export function resolveOverrides(leia) {
 }
 
 export function resolvePlaceholders(leia) {
-  const replacementOrder = ['problem', 'persona', 'behaviour'];
+  const hasRubric = Boolean(leia.rubric?.spec);
+  if (
+    !hasRubric &&
+    (containsRubricPlaceholder(leia.behaviour?.spec) || containsRubricPlaceholder(leia.problem?.spec))
+  ) {
+    const error = new Error('Behaviour or problem references rubric placeholders, but no rubric is attached to this LEIA');
+    error.statusCode = 400;
+    throw error;
+  }
 
-  // Create a view of the leia object with only the spec fields
-  const view = Object.fromEntries(Object.entries(leia).map(([key, value]) => [key, value?.spec]));
+  // Create a view of the leia object with spec fields plus virtual rubric fields
+  const view = {
+    problem: leia.problem?.spec,
+    persona: leia.persona?.spec,
+    behaviour: leia.behaviour?.spec,
+    ...(hasRubric ? { rubric: buildRubricPlaceholderView(leia.rubric) } : {}),
+  };
 
-  for (const entity of replacementOrder) {
+  for (const entity of ['problem', 'persona']) {
     const leiaEntitySpec = leia[entity]?.spec;
-
     if (!leiaEntitySpec) {
       logger.warn(`Ignoring: ${entity}. Entity not found.`);
       continue;
     }
-
-    // Replace placeholders in the object
     leia[entity].spec = replacePlaceholders(leiaEntitySpec, view);
-
-    // Update the view
     view[entity] = leia[entity].spec;
   }
+
+  if (hasRubric) {
+    if (typeof leia.rubric.spec.evaluationPrompt === 'string' && leia.rubric.spec.evaluationPrompt) {
+      leia.rubric.spec = {
+        ...leia.rubric.spec,
+        evaluationPrompt: replacePlaceholders(leia.rubric.spec.evaluationPrompt, view),
+      };
+    }
+    view.rubric = buildRubricPlaceholderView(leia.rubric);
+  }
+
+  if (leia.behaviour?.spec) {
+    leia.behaviour.spec = replacePlaceholders(leia.behaviour.spec, view);
+    view.behaviour = leia.behaviour.spec;
+  } else {
+    logger.warn('Ignoring: behaviour. Entity not found.');
+  }
+
   return leia;
 }

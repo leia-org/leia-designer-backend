@@ -90,12 +90,22 @@ export const isMarkdownTable = (value) => parseRubricMarkdown(value).error === n
 
 const ajv = new Ajv({ allErrors: true });
 const validateSchema = ajv.compile(rubricDefinitionSchema);
+const stagePlaceholderPattern = /{{\s*(previousStage|currentStage)\b([^{}]*)}}/g;
+const supportedStagePaths = new Set(['.outputs.conversation', '.outputs.submitedSolution']);
 
 export function validateRubricSemantics(value) {
   const errors = [];
   const totalWeight = value.spec.sections.reduce((total, section) => total + section.weight, 0);
   if (Math.abs(totalWeight - 100) > 0.001) errors.push('Section weights must total 100%');
   if (JSON.stringify(value.spec).length > 50000) errors.push('Rubric content must not exceed 50000 characters');
+  if (typeof value.spec.evaluationPrompt === 'string' && value.spec.evaluationPrompt) {
+    for (const [, scope, path] of value.spec.evaluationPrompt.matchAll(stagePlaceholderPattern)) {
+      const normalizedPath = path.trimEnd();
+      if (!supportedStagePaths.has(normalizedPath)) {
+        errors.push(`Unsupported stage reference in spec.evaluationPrompt: ${scope}${normalizedPath}`);
+      }
+    }
+  }
   value.spec.sections.forEach((section, sectionIndex) => {
     if (!section.title.trim() || section.levels.some((level) => !level.trim())) {
       errors.push(`spec.sections[${sectionIndex}] text fields must not be blank`);

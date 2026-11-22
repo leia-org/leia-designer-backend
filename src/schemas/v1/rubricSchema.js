@@ -5,6 +5,7 @@ export const rubricSpecSchema = {
   additionalProperties: false,
   required: ['sections'],
   properties: {
+    evaluationPrompt: { type: 'string', maxLength: 10000 },
     sections: {
       type: 'array', minItems: 1,
       items: {

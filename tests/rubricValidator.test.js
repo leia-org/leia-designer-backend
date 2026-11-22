@@ -88,4 +88,27 @@ describe('rubric validator', () => {
     expect(parseRubricMarkdown(`## Content [60%]\n| A | B |\n| --- | --- |\n| C | D |`).error).toBe('rubric.weightTotal');
     expect(parseRubricMarkdown(`## Missing table`).error).toBe('rubric.sectionTable');
   });
+
+  test('accepts evaluationPrompt with supported stage placeholders and rejects unsupported ones', async () => {
+    const withPrompt = {
+      ...validRubric,
+      spec: {
+        ...validRubric.spec,
+        evaluationPrompt:
+          'Use {{currentStage.outputs.conversation}} and {{previousStage.outputs.submitedSolution}}.',
+      },
+    };
+    await expect(createRubricValidator.validateAsync(withPrompt)).resolves.toEqual(withPrompt);
+
+    const badPrompt = {
+      ...validRubric,
+      spec: {
+        ...validRubric.spec,
+        evaluationPrompt: 'Use {{currentStage.outputs.unknownField}}.',
+      },
+    };
+    await expect(createRubricValidator.validateAsync(badPrompt)).rejects.toThrow(
+      'Unsupported stage reference',
+    );
+  });
 });

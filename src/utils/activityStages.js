@@ -14,15 +14,20 @@ export function stageError(message, statusCode = 400) {
 }
 
 export function getStageReferences(leia) {
-  const description = leia?.spec?.behaviour?.spec?.description || '';
-  const references = [...description.matchAll(referencePattern)];
+  const templates = [
+    leia?.spec?.behaviour?.spec?.description || '',
+    leia?.spec?.rubric?.spec?.evaluationPrompt || '',
+  ];
   const outputs = new Set();
-  for (const [, path] of references) {
-    const output = supportedOutputs.get(path.trimEnd());
-    if (!output) {
-      throw stageError(`Unsupported previous stage reference: previousStage${path.trimEnd()}`);
+  for (const template of templates) {
+    const references = [...template.matchAll(referencePattern)];
+    for (const [, path] of references) {
+      const output = supportedOutputs.get(path.trimEnd());
+      if (!output) {
+        throw stageError(`Unsupported previous stage reference: previousStage${path.trimEnd()}`);
+      }
+      outputs.add(output);
     }
-    outputs.add(output);
   }
   return outputs;
 }

@@ -16,6 +16,9 @@ const RubricSchema = new Schema(
       },
     },
     spec: {
+      evaluationPrompt: {
+        type: String,
+      },
       sections: [{
         _id: false,
         title: { type: String, required: true },
