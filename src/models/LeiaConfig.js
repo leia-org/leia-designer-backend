@@ -2,7 +2,10 @@ import { Schema } from 'mongoose';
 
 const LeiaConfigSchema = new Schema(
   {
-    stageId: String,
+    stageId: {
+      type: String,
+      required: true,
+    },
     leia: {
       type: Schema.Types.ObjectId,
       ref: 'Leia',

@@ -5,10 +5,16 @@ properties:
   id:
     type: string
     format: uuid
-  previousStageId:
-    type: string
-    format: uuid
-    nullable: true
-    description: Earlier stage whose completed conversation and submitted solution can be used by behaviours in this stage.
+  outputSources:
+    type: object
+    properties:
+      conversation:
+        type: string
+        format: uuid
+        nullable: true
+      submitedSolution:
+        type: string
+        format: uuid
+        nullable: true
   orchestration:
     $ref: './orchestration.yaml'

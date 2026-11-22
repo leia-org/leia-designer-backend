@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { updateExperimentOrchestrationValidator } from '../src/validators/v1/experimentValidator.js';
+import { stageOrchestrationValidator } from '../src/validators/v1/experimentValidator.js';
 
 describe('experiment orchestration validation', () => {
   test('accepts a text MultiLEIA virtual graph configuration', async () => {
-    const value = await updateExperimentOrchestrationValidator.validateAsync({
+    const value = await stageOrchestrationValidator.validateAsync({
       mode: 'multi',
       maxInternalTurns: 2,
       openingLeiaId: '507f1f77bcf86cd799439011',
@@ -18,7 +18,7 @@ describe('experiment orchestration validation', () => {
 
   test('rejects an unbounded number of internal turns', async () => {
     await expect(
-      updateExperimentOrchestrationValidator.validateAsync({
+      stageOrchestrationValidator.validateAsync({
         mode: 'multi',
         maxInternalTurns: 20,
         openingLeiaId: '507f1f77bcf86cd799439011',
@@ -28,14 +28,14 @@ describe('experiment orchestration validation', () => {
   });
 
   test('allows one to eight routed LEIA messages independently of actor count', async () => {
-    const one = await updateExperimentOrchestrationValidator.validateAsync({
+    const one = await stageOrchestrationValidator.validateAsync({
       mode: 'multi',
       maxInternalTurns: 1,
       openingLeiaId: '507f1f77bcf86cd799439011',
       problemLeiaId: '507f1f77bcf86cd799439012',
       sharedTask: '',
     });
-    const eight = await updateExperimentOrchestrationValidator.validateAsync({
+    const eight = await stageOrchestrationValidator.validateAsync({
       mode: 'multi',
       maxInternalTurns: 8,
       openingLeiaId: '507f1f77bcf86cd799439011',

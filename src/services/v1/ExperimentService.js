@@ -142,23 +142,9 @@ class ExperimentService {
     return await ExperimentRepository.update(id, { name });
   }
 
-  async updateOrchestration(id, orchestration) {
-    const experiment = await this.findByIdPopulated(id);
-    if (!experiment) {
-      const error = new Error('Experiment not found');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (experiment.stages) throw stageError('Configure the conversation flow on each stage');
-    return await ExperimentRepository.updateOrchestration(
-      id, normalizeOrchestration(experiment.leias || [], orchestration)
-    );
-  }
-
   async updateStages(id, stages) {
     const experiment = await ExperimentRepository.findByIdPopulated(id);
-    if (!experiment?.stages) throw stageError('This activity uses the legacy format', 409);
+    if (!experiment) throw stageError('Experiment not found', 404);
     const normalizedStages = stages.map((stage) => ({
       ...stage,
       outputSources: {
@@ -177,42 +163,17 @@ class ExperimentService {
   //fix to add check for leia before publishing modeled after checkEditable
   async publish(id) {
     const experiment = await ExperimentRepository.findByIdPopulated(id);
-    if (experiment?.stages) {
-      this.assertPublishedLeias(experiment.leias);
-      validateActivityStages(experiment.stages, experiment.leias, normalizeOrchestration, true);
-      return await ExperimentRepository.updateStagedDraft(experiment, { isPublished: true });
-    }
-    if (!experiment.leias || experiment.leias.length === 0) {
-      const error = new Error('Experiment must have an associated LEIA before publishing');
-      error.statusCode = 400;
-      throw error;
-    }
+    if (!experiment) throw stageError('Experiment not found', 404);
     this.assertPublishedLeias(experiment.leias);
-    if (experiment.orchestration?.mode === 'multi') {
-      if (experiment.leias.length < 2) {
-        const error = new Error('A MultiLEIA activity requires at least two LEIAs before publishing');
-        error.statusCode = 400;
-        throw error;
-      }
-      if (experiment.leias.some((entry) => entry.configuration?.mode === 'transcription')) {
-        const error = new Error('MultiLEIA activities currently support standard text mode only');
-        error.statusCode = 400;
-        throw error;
-      }
-      const problemLeiaId =
-        experiment.orchestration.problemLeiaId ||
-        experiment.orchestration.openingLeiaId ||
-        experiment.leias[0].id;
-      assertProcessCompatibility(experiment.leias, problemLeiaId);
-    }
-    return await ExperimentRepository.update(id, { isPublished: true });
+    validateActivityStages(experiment.stages, experiment.leias, normalizeOrchestration, true);
+    return await ExperimentRepository.updateStagedDraft(experiment, { isPublished: true });
   }
 
   async addLeia(experimentId, leiaConfig, context) {
     const experiment = await ExperimentRepository.findByIdPopulated(experimentId);
-    if (!experiment?.stages) {
-      if (leiaConfig.stageId) throw stageError('This activity uses the legacy format');
-      return await ExperimentRepository.addLeia(experimentId, leiaConfig);
+    if (!experiment) throw stageError('Experiment not found', 404);
+    if (!Array.isArray(experiment.stages) || !experiment.stages.length) {
+      throw stageError('An activity requires at least one stage');
     }
     const stageId = leiaConfig.stageId || (experiment.stages.length === 1 ? experiment.stages[0].id : null);
     if (!experiment.stages.some((stage) => stage.id === stageId)) throw stageError('Select a stage');
@@ -227,86 +188,44 @@ class ExperimentService {
   }
 
   async updateLeia(experimentId, leiaConfigId, leiaConfig) {
-    const experiment = await this.findById(experimentId);
-    if (experiment?.stages) {
-      const draft = await ExperimentRepository.findByIdPopulated(experimentId);
-      const existing = draft.leias.find((entry) => entry.id === leiaConfigId);
-      if (!existing) throw stageError('LEIA configuration not found', 404);
-      const { leias } = draft.toObject({ depopulate: true });
-      const entry = leias.find(({ _id }) => String(_id) === leiaConfigId);
-      if (String(entry.leia) !== leiaConfig.leia) {
-        throw stageError('Remove the existing LEIA and add its replacement to the stage');
-      }
-      entry.configuration = leiaConfig.configuration;
-      const entries = draft.leias.map((candidate) => candidate.id === leiaConfigId
-        ? { id: existing.id, stageId: existing.stageId, leia: existing.leia, configuration: entry.configuration }
-        : candidate);
-      validateActivityStages(draft.stages, entries, normalizeOrchestration);
-      return await ExperimentRepository.updateStagedDraft(draft, { leias });
+    const draft = await ExperimentRepository.findByIdPopulated(experimentId);
+    if (!draft) throw stageError('Experiment not found', 404);
+    const existing = draft.leias.find((entry) => entry.id === leiaConfigId);
+    if (!existing) throw stageError('LEIA configuration not found', 404);
+    const { leias } = draft.toObject({ depopulate: true });
+    const entry = leias.find(({ _id }) => String(_id) === leiaConfigId);
+    if (String(entry.leia) !== leiaConfig.leia) {
+      throw stageError('Remove the existing LEIA and add its replacement to the stage');
     }
-    if (
-      experiment?.orchestration?.mode === 'multi' &&
-      leiaConfig.configuration?.mode === 'transcription'
-    ) {
-      const error = new Error('MultiLEIA activities currently support standard text mode only');
-      error.statusCode = 400;
-      throw error;
-    }
-    return await ExperimentRepository.updateLeia(experimentId, leiaConfigId, leiaConfig);
+    entry.configuration = leiaConfig.configuration;
+    const entries = draft.leias.map((candidate) => candidate.id === leiaConfigId
+      ? { id: existing.id, stageId: existing.stageId, leia: existing.leia, configuration: entry.configuration }
+      : candidate);
+    validateActivityStages(draft.stages, entries, normalizeOrchestration);
+    return await ExperimentRepository.updateStagedDraft(draft, { leias });
   }
 
   // DELETE METHODS
 
   async deleteLeia(experimentId, leiaConfigId) {
-    const experiment = await this.findById(experimentId);
-    if (experiment?.stages) {
-      const draft = await ExperimentRepository.findByIdPopulated(experimentId);
-      const existing = draft.leias.find((entry) => entry.id === leiaConfigId);
-      if (!existing) throw stageError('LEIA configuration not found', 404);
-      const { leias, stages } = draft.toObject({ depopulate: true });
-      const stage = stages.find(({ id }) => id === existing.stageId);
-      if (stage.orchestration.mode === 'multi') {
-        const remaining = draft.leias.filter((entry) => entry.stageId === stage.id && entry.id !== leiaConfigId);
-        const orchestration = stage.orchestration;
-        if (remaining.length < 2) orchestration.mode = 'single';
-        if (orchestration.openingLeiaId === leiaConfigId) orchestration.openingLeiaId = null;
-        if (orchestration.problemLeiaId === leiaConfigId) orchestration.problemLeiaId = null;
-        stage.orchestration = normalizeOrchestration(remaining, orchestration);
-      }
-      return await ExperimentRepository.updateStagedDraft(draft, {
-        stages,
-        leias: leias.filter(({ _id }) => String(_id) !== leiaConfigId),
-      });
+    const draft = await ExperimentRepository.findByIdPopulated(experimentId);
+    if (!draft) throw stageError('Experiment not found', 404);
+    const existing = draft.leias.find((entry) => entry.id === leiaConfigId);
+    if (!existing) throw stageError('LEIA configuration not found', 404);
+    const { leias, stages } = draft.toObject({ depopulate: true });
+    const stage = (stages || []).find(({ id }) => id === existing.stageId);
+    if (!stage) throw stageError('Stage not found', 404);
+    if (stage.orchestration.mode === 'multi') {
+      const remaining = draft.leias.filter((entry) => entry.stageId === stage.id && entry.id !== leiaConfigId);
+      const orchestration = stage.orchestration;
+      if (remaining.length < 2) orchestration.mode = 'single';
+      if (orchestration.openingLeiaId === leiaConfigId) orchestration.openingLeiaId = null;
+      if (orchestration.problemLeiaId === leiaConfigId) orchestration.problemLeiaId = null;
+      stage.orchestration = normalizeOrchestration(remaining, orchestration);
     }
-    const updatedExperiment = await ExperimentRepository.deleteLeia(experimentId, leiaConfigId);
-    if (experiment?.orchestration?.mode !== 'multi') return updatedExperiment;
-
-    if (updatedExperiment.leias.length < 2) {
-      return await ExperimentRepository.updateOrchestration(experimentId, {
-        mode: 'single',
-        maxInternalTurns: 2,
-        openingLeiaId: null,
-        problemLeiaId: null,
-        sharedTask: experiment.orchestration?.sharedTask || '',
-      });
-    }
-    const removedOpeningLeia =
-      String(experiment.orchestration?.openingLeiaId) === String(leiaConfigId);
-    const removedProblemLeia =
-      String(experiment.orchestration?.problemLeiaId) === String(leiaConfigId);
-    const orchestration =
-      typeof experiment.orchestration?.toObject === 'function'
-        ? experiment.orchestration.toObject()
-        : { ...experiment.orchestration };
-    return await ExperimentRepository.updateOrchestration(experimentId, {
-      ...orchestration,
-      maxInternalTurns: Math.min(orchestration.maxInternalTurns || 2, 8),
-      openingLeiaId: removedOpeningLeia
-        ? updatedExperiment.leias[0].id
-        : orchestration.openingLeiaId,
-      problemLeiaId: removedProblemLeia
-        ? updatedExperiment.leias[0].id
-        : orchestration.problemLeiaId,
+    return await ExperimentRepository.updateStagedDraft(draft, {
+      stages,
+      leias: leias.filter(({ _id }) => String(_id) !== leiaConfigId),
     });
   }
 

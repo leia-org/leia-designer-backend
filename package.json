@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test:regression": "vitest run --exclude 'tests/integration/**'",
-    "test:integration": "vitest run --config vitest.integration.config.mjs"
+    "test:integration": "vitest run --config vitest.integration.config.mjs",
+    "migrate:staged-activities": "node --env-file-if-exists=.env ./scripts/migrate-staged-activities.js"
   },
   "repository": {
     "type": "git",

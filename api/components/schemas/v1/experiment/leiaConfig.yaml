@@ -5,7 +5,7 @@ properties:
   stageId:
     type: string
     format: uuid
-    description: Stage membership. When adding a LEIA to a staged activity, it may be omitted if the activity has one stage.
+    description: Stage membership. Always present in responses; optional in POST request body when the activity has one stage, and omitted in PUT updates.
   leia:
     type: string
     description: Unique identifier for the Leia

@@ -91,49 +91,10 @@ class ExperimentRepository {
     return updated;
   }
 
-  async updateOrchestration(id, orchestration) {
-    return await Experiment.findByIdAndUpdate(
-      id,
-      { $set: { orchestration } },
-      { new: true }
-    ).populate('leias.leia');
-  }
-
-  async regenerateCode(id) {
-    const experiment = await Experiment.findById(id).populate('leias.leia');
-    if (!experiment) {
-      throw new Error('Experiment not found');
-    }
-    await experiment.regenerateCode();
-    return await experiment.save();
-  }
-
   async toggleIsActive(id) {
     return await Experiment.findByIdAndUpdate(
       id,
       { $set: { isActive: { $not: '$isActive' } } },
-      { new: true }
-    ).populate('leias.leia');
-  }
-
-  async addLeia(experimentId, leiaConfig) {
-    return await Experiment.findByIdAndUpdate(experimentId, { $push: { leias: leiaConfig } }, { new: true }).populate(
-      'leias.leia'
-    );
-  }
-
-  async updateLeia(experimentId, leiaConfigId, leiaConfig) {
-    return await Experiment.findOneAndUpdate(
-      { _id: experimentId, 'leias._id': leiaConfigId },
-      { $set: { 'leias.$': { ...leiaConfig, _id: leiaConfigId } } },
-      { new: true }
-    ).populate('leias.leia');
-  }
-
-  async deleteLeia(experimentId, leiaConfigId) {
-    return await Experiment.findByIdAndUpdate(
-      experimentId,
-      { $pull: { leias: { _id: leiaConfigId } } },
       { new: true }
     ).populate('leias.leia');
   }
