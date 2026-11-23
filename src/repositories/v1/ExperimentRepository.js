@@ -1,6 +1,7 @@
 import Experiment from '../../models/Experiment.js';
 import mongoose from 'mongoose';
 import { regexQuery } from '../../utils/search.js';
+import { stageError } from '../../utils/activityStages.js';
 class ExperimentRepository {
   // READ METHODS
 
@@ -17,6 +18,17 @@ class ExperimentRepository {
     const experiments = results.slice(0, limit);
     const nextCursor = experiments.length === limit ? experiments[experiments.length - 1].id : null;
     return {experiments, nextCursor}
+  }
+
+  async findAccessible(userId, ownedOnly = false, lastActivityId, text) {
+    const query = ownedOnly ? { user: userId } : { $or: [{ user: userId }, { isPublished: true }] };
+    if (lastActivityId) query._id = { $gt: new mongoose.Types.ObjectId(lastActivityId) };
+    if (text) Object.assign(query, regexQuery(text, 'name'));
+    const limit = 10;
+    const results = await Experiment.find(query).sort({ _id: 1 }).populate('leias.leia').limit(limit + 1);
+    const experiments = results.slice(0, limit);
+    const nextCursor = results.length > limit ? experiments[experiments.length - 1].id : null;
+    return { experiments, nextCursor };
   }
 
   async findById(id) {
@@ -67,6 +79,16 @@ class ExperimentRepository {
 
   async update(id, experimentData) {
     return await Experiment.findByIdAndUpdate(id, experimentData, { new: true }).populate('leias.leia');
+  }
+
+  async updateStagedDraft(experiment, changes) {
+    const updated = await Experiment.findOneAndUpdate(
+      { _id: experiment.id, __v: experiment.__v, isPublished: false },
+      { $set: changes, $inc: { __v: 1 } },
+      { new: true, runValidators: true }
+    ).populate('leias.leia');
+    if (!updated) throw stageError('The activity changed. Reload it and try again.', 409);
+    return updated;
   }
 
   async updateOrchestration(id, orchestration) {

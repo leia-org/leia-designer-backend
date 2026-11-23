@@ -22,6 +22,4 @@ post:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '../../../components/schemas/v1/experiment/experiment.yaml'
+            $ref: '../../../components/schemas/v1/experiment/experiment.yaml'

@@ -1,4 +1,5 @@
 import ExperimentService from '../../services/v1/ExperimentService.js';
+import LeiaService from '../../services/v1/LeiaService.js';
 import WorkbenchService from '../../services/v1/WorkbenchService.js';
 import {
   createExperimentValidator,
@@ -6,7 +7,10 @@ import {
   leiaConfigValidator,
   createExperimentReplicationValidator,
   updateExperimentOrchestrationValidator,
+  updateExperimentStagesValidator,
+  stagedLeiaConfigValidator,
 } from '../../validators/v1/experimentValidator.js';
+import { hasStageReferences, stageError } from '../../utils/activityStages.js';
 import { validateBoolean, validateVisibility, isMongoIdQueryValid } from '../../validators/queryValidator.js';
 
 export const createExperiment = async (req, res, next) => {
@@ -29,13 +33,29 @@ export const getExperimentById = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-    if (experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
+    if (experiment.isPublished || experiment.user.id == req.auth?.payload?.id || req.auth?.payload?.role === 'admin') {
       res.json(experiment);
     } else {
       const error = new Error('Unauthorized: You do not have permission to access this experiment');
       error.statusCode = 403;
       throw error;
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAccessibleExperiments = async (req, res, next) => {
+  try {
+    const { lastActivityId, text, ownedOnly } = req.query;
+    if ((lastActivityId !== undefined && !isMongoIdQueryValid(lastActivityId)) ||
+        (text !== undefined && typeof text !== 'string') ||
+        (ownedOnly !== undefined && !['true', 'false'].includes(ownedOnly))) {
+      const error = new Error('Invalid activity filter');
+      error.statusCode = 400;
+      throw error;
+    }
+    res.json(await ExperimentService.findAccessible(req.auth.payload.id, ownedOnly === 'true', lastActivityId, text));
   } catch (err) {
     next(err);
   }
@@ -119,15 +139,27 @@ export const updateExperimentOrchestration = async (req, res, next) => {
   }
 };
 
+export const updateExperimentStages = async (req, res, next) => {
+  try {
+    const { stages } = await updateExperimentStagesValidator.validateAsync(req.body);
+    await ExperimentService.checkEditable(req.params.id, req.auth.payload.id);
+    res.json(await ExperimentService.updateStages(req.params.id, stages));
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const addExperimentLeia = async (req, res, next) => {
   try {
-    const value = await leiaConfigValidator.validateAsync(req.body, { abortEarly: false });
+    const value = await stagedLeiaConfigValidator.validateAsync(req.body, { abortEarly: false });
 
     const userId = req.auth?.payload?.id;
     const experimentId = req.params.id;
     await ExperimentService.checkEditable(experimentId, userId);
 
-    const updatedExperiment = await ExperimentService.addLeia(experimentId, value);
+    const updatedExperiment = await ExperimentService.addLeia(experimentId, value, {
+      userId, role: req.auth?.payload?.role,
+    });
     res.json(updatedExperiment);
   } catch (err) {
     next(err);
@@ -199,11 +231,18 @@ export const createExperimentReplication = async (req, res, next) => {
     if (existsReplication) {
       return res.status(409).json({ error: 'Replication name already exists' });
     }
+    const role = req.auth?.payload?.role;
+    const leia = await LeiaService.findById(value.leiaId, { role, userId });
+    if (!leia) throw stageError('LEIA not found', 404);
+    if (hasStageReferences(leia)) throw stageError('The first stage cannot use previous stage references');
+    if (role === 'admin') {
+      ExperimentService.assertPublishedLeias([{ id: value.leiaId, leia }]);
+    }
     const newExperiment = await ExperimentService.create({
       name: value.leiaName,
       user: userId,
       leias: [{ leia: value.leiaId }],
-      isPublished: true
+      isPublished: role === 'admin'
     });
     const newReplication = await WorkbenchService.createReplication(newExperiment.id, value.leiaName, req.headers.authorization);
     res.status(201).json({ experiment: newExperiment, replication: newReplication });
