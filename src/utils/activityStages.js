@@ -1,12 +1,24 @@
 const referencePattern = /{{\s*previousStage\b([^{}]*)}}/g;
-export const STAGE_OUTPUTS = ['conversation', 'submitedSolution'];
+export const STAGE_OUTPUTS = ['conversation', 'submitedSolution', 'problem'];
+export const PREVIOUS_STAGE_PROBLEM_FIELDS = [
+  'description',
+  'details',
+  'personaBackground',
+  'solution',
+  'initialSolution',
+  'solutionFormat',
+  'evaluationPrompt',
+  'process',
+];
 const supportedOutputs = new Map([
   ['.outputs.conversation', 'conversation'],
   ['.outputs.submitedSolution', 'submitedSolution'],
+  ...PREVIOUS_STAGE_PROBLEM_FIELDS.map((field) => [`.leia.problem.${field}`, 'problem']),
 ]);
 const outputLabels = {
   conversation: 'conversation',
   submitedSolution: 'submitted solution',
+  problem: 'problem',
 };
 
 export function stageError(message, statusCode = 400) {

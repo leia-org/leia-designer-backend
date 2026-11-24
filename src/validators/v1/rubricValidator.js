@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import rubricDefinitionSchema from '../../schemas/v1/rubricSchema.js';
+import { PREVIOUS_STAGE_PROBLEM_FIELDS } from '../../utils/activityStages.js';
 
 const splitCells = (line) => line
   .replace(/^\||\|$/g, '')
@@ -91,7 +92,12 @@ export const isMarkdownTable = (value) => parseRubricMarkdown(value).error === n
 const ajv = new Ajv({ allErrors: true });
 const validateSchema = ajv.compile(rubricDefinitionSchema);
 const stagePlaceholderPattern = /{{\s*(previousStage|currentStage)\b([^{}]*)}}/g;
-const supportedStagePaths = new Set(['.outputs.conversation', '.outputs.submitedSolution']);
+const supportedCurrentStagePaths = new Set(['.outputs.conversation', '.outputs.submitedSolution']);
+const supportedPreviousStagePaths = new Set([
+  '.outputs.conversation',
+  '.outputs.submitedSolution',
+  ...PREVIOUS_STAGE_PROBLEM_FIELDS.map((field) => `.leia.problem.${field}`),
+]);
 
 export function validateRubricSemantics(value) {
   const errors = [];
@@ -101,7 +107,8 @@ export function validateRubricSemantics(value) {
   if (typeof value.spec.evaluationPrompt === 'string' && value.spec.evaluationPrompt) {
     for (const [, scope, path] of value.spec.evaluationPrompt.matchAll(stagePlaceholderPattern)) {
       const normalizedPath = path.trimEnd();
-      if (!supportedStagePaths.has(normalizedPath)) {
+      const allowed = scope === 'previousStage' ? supportedPreviousStagePaths : supportedCurrentStagePaths;
+      if (!allowed.has(normalizedPath)) {
         errors.push(`Unsupported stage reference in spec.evaluationPrompt: ${scope}${normalizedPath}`);
       }
     }

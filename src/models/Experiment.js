@@ -7,6 +7,7 @@ const StageSchema = new Schema(
     outputSources: {
       conversation: { type: String, default: null },
       submitedSolution: { type: String, default: null },
+      problem: { type: String, default: null },
     },
     orchestration: {
       mode: { type: String, enum: ['single', 'multi'], default: 'single' },
