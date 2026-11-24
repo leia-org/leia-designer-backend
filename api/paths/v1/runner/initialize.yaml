@@ -17,4 +17,4 @@ post:
           schema:
             $ref: '../../../components/schemas/v1/runner/initializeRunnerResponse.yaml'
     '400':
-      description: Invalid request body or runner configuration
+      description: Invalid request body, runner configuration, or LEIA references previousStage (cannot be tested in Designer)

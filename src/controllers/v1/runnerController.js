@@ -2,10 +2,18 @@ import RunnerService from "../../services/v1/RunnerService.js";
 import ConversationDynamicsService from "../../services/v1/ConversationDynamicsService.js";
 import { runnerLeiaValidator } from "../../validators/v1/leiaValidator.js";
 import { filterProblemChatToolsForRole } from "../../utils/behaviourPermissions.js";
+import {
+  hasAnyPreviousStageReference,
+  PREVIOUS_STAGE_TEST_ERROR,
+  stageError,
+} from "../../utils/activityStages.js";
 
 export const initializeRunner = async (req, res, next) => {
   try {
     const value = await runnerLeiaValidator.validateAsync(req.body, { abortEarly: false });
+    if (hasAnyPreviousStageReference({ spec: value.spec })) {
+      throw stageError(PREVIOUS_STAGE_TEST_ERROR, 400);
+    }
     if (!value.runnerConfiguration) {
       const error = new Error('runnerConfiguration is required for testing');
       error.statusCode = 400;
