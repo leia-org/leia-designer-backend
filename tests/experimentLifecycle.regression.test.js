@@ -110,7 +110,7 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(200);
   });
 
-  test('blocks transcription mode on a stage whose conversation is referenced by a later stage', async () => {
+  test('allows transcription mode on a stage whose conversation is referenced only when transcription chat messages are non-empty', async () => {
     const stages = Array.from({ length: 3 }, () => ({
       id: randomUUID(), orchestration: { mode: 'single' },
     }));
@@ -132,23 +132,24 @@ describe('Designer activity HTTP lifecycle regressions', () => {
     // Stage 1 is in transcription mode and only supplies submitedSolution → allowed.
     expect((await update(stages)).status).toBe(200);
 
-    // Pointing stage 3's conversation output at stage 1 (transcription) → rejected.
-    const invalidStages = stages.map((stage, index) => index === 2
+    // Pointing stage 3's conversation output at stage 1 (transcription) is allowed while editing the draft.
+    const transcriptionConversationStages = stages.map((stage, index) => index === 2
       ? { ...stage, outputSources: { conversation: stages[0].id, submitedSolution: stages[0].id } }
       : stage);
-    const badConversationSource = await update(invalidStages);
-    expect(badConversationSource.status).toBe(400);
-    expect((await badConversationSource.json()).message).toBe(
-      'Stage 1 cannot use transcription mode because stage 3 uses its conversation'
+    expect((await update(transcriptionConversationStages)).status).toBe(200);
+
+    // Publishing with an empty transcription on stage 1 → rejected.
+    const publishEmptyRejected = await request('/activity/publish', { method: 'PATCH' });
+    expect(publishEmptyRejected.status).toBe(400);
+    expect((await publishEmptyRejected.json()).message).toBe(
+      'Stage 1 requires non-empty transcription chat messages because stage 3 uses its conversation'
     );
 
-    // Switching stage 2 to transcription while stage 3 references stage 2's conversation → rejected on publish.
-    activity.leias[1].configuration.mode = 'transcription';
-    const publishRejected = await request('/activity/publish', { method: 'PATCH' });
-    expect(publishRejected.status).toBe(400);
-    expect((await publishRejected.json()).message).toBe(
-      'Stage 2 cannot use transcription mode because stage 3 uses its conversation'
-    );
+    // Populating stage 1's transcription chat messages → allowed on publish.
+    activity.leias[0].configuration.data = {
+      messages: [{ text: 'Hello from transcript', timestamp: '2026-11-25T10:00:00Z', isLeia: false }],
+    };
+    expect((await request('/activity/publish', { method: 'PATCH' })).status).toBe(200);
   });
 
   test.each([null, { isPublished: false }, undefined])('rejects missing or private LEIAs (%j)', async (leia) => {

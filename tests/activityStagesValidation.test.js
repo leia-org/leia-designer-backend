@@ -9,10 +9,10 @@ const orchestration = {
   sharedTask: '',
 };
 
-const makeEntry = (id, stageId, description, mode = 'standard') => ({
+const makeEntry = (id, stageId, description, mode = 'standard', data = {}) => ({
   id,
   stageId,
-  configuration: { mode, data: {} },
+  configuration: { mode, data },
   leia: {
     spec: {
       behaviour: { spec: { description } },
@@ -34,6 +34,39 @@ describe('validateActivityStages transcription guards', () => {
     expect(() => validateActivityStages(stages, leias, () => {}, true)).toThrow(
       /Stage 2 cannot use transcription mode because it uses outputs from an earlier stage/
     );
+  });
+
+  test('allows transcription source stage for conversation when chat messages are non-empty, and blocks publishing when empty or link-only', () => {
+    const stages = [
+      { id: 's1', outputSources: { conversation: null, submitedSolution: null }, orchestration },
+      { id: 's2', outputSources: { conversation: 's1', submitedSolution: null }, orchestration },
+    ];
+    const emptyTranscriptLeias = [
+      makeEntry('l1', 's1', 'Read static transcript', 'transcription', { messages: [] }),
+      makeEntry('l2', 's2', 'Review {{previousStage.outputs.conversation}}', 'standard'),
+    ];
+
+    // Allowed while editing a draft so the author can switch to transcription and populate messages.
+    expect(() => validateActivityStages(stages, emptyTranscriptLeias, () => {}, false)).not.toThrow();
+    expect(() => validateActivityStages(stages, emptyTranscriptLeias, () => {}, true)).toThrow(
+      /Stage 1 requires non-empty transcription chat messages because stage 2 uses its conversation/
+    );
+
+    const linkOnlyLeias = [
+      makeEntry('l1', 's1', 'Read static transcript', 'transcription', { link: 'https://example.com/transcript' }),
+      makeEntry('l2', 's2', 'Review {{previousStage.outputs.conversation}}', 'standard'),
+    ];
+    expect(() => validateActivityStages(stages, linkOnlyLeias, () => {}, true)).toThrow(
+      /Stage 1 requires non-empty transcription chat messages because stage 2 uses its conversation/
+    );
+
+    const populatedTranscriptLeias = [
+      makeEntry('l1', 's1', 'Read static transcript', 'transcription', {
+        messages: [{ text: 'Hello', timestamp: '2026-11-25T10:00:00Z', isLeia: false }],
+      }),
+      makeEntry('l2', 's2', 'Review {{previousStage.outputs.conversation}}', 'standard'),
+    ];
+    expect(() => validateActivityStages(stages, populatedTranscriptLeias, () => {}, true)).not.toThrow();
   });
 
   test('still allows transcription mode on a source stage when only submitedSolution is referenced', () => {
