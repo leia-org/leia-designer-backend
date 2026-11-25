@@ -95,7 +95,7 @@ describe('rubric validator', () => {
       spec: {
         ...validRubric.spec,
         evaluationPrompt:
-          'Use {{currentStage.outputs.conversation}} and {{previousStage.outputs.submitedSolution}}.',
+          'Use {{currentStage.outputs.conversation}}, {{previousStage.outputs.submitedSolution}} and {{previousStage.leia.problem.description}} ({{previousStage.leia.problem.solution}}).',
       },
     };
     await expect(createRubricValidator.validateAsync(withPrompt)).resolves.toEqual(withPrompt);
@@ -108,6 +108,28 @@ describe('rubric validator', () => {
       },
     };
     await expect(createRubricValidator.validateAsync(badPrompt)).rejects.toThrow(
+      'Unsupported stage reference',
+    );
+
+    const badCurrentProblem = {
+      ...validRubric,
+      spec: {
+        ...validRubric.spec,
+        evaluationPrompt: 'Use {{currentStage.leia.problem.description}}.',
+      },
+    };
+    await expect(createRubricValidator.validateAsync(badCurrentProblem)).rejects.toThrow(
+      'Unsupported stage reference',
+    );
+
+    const badPreviousProblemField = {
+      ...validRubric,
+      spec: {
+        ...validRubric.spec,
+        evaluationPrompt: 'Use {{previousStage.leia.problem.nonExistent}}.',
+      },
+    };
+    await expect(createRubricValidator.validateAsync(badPreviousProblemField)).rejects.toThrow(
       'Unsupported stage reference',
     );
   });

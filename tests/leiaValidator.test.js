@@ -53,10 +53,13 @@ describe('runnerLeiaValidator', () => {
           _id: objectId,
           apiVersion: 'v1',
           metadata: { name: 'Interview rubric' },
-          spec: { sections: [{
-            title: 'Content', weight: 100, levels: ['Score'],
-            criteria: [{ name: 'Clarity', descriptors: [{ level: 'Score', description: 'Strong' }] }],
-          }] },
+          spec: {
+            evaluationPrompt: 'Grade using {{currentStage.outputs.conversation}}.',
+            sections: [{
+              title: 'Content', weight: 100, levels: ['Score'],
+              criteria: [{ name: 'Clarity', descriptors: [{ level: 'Score', description: 'Strong' }] }],
+            }],
+          },
         },
       },
     };

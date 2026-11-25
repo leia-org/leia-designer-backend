@@ -97,6 +97,7 @@ export const runnerLeiaValidator = Joi.object({
         name: Joi.string().required(),
       }).required(),
       spec: Joi.object({
+        evaluationPrompt: Joi.string().allow('', null).optional(),
         sections: rubricSpec.extract('sections'),
       }).required(),
     }).optional(),

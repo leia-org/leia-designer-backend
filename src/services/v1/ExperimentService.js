@@ -164,6 +164,7 @@ class ExperimentService {
       outputSources: {
         conversation: stage.outputSources?.conversation ?? null,
         submitedSolution: stage.outputSources?.submitedSolution ?? null,
+        problem: stage.outputSources?.problem ?? null,
       },
     }));
     validateActivityStages(normalizedStages, experiment.leias, normalizeOrchestration);

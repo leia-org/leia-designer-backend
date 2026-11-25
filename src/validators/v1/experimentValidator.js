@@ -21,12 +21,13 @@ const stageId = Joi.string().uuid({ version: 'uuidv4' });
 const stageOutputSourcesValidator = Joi.object({
   conversation: stageId.allow(null).default(null),
   submitedSolution: stageId.allow(null).default(null),
+  problem: stageId.allow(null).default(null),
 });
 
 export const updateExperimentStagesValidator = Joi.object({
   stages: Joi.array().min(1).items(Joi.object({
     id: stageId.required(),
-    outputSources: stageOutputSourcesValidator.default({ conversation: null, submitedSolution: null }),
+    outputSources: stageOutputSourcesValidator.default({ conversation: null, submitedSolution: null, problem: null }),
     orchestration: updateExperimentOrchestrationValidator.required(),
   })).required(),
 });

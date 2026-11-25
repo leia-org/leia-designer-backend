@@ -50,7 +50,7 @@ test('create → attach a real LEIA → publish → read populates resources and
   expect(updated.status).toBe(200);
   const emptyStageDraft = await updated.json();
   expect(emptyStageDraft.stages.map(({ id }) => id)).toEqual([stage.id, secondStage.id]);
-  expect(emptyStageDraft.stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null });
+  expect(emptyStageDraft.stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null, problem: null });
   expect(emptyStageDraft.leias).toHaveLength(1);
   const reflectiveLeia = await Leia.create({
     metadata: { name: 'Reflection LEIA' },
@@ -60,7 +60,7 @@ test('create → attach a real LEIA → publish → read populates resources and
   });
   const addedLeia = await request(`/${activity.id}/leias`, 'POST', { leia: reflectiveLeia.id, stageId: secondStage.id });
   expect(addedLeia.status).toBe(200);
-  expect((await addedLeia.json()).stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null });
+  expect((await addedLeia.json()).stages[1].outputSources).toEqual({ conversation: null, submitedSolution: null, problem: null });
   expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, other)).status).toBe(403);
   for (const role of ['instructor', 'advanced', 'read']) {
     expect((await request(`/${activity.id}/publish`, 'PATCH', undefined, owner, role)).status).toBe(403);

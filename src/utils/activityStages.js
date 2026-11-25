@@ -1,23 +1,48 @@
 const referencePattern = /{{\s*previousStage\b([^{}]*)}}/g;
-export const STAGE_OUTPUTS = ['conversation', 'submitedSolution'];
+const anyPreviousStagePattern = /{{\s*previousStage\b[^{}]*}}/;
+export const PREVIOUS_STAGE_TEST_ERROR =
+  'LEIAs that reference previousStage cannot be tested in Designer. Add this LEIA to a staged activity and test it in Workbench.';
+export const STAGE_OUTPUTS = ['conversation', 'submitedSolution', 'problem'];
+export const PREVIOUS_STAGE_PROBLEM_FIELDS = [
+  'description',
+  'details',
+  'personaBackground',
+  'solution',
+  'initialSolution',
+  'solutionFormat',
+  'evaluationPrompt',
+  'process',
+];
 const supportedOutputs = new Map([
   ['.outputs.conversation', 'conversation'],
   ['.outputs.submitedSolution', 'submitedSolution'],
+  ...PREVIOUS_STAGE_PROBLEM_FIELDS.map((field) => [`.leia.problem.${field}`, 'problem']),
 ]);
 const outputLabels = {
   conversation: 'conversation',
   submitedSolution: 'submitted solution',
+  problem: 'problem',
 };
 
 export function stageError(message, statusCode = 400) {
   return Object.assign(new Error(message), { statusCode });
 }
 
-export function getStageReferences(leia) {
-  const templates = [
+function getStageTemplates(leia) {
+  return [
     leia?.spec?.behaviour?.spec?.description || '',
     leia?.spec?.rubric?.spec?.evaluationPrompt || '',
   ];
+}
+
+export function hasAnyPreviousStageReference(leia) {
+  return getStageTemplates(leia).some(
+    (template) => typeof template === 'string' && anyPreviousStagePattern.test(template)
+  );
+}
+
+export function getStageReferences(leia) {
+  const templates = getStageTemplates(leia);
   const outputs = new Set();
   for (const template of templates) {
     const references = [...template.matchAll(referencePattern)];

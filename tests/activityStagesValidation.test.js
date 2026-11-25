@@ -48,4 +48,31 @@ describe('validateActivityStages transcription guards', () => {
 
     expect(() => validateActivityStages(stages, leias, () => {}, true)).not.toThrow();
   });
+
+  test('validates previousStage.leia.problem.* references and requires a problem source before publishing', () => {
+    const stages = [
+      { id: 's1', outputSources: { conversation: null, submitedSolution: null, problem: null }, orchestration },
+      { id: 's2', outputSources: { conversation: null, submitedSolution: null, problem: null }, orchestration },
+    ];
+    const leias = [
+      makeEntry('l1', 's1', 'Stage 1', 'transcription'),
+      makeEntry('l2', 's2', 'Compare against {{previousStage.leia.problem.description}} and {{previousStage.leia.problem.solution}}', 'standard'),
+    ];
+
+    expect(() => validateActivityStages(stages, leias, () => {}, false)).not.toThrow();
+    expect(() => validateActivityStages(stages, leias, () => {}, true)).toThrow(
+      /Select an earlier stage for problem in stage 2/
+    );
+
+    stages[1].outputSources.problem = 's1';
+    expect(() => validateActivityStages(stages, leias, () => {}, true)).not.toThrow();
+
+    const invalidLeias = [
+      makeEntry('l1', 's1', 'Stage 1', 'standard'),
+      makeEntry('l2', 's2', 'Invalid {{previousStage.leia.problem.unknownField}}', 'standard'),
+    ];
+    expect(() => validateActivityStages(stages, invalidLeias, () => {}, false)).toThrow(
+      /Unsupported previous stage reference: previousStage\.leia\.problem\.unknownField/
+    );
+  });
 });
